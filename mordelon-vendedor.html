@@ -680,7 +680,65 @@ window.cambiarTab = function(tab) {
   document.getElementById('panel-'+tab).classList.add('active');
   if (tab === 'stock') renderStock();
   if (tab === 'menu-admin') renderMenuAdmin();
+  if (tab === 'horarios') renderHorarios();
   if (tab === 'config') cargarConfig();
+};
+
+// ===== HORARIOS =====
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+let horariosData = [
+  { dia:'Lunes',     abierto:false, desde:'19:30', hasta:'23:00' },
+  { dia:'Martes',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Miércoles', abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Jueves',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Viernes',   abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Sábado',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Domingo',   abierto:true,  desde:'19:30', hasta:'23:00' },
+];
+
+onSnapshot(doc(db,'config','horarios'), (snap) => {
+  if (snap.exists() && snap.data().dias) horariosData = snap.data().dias;
+  if (document.getElementById('panel-horarios').classList.contains('active')) renderHorarios();
+});
+
+function renderHorarios() {
+  const grid = document.getElementById('horariosGrid');
+  grid.innerHTML = horariosData.map((h, i) => `
+    <div class="horario-row ${h.abierto ? '' : 'cerrado'}" id="hrow-${i}">
+      <div class="dia-label">${h.dia}</div>
+      <label class="toggle-abierto">
+        <input type="checkbox" ${h.abierto ? 'checked' : ''} onchange="window.toggleDia(${i}, this.checked)" />
+        ${h.abierto ? '<span style="color:var(--verde);">Abierto</span>' : '<span style="color:var(--rojo);">Cerrado</span>'}
+      </label>
+      <div class="horario-inputs">
+        <span style="font-size:.75rem;color:#666;">De</span>
+        <input class="time-input" type="time" value="${h.desde}" ${h.abierto ? '' : 'disabled'}
+          onchange="window.cambiarHora(${i},'desde',this.value)" />
+        <span style="font-size:.75rem;color:#666;">a</span>
+        <input class="time-input" type="time" value="${h.hasta}" ${h.abierto ? '' : 'disabled'}
+          onchange="window.cambiarHora(${i},'hasta',this.value)" />
+      </div>
+    </div>
+  `).join('');
+}
+
+window.toggleDia = function(i, abierto) {
+  horariosData[i].abierto = abierto;
+  renderHorarios();
+};
+
+window.cambiarHora = function(i, campo, valor) {
+  horariosData[i][campo] = valor;
+};
+
+window.guardarHorarios = async function() {
+  try {
+    await setDoc(doc(db,'config','horarios'), { dias: horariosData });
+    showNotif('✅ Horarios guardados');
+  } catch(e) {
+    showNotif('❌ Error al guardar');
+    console.error(e);
+  }
 };
 
 // ===== MENU ADMIN =====
