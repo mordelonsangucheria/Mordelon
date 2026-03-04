@@ -859,13 +859,13 @@ function actualizarBarraEstado(estado) {
 
 // Cargar horarios desde Firebase
 const horariosDefault = [
-  { dia:'Lunes',     abierto:false, desde:'19:30', hasta:'23:00' },
-  { dia:'Martes',    abierto:true,  desde:'19:30', hasta:'23:00' },
-  { dia:'Miércoles', abierto:true,  desde:'19:30', hasta:'23:00' },
-  { dia:'Jueves',    abierto:true,  desde:'19:30', hasta:'23:00' },
-  { dia:'Viernes',   abierto:true,  desde:'19:30', hasta:'23:00' },
-  { dia:'Sábado',    abierto:true,  desde:'19:30', hasta:'23:00' },
-  { dia:'Domingo',   abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Lunes',     abierto:false, desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Martes',    abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Miércoles', abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Jueves',    abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Viernes',   abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Sábado',    abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
+  { dia:'Domingo',   abierto:true,  desde:'19:30', hasta:'23:00', turno2:false, desde2:'12:00', hasta2:'14:00' },
 ];
 
 function mostrarHorarios(dias) {
@@ -875,9 +875,11 @@ function mostrarHorarios(dias) {
   lista.innerHTML = dias.map(h => `
     <div class="horario-fila">
       <span class="horario-dia">${h.dia}</span>
-      ${h.abierto
-        ? `<span class="horario-hora">${h.desde} — ${h.hasta} <span class="horario-abierto">✓</span></span>`
-        : `<span class="horario-cerrado">Cerrado</span>`}
+      <span>
+        ${h.abierto
+          ? `<span class="horario-hora">${h.desde} — ${h.hasta}${h.turno2 ? ` · ${h.desde2} — ${h.hasta2}` : ''} <span class="horario-abierto">✓</span></span>`
+          : `<span class="horario-cerrado">Cerrado</span>`}
+      </span>
     </div>
   `).join('');
 }
