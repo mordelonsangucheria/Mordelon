@@ -346,6 +346,7 @@ select.mac-field option { background:#222; }
     <div class="stat-card t"><div class="stat-label">Transferencia</div><div class="stat-val t" id="cajaTransf">$0</div></div>
     <div class="stat-card t"><div class="stat-label">Tarjeta</div><div class="stat-val t" id="cajaTarjeta">$0</div></div>
     <div class="stat-card v"><div class="stat-label">Efectivo</div><div class="stat-val v" id="cajaEfectivo">$0</div></div>
+    <div class="stat-card n"><div class="stat-label">Visitas Hoy</div><div class="stat-val n" id="cajaVisitas">0</div></div>
   </div>
   <div class="ranking-box">
     <div class="ranking-title">🏆 MÁS VENDIDOS</div>
@@ -918,6 +919,13 @@ function updateReloj() {
   document.getElementById('reloj').textContent = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
 }
 updateReloj(); setInterval(updateReloj,1000);
+
+// CONTADOR DE VISITAS
+onSnapshot(doc(db,'config','stats'), (snap) => {
+  const visitas = snap.exists() ? (snap.data().visitas || 0) : 0;
+  const el = document.getElementById('cajaVisitas');
+  if (el) el.textContent = visitas.toLocaleString('es-AR');
+});
 </script>
 </body>
 </html>
