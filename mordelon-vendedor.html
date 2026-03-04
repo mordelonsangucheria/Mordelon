@@ -657,7 +657,10 @@ onSnapshot(doc(db,'config','menu'), (snap) => {
       { id:25, cat:'🥪 Sánguches',        emoji:'🥩', nombre:'Sánguche de Milanesa Clásico',    desc:'Lechuga, tomate, jamón y queso · Ciabatta',           precio:15000 },
       { id:26, cat:'🍟 Combos',           emoji:'🥩', nombre:'Combo 2 Milanesas Clásicas',      desc:'2 sánguches de milanesa clásico',                     precio:25000 },
       { id:27, cat:'🍟 Combos',           emoji:'🔥', nombre:'Combo Mordelón x4',               desc:'4 Mordelón de la Casa + 4 porciones de papas',        precio:52000 },
-      { id:28, cat:'🍟 Combos',           emoji:'🔥', nombre:'Combo 2 de la Casa + Papas',      desc:'2 Mordelón de la Casa + 1 porción de papas',          precio:25000 },
+      { id:28, cat:'🍟 Combos',  emoji:'🔥', nombre:'Combo 2 de la Casa + Papas', desc:'2 Mordelón de la Casa + 1 porción de papas', precio:25000 },
+      { id:29, cat:'🫙 Salsas', emoji:'🧄', nombre:'Salsa Besito de Ajo',         desc:'Salsa de ajo de la casa',                    precio:500  },
+      { id:30, cat:'🫙 Salsas', emoji:'🌶️', nombre:'Salsa Picante de la Casa',   desc:'Salsa picante de la casa',                   precio:500  },
+      { id:31, cat:'🫙 Salsas', emoji:'🥛', nombre:'Mayonesa Común',              desc:'Dip de mayonesa',                            precio:500  },
     ];
   }
   if (document.getElementById('panel-menu-admin').classList.contains('active')) renderMenuAdmin();
@@ -792,6 +795,9 @@ const menuItems = [
   { id:26, cat:'🍟 Combos', emoji:'🥩', nombre:'Combo 2 Milanesas Clásicas' },
   { id:27, cat:'🍟 Combos', emoji:'🔥', nombre:'Combo Mordelón x4' },
   { id:28, cat:'🍟 Combos', emoji:'🔥', nombre:'Combo 2 de la Casa + Papas' },
+  { id:29, cat:'🫙 Salsas', emoji:'🧄', nombre:'Salsa Besito de Ajo' },
+  { id:30, cat:'🫙 Salsas', emoji:'🌶️', nombre:'Salsa Picante de la Casa' },
+  { id:31, cat:'🫙 Salsas', emoji:'🥛', nombre:'Mayonesa Común' },
 ];
 
 let stockActual = {};

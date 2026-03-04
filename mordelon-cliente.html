@@ -604,6 +604,9 @@ onSnapshot(doc(db, 'config', 'menu'), (snap) => {
       { id:26, cat:'🍟 Combos', emoji:'🥩', nombre:'Combo 2 Milanesas Clásicas',       desc:'2 sánguches de milanesa clásico',                           precio:25000, esCombo:true },
       { id:27, cat:'🍟 Combos', emoji:'🔥', nombre:'Combo Mordelón x4',                 desc:'4 Mordelón de la Casa + 4 porciones de papas',              precio:52000, esCombo:true },
       { id:28, cat:'🍟 Combos', emoji:'🔥', nombre:'Combo 2 de la Casa + Papas',        desc:'2 Mordelón de la Casa + 1 porción de papas',                precio:25000, esCombo:true },
+      { id:29, cat:'🫙 Salsas', emoji:'🧄', nombre:'Salsa Besito de Ajo',       desc:'Salsa de ajo de la casa',  precio:500 },
+      { id:30, cat:'🫙 Salsas', emoji:'🌶️', nombre:'Salsa Picante de la Casa', desc:'Salsa picante de la casa', precio:500 },
+      { id:31, cat:'🫙 Salsas', emoji:'🥛', nombre:'Mayonesa Común',            desc:'Dip de mayonesa',          precio:500 },
     ];
   }
   menu.forEach(item => { item.agotado = stockActual[item.id] === false; });
