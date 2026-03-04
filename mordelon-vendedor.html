@@ -107,6 +107,9 @@ header {
 .btn-listo:hover { background:var(--verde); color:white; }
 .btn-cobrar { background:linear-gradient(135deg,var(--turquesa-dark),var(--turquesa)); color:var(--negro); border:none; }
 .btn-rechazar { background:rgba(255,77,77,.15); color:var(--rojo); border:1.5px solid var(--rojo); margin-top:6px; }
+.btn-billete { background:var(--gris-mid); border:1.5px solid var(--gris-light); color:var(--blanco); border-radius:10px; padding:8px 12px; font-family:inherit; font-weight:900; font-size:0.8rem; cursor:pointer; transition:all .18s; }
+.btn-billete:hover { border-color:var(--turquesa); color:var(--turquesa); }
+.btn-billete.sel { border-color:var(--turquesa); background:rgba(61,191,184,.15); color:var(--turquesa); }
 .btn-imprimir { background:rgba(61,191,184,.15); color:var(--turquesa); border:1.5px solid var(--turquesa); }
 .btn-cobrar:hover { box-shadow:0 0 14px rgba(61,191,184,.4); }
 
@@ -355,6 +358,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('menu-admin')">✏️ Menú</div>
   <div class="tab" onclick="cambiarTab('horarios')">🕐 Horarios</div>
   <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
+  <div class="tab" onclick="cambiarTab('calculadora')">🧮 Vuelto</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -488,6 +492,60 @@ select.mac-field option { background:#222; }
   <p style="font-size:0.8rem;color:#666;margin-bottom:16px;">Configurá los horarios del local. Se muestran al instante en el menú del cliente.</p>
   <div id="horariosGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
   <button class="btn btn-turquesa" onclick="window.guardarHorarios()" style="margin-top:16px;">💾 Guardar horarios</button>
+</div>
+
+<div id="panel-calculadora" class="panel">
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:20px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:18px;">🧮 CALCULADORA DE VUELTO</div>
+
+    <!-- Total del pedido -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Total del pedido</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:1.2rem;color:#666;">$</span>
+        <input type="number" id="calcTotal" class="campo" placeholder="0" oninput="window.calcVuelto()"
+          style="font-size:1.4rem;font-weight:900;padding:12px;text-align:right;flex:1;" />
+      </div>
+    </div>
+
+    <!-- Con cuánto paga -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">El cliente paga con</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:1.2rem;color:#666;">$</span>
+        <input type="number" id="calcPago" class="campo" placeholder="0" oninput="window.calcVuelto()"
+          style="font-size:1.4rem;font-weight:900;padding:12px;text-align:right;flex:1;" />
+      </div>
+    </div>
+
+    <!-- Botones rápidos de billetes -->
+    <div style="margin-bottom:18px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Billetes rápidos</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-billete" onclick="window.setBillete(1000,this)">$1.000</button>
+        <button class="btn-billete" onclick="window.setBillete(2000,this)">$2.000</button>
+        <button class="btn-billete" onclick="window.setBillete(5000,this)">$5.000</button>
+        <button class="btn-billete" onclick="window.setBillete(10000,this)">$10.000</button>
+        <button class="btn-billete" onclick="window.setBillete(20000,this)">$20.000</button>
+        <button class="btn-billete" onclick="window.setBillete(50000,this)">$50.000</button>
+      </div>
+    </div>
+
+    <!-- Resultado -->
+    <div id="calcResultado" style="display:none;background:var(--gris-mid);border-radius:14px;padding:18px;text-align:center;">
+      <div style="font-size:0.75rem;color:#666;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Vuelto a dar</div>
+      <div id="calcVueltoNum" style="font-family:'Righteous',cursive;font-size:2.8rem;color:var(--verde);"></div>
+    </div>
+
+    <!-- Resultado negativo (falta plata) -->
+    <div id="calcFalta" style="display:none;background:rgba(255,77,77,.1);border:1.5px solid var(--rojo);border-radius:14px;padding:18px;text-align:center;">
+      <div style="font-size:0.75rem;color:var(--rojo);font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Le falta</div>
+      <div id="calcFaltaNum" style="font-family:'Righteous',cursive;font-size:2.8rem;color:var(--rojo);"></div>
+    </div>
+
+    <!-- Limpiar -->
+    <button class="btn btn-ghost" onclick="window.limpiarCalc()" style="width:100%;margin-top:14px;">🗑 Limpiar</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="modalCierre">
@@ -881,7 +939,7 @@ function showNotif(msg, conSonido = false) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config'];
+  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -889,6 +947,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'menu-admin') renderMenuAdmin();
   if (tab === 'horarios') renderHorarios();
   if (tab === 'config') { cargarConfig(); renderUsuarios(); }
+  if (tab === 'calculadora') limpiarCalc();
 };
 
 // ===== HORARIOS =====
@@ -1088,6 +1147,38 @@ onSnapshot(
     });
   }
 );
+
+// ===== CALCULADORA DE VUELTO =====
+window.calcVuelto = function() {
+  const total = parseFloat(document.getElementById('calcTotal').value) || 0;
+  const pago  = parseFloat(document.getElementById('calcPago').value)  || 0;
+  const res   = document.getElementById('calcResultado');
+  const falta = document.getElementById('calcFalta');
+  if (!total || !pago) { res.style.display='none'; falta.style.display='none'; return; }
+  const diff = pago - total;
+  if (diff >= 0) {
+    res.style.display = 'block'; falta.style.display = 'none';
+    document.getElementById('calcVueltoNum').textContent = '$' + fN(diff);
+  } else {
+    res.style.display = 'none'; falta.style.display = 'block';
+    document.getElementById('calcFaltaNum').textContent = '$' + fN(Math.abs(diff));
+  }
+};
+
+window.setBillete = function(monto, el) {
+  document.getElementById('calcPago').value = monto;
+  document.querySelectorAll('.btn-billete').forEach(b => b.classList.remove('sel'));
+  if (el) el.classList.add('sel');
+  window.calcVuelto();
+};
+
+window.limpiarCalc = function() {
+  document.getElementById('calcTotal').value = '';
+  document.getElementById('calcPago').value = '';
+  document.getElementById('calcResultado').style.display = 'none';
+  document.getElementById('calcFalta').style.display = 'none';
+  document.querySelectorAll('.btn-billete').forEach(b => b.classList.remove('sel'));
+};
 
 // ===== MENU ADMIN =====
 let menuAdmin = [];
