@@ -81,6 +81,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 /* CARRITO FLOTANTE */
 .carrito-fab {
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  z-index:97;
   background:linear-gradient(135deg,var(--turquesa-dark),var(--turquesa));
   color:var(--negro); border:none; border-radius:30px;
   padding:14px 28px; font-family:inherit; font-weight:900; font-size:0.95rem;
@@ -190,11 +191,11 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 .seccion-titulo { font-family:'Righteous',cursive; font-size:1.1rem; color:var(--turquesa); letter-spacing:1px; margin-bottom:14px; }
 
 .toast {
-  position:fixed; bottom:90px; left:50%;
-  transform:translateX(-50%) translateY(90px);
+  position:fixed; bottom:140px; left:50%;
+  transform:translateX(-50%) translateY(200px);
   background:var(--gris-dark); border:1.5px solid var(--turquesa); color:var(--turquesa);
   padding:11px 22px; border-radius:30px; font-weight:800; font-size:0.85rem;
-  z-index:999; transition:transform .3s cubic-bezier(.34,1.56,.64,1); white-space:nowrap;
+  z-index:9999; transition:transform .3s cubic-bezier(.34,1.56,.64,1); white-space:nowrap;
 }
 .toast.show { transform:translateX(-50%) translateY(0); }
 
