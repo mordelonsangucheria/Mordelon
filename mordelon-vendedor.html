@@ -682,14 +682,18 @@ function renderMenuAdmin() {
       <div class="prod-card" id="prod-${item.id}">
         <div class="prod-emoji-big">${item.emoji}</div>
         <div class="prod-info">
-          <input class="prod-nombre-input" value="${item.nombre}" 
-            onchange="editarCampo(${item.id},'nombre',this.value)" placeholder="Nombre"/>
-          <input class="prod-desc-input" value="${item.desc || ''}" 
-            onchange="editarCampo(${item.id},'desc',this.value)" placeholder="Descripción"/>
+          <div class="prod-nombre-display" id="nombre-display-${item.id}" onclick="window.editarInline(${item.id})" style="font-weight:800;font-size:0.88rem;cursor:pointer;padding:2px 0;border-bottom:1.5px dashed #444;">${item.nombre} ✏️</div>
+          <div style="font-size:0.7rem;color:#666;margin-top:2px;">${item.desc || ''}</div>
+          <div class="prod-edit-form" id="edit-form-${item.id}" style="display:none;margin-top:6px;">
+            <input class="prod-nombre-input" id="edit-nombre-${item.id}" value="${item.nombre}" placeholder="Nombre" style="margin-bottom:5px;display:block;width:100%;"/>
+            <input class="prod-desc-input" id="edit-desc-${item.id}" value="${item.desc || ''}" placeholder="Descripción" style="display:block;width:100%;color:#aaa;"/>
+            <button onclick="window.guardarEdicion(${item.id})" style="margin-top:6px;padding:5px 12px;background:var(--turquesa);color:#111;border:none;border-radius:8px;font-weight:900;font-size:0.75rem;cursor:pointer;">✅ Guardar</button>
+            <button onclick="window.cancelarEdicion(${item.id})" style="margin-top:6px;margin-left:6px;padding:5px 12px;background:transparent;color:#888;border:1.5px solid #444;border-radius:8px;font-weight:900;font-size:0.75rem;cursor:pointer;">Cancelar</button>
+          </div>
         </div>
         <input class="prod-precio-input" type="number" value="${item.precio}"
-          onchange="editarCampo(${item.id},'precio',parseInt(this.value))" />
-        <button class="btn-del-prod" onclick="eliminarProducto(${item.id})">🗑</button>
+          onchange="window.editarCampo(${item.id},'precio',parseInt(this.value))" />
+        <button class="btn-del-prod" onclick="window.eliminarProducto(${item.id})">🗑</button>
       </div>
     `).join('')}
   `).join('');
@@ -700,6 +704,29 @@ window.editarCampo = function(id, campo, valor) {
   if (item) {
     item[campo] = valor;
     guardarMenu();
+  }
+};
+
+window.editarInline = function(id) {
+  document.getElementById('edit-form-'+id).style.display = 'block';
+  document.getElementById('nombre-display-'+id).style.display = 'none';
+};
+
+window.cancelarEdicion = function(id) {
+  document.getElementById('edit-form-'+id).style.display = 'none';
+  document.getElementById('nombre-display-'+id).style.display = 'block';
+};
+
+window.guardarEdicion = function(id) {
+  const nombre = document.getElementById('edit-nombre-'+id).value.trim();
+  const desc = document.getElementById('edit-desc-'+id).value.trim();
+  if (!nombre) { showNotif('⚠️ El nombre no puede estar vacío'); return; }
+  const item = menuAdmin.find(i => i.id === id);
+  if (item) {
+    item.nombre = nombre;
+    item.desc = desc;
+    guardarMenu();
+    renderMenuAdmin();
   }
 };
 

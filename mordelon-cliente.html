@@ -235,7 +235,11 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <span class="total-label">Total</span>
       <span class="total-num" id="carritoTotal">$0</span>
     </div>
-    <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp (ej: 2271234567)" />
+    <div style="position:relative;">
+      <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp — requerido" oninput="validarWA(this)" style="padding-right:36px;border-color:var(--rojo);"/>
+      <span id="waCheck" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1rem;display:none;">✅</span>
+    </div>
+    <div id="waError" style="font-size:0.72rem;color:var(--rojo);font-weight:800;margin-top:-6px;margin-bottom:6px;display:none;">⚠️ Ingresá tu número para continuar</div>
     <textarea class="campo" id="notaPedido" rows="2" placeholder="📝 Notas: sin cebolla, extra queso..."></textarea>
     <button class="btn btn-turquesa" onclick="irAPago()">💳 Continuar al pago</button>
     <button class="btn btn-ghost" onclick="irAMenu()">← Seguir eligiendo</button>
@@ -408,8 +412,26 @@ window.cambiarQty = function(id, delta) {
 
 window.irAMenu = function() { showScreen('menu'); };
 window.irACarrito = function() { renderCarrito(); showScreen('carrito'); };
+window.validarWA = function(el) {
+  const val = el.value.trim();
+  const valido = val.length >= 8;
+  el.style.borderColor = val.length === 0 ? 'var(--rojo)' : valido ? 'var(--verde)' : 'var(--naranja)';
+  document.getElementById('waCheck').style.display = valido ? 'block' : 'none';
+  document.getElementById('waError').style.display = val.length > 0 && !valido ? 'block' : 'none';
+};
+
 window.irAPago = function() {
   if (!carrito.length) { showToast('⚠️ Tu carrito está vacío'); return; }
+  const wa = document.getElementById('whatsappCliente').value.trim();
+  if (!wa || wa.length < 8) {
+    document.getElementById('whatsappCliente').focus();
+    document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
+    document.getElementById('waError').style.display = 'block';
+    showToast('⚠️ Ingresá tu número de WhatsApp para continuar');
+    return;
+  }
+  document.getElementById('waError').style.display = 'none';
+  document.getElementById('whatsappCliente').style.borderColor = 'var(--verde)';
   metodoPago = null;
   document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('sel'));
   document.getElementById('pagoTransferencia').style.display = 'none';
@@ -497,6 +519,9 @@ window.nuevoPedido = function() {
   metodoPago = null;
   document.getElementById('notaPedido').value = '';
   document.getElementById('whatsappCliente').value = '';
+  document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
+  document.getElementById('waCheck').style.display = 'none';
+  document.getElementById('waError').style.display = 'none';
   actualizarFab();
   showScreen('menu');
 };
@@ -527,11 +552,11 @@ function showToast(msg) {
 function fN(n) { return n.toLocaleString('es-AR'); }
 
 // MODO CLARO/OSCURO
-function toggleTheme() {
+window.toggleTheme = function() {
   const isLight = document.body.classList.toggle('light');
   document.getElementById('themeToggle').textContent = isLight ? '☀️' : '🌙';
   localStorage.setItem('mordelon-theme', isLight ? 'light' : 'dark');
-}
+};
 const savedTheme = localStorage.getItem('mordelon-theme');
 if (savedTheme === 'light') {
   document.body.classList.add('light');
