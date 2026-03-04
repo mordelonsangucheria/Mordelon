@@ -203,6 +203,25 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 .item-card.agotado { opacity:0.5; cursor:default; }
 .item-card.agotado:active { transform:none; border-color:var(--gris-light); }
 
+/* HORARIOS */
+.horarios-banner {
+  background:var(--gris-dark); border:1.5px solid var(--gris-light);
+  border-radius:14px; padding:14px 16px; margin:12px 0;
+}
+.horarios-titulo {
+  font-family:'Righteous',cursive; font-size:0.8rem; color:var(--turquesa);
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;
+}
+.horario-fila {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:5px 0; border-bottom:1px solid var(--gris-mid); font-size:0.8rem;
+}
+.horario-fila:last-child { border-bottom:none; }
+.horario-dia { font-weight:800; color:var(--blanco); }
+.horario-hora { color:#888; }
+.horario-cerrado { color:var(--rojo); font-weight:800; }
+.horario-abierto { color:var(--verde); font-weight:800; }
+
 /* WHATSAPP FLOTANTE */
 .wa-fab {
   position:fixed; bottom:88px; right:16px; z-index:98;
@@ -370,6 +389,10 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
 <!-- PANTALLA: MENÚ -->
 <div class="screen active" id="screen-menu">
+  <div id="horariosBanner" style="display:none;" class="horarios-banner">
+    <div class="horarios-titulo">🕐 Horarios</div>
+    <div id="horariosLista"></div>
+  </div>
   <div id="menuContainer"></div>
   <div style="height:80px;"></div>
 </div>
@@ -497,7 +520,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 <div class="toast" id="toast"></div>
 
 <!-- WHATSAPP FLOTANTE -->
-<a class="wa-fab" href="https://wa.me/5492271415751?text=Hola%20Mordelón%20🔥%20quería%20consultarles%20algo" target="_blank" title="Escribinos por WhatsApp">
+<a class="wa-fab" href="https://wa.me/5492271415751?text=Hola%20Mordelón!%20🔥%20Quería%20hacerles%20un%20pedido!" target="_blank" title="Escribinos por WhatsApp">
   <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
   </svg>
@@ -833,6 +856,23 @@ function actualizarBarraEstado(estado) {
   document.getElementById('linea-1').className = 'paso-linea' + (idx >= 1 ? ' activa' : '');
   document.getElementById('linea-2').className = 'paso-linea' + (idx >= 2 ? ' activa' : '');
 }
+
+// Cargar horarios desde Firebase
+onSnapshot(doc(db,'config','horarios'), (snap) => {
+  const banner = document.getElementById('horariosBanner');
+  const lista = document.getElementById('horariosLista');
+  if (!snap.exists() || !snap.data().dias) { banner.style.display='none'; return; }
+  const dias = snap.data().dias;
+  banner.style.display = 'block';
+  lista.innerHTML = dias.map(h => `
+    <div class="horario-fila">
+      <span class="horario-dia">${h.dia}</span>
+      ${h.abierto
+        ? `<span class="horario-hora">${h.desde} — ${h.hasta} <span class="horario-abierto">✓</span></span>`
+        : `<span class="horario-cerrado">Cerrado</span>`}
+    </div>
+  `).join('');
+});
 
 // Cargar menú desde Firebase en tiempo real
 let stockActual = {};

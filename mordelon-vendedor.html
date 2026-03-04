@@ -158,6 +158,24 @@ header {
 .btn-rojo { background:linear-gradient(135deg,#cc2222,var(--rojo)); color:white; }
 .btn-ghost { background:transparent; border:1.5px solid var(--gris-light); color:#888; }
 
+.horario-row {
+  background:var(--gris-dark); border:1.5px solid var(--gris-light);
+  border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.horario-row.cerrado { border-color:#FF4D4D; opacity:.7; }
+.dia-label { font-weight:900; font-size:0.88rem; min-width:90px; }
+.toggle-abierto { display:flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:700; color:#888; cursor:pointer; }
+.toggle-abierto input { accent-color:var(--turquesa); width:16px; height:16px; cursor:pointer; }
+.horario-inputs { display:flex; align-items:center; gap:8px; flex:1; }
+.time-input {
+  padding:7px 10px; border:1.5px solid var(--gris-light); border-radius:9px;
+  background:var(--gris-mid); color:var(--turquesa); font-family:inherit;
+  font-weight:900; font-size:0.88rem; outline:none; width:90px;
+  transition:border-color .2s;
+}
+.time-input:focus { border-color:var(--turquesa); }
+.time-input:disabled { opacity:.3; cursor:not-allowed; }
+
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
 .modal-overlay.open { display:flex; }
 .modal { background:var(--gris-dark); border:1.5px solid var(--gris-light); border-radius:20px; padding:22px; max-width:380px; width:100%; }
@@ -323,6 +341,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('caja')">💰 Caja</div>
   <div class="tab" onclick="cambiarTab('stock')">📦 Stock</div>
   <div class="tab" onclick="cambiarTab('menu-admin')">✏️ Menú</div>
+  <div class="tab" onclick="cambiarTab('horarios')">🕐 Horarios</div>
   <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
 </div>
 
@@ -426,6 +445,12 @@ select.mac-field option { background:#222; }
     <button class="btn btn-turquesa" onclick="window.guardarNotas()" style="margin-bottom:0;">💾 Guardar notas</button>
   </div>
 
+</div>
+
+<div id="panel-horarios" class="panel">
+  <p style="font-size:0.8rem;color:#666;margin-bottom:16px;">Configurá los horarios del local. Se muestran al instante en el menú del cliente.</p>
+  <div id="horariosGrid" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <button class="btn btn-turquesa" onclick="window.guardarHorarios()" style="margin-top:16px;">💾 Guardar horarios</button>
 </div>
 
 <div class="modal-overlay" id="modalCierre">
