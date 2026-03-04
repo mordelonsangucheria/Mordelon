@@ -648,8 +648,16 @@ onSnapshot(doc(db,'config','menu'), (snap) => {
       { id:16, cat:'🫓 Arepas',        emoji:'🫓', nombre:'Arepa de Bola de Lomo',     desc:'Asada o frita · Bola de lomo desmechada con mozzarella',                precio:9000  },
       { id:17, cat:'🫓 Arepas',        emoji:'🧀', nombre:'Arepa de Jamón y Queso',    desc:'Asada o frita · Jamón y queso',                                         precio:7500  },
       { id:18, cat:'🍟 Extras',        emoji:'🍟', nombre:'Porción de Papas',          desc:'Papas fritas crocantes',                                                precio:4000  },
-      { id:19, cat:'🥤 Bebidas',       emoji:'🥤', nombre:'Coca-Cola',                 desc:'Lata 354ml',                                                            precio:2000  },
-      { id:20, cat:'🥤 Bebidas',       emoji:'🥤', nombre:'Sprite',                    desc:'Lata 354ml',                                                            precio:2000  },
+      { id:19, cat:'🥤 Bebidas',          emoji:'🥤', nombre:'Coca-Cola',                      desc:'Lata 354ml',                                          precio:2000  },
+      { id:20, cat:'🥤 Bebidas',          emoji:'🥤', nombre:'Sprite',                         desc:'Lata 354ml',                                          precio:2000  },
+      { id:21, cat:'🧅 Aros de Cebolla',  emoji:'🧅', nombre:'Aros de Cebolla — Media Docena', desc:'Media docena de aros de cebolla crocantes',           precio:5000  },
+      { id:22, cat:'🧅 Aros de Cebolla',  emoji:'🧅', nombre:'Aros de Cebolla — Docena',       desc:'Docena de aros de cebolla crocantes',                 precio:9000  },
+      { id:23, cat:'🧀 Tequeños',         emoji:'🧀', nombre:'Tequeños — Media Docena',         desc:'Media docena de tequeños de queso',                   precio:9500  },
+      { id:24, cat:'🧀 Tequeños',         emoji:'🧀', nombre:'Tequeños — Docena',               desc:'Docena de tequeños de queso',                         precio:18000 },
+      { id:25, cat:'🥪 Sánguches',        emoji:'🥩', nombre:'Sánguche de Milanesa Clásico',    desc:'Lechuga, tomate, jamón y queso · Ciabatta',           precio:15000 },
+      { id:26, cat:'🍟 Combos',           emoji:'🥩', nombre:'Combo 2 Milanesas Clásicas',      desc:'2 sánguches de milanesa clásico',                     precio:25000 },
+      { id:27, cat:'🍟 Combos',           emoji:'🔥', nombre:'Combo Mordelón x4',               desc:'4 Mordelón de la Casa + 4 porciones de papas',        precio:52000 },
+      { id:28, cat:'🍟 Combos',           emoji:'🔥', nombre:'Combo 2 de la Casa + Papas',      desc:'2 Mordelón de la Casa + 1 porción de papas',          precio:25000 },
     ];
   }
   if (document.getElementById('panel-menu-admin').classList.contains('active')) renderMenuAdmin();
