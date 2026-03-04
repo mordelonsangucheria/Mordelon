@@ -192,6 +192,58 @@ header {
 .toggle-switch input:checked + .toggle-slider { background:rgba(45,198,83,.2); border-color:var(--verde); }
 .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); background:var(--verde); }
 
+.mac-field {
+  width:100%; padding:10px 12px;
+  border:1.5px solid var(--gris-light); border-radius:10px;
+  background:var(--gris-mid); color:var(--blanco);
+  font-family:inherit; font-size:0.85rem; font-weight:700; outline:none;
+  transition:border-color .2s;
+}
+.mac-field:focus { border-color:var(--turquesa); }
+.mac-field::placeholder { color:#555; }
+select.mac-field option { background:#222; }
+
+.prod-card {
+  background:var(--gris-dark); border:1.5px solid var(--gris-light);
+  border-radius:14px; padding:14px; margin-bottom:10px;
+  display:flex; align-items:center; gap:12px;
+}
+.prod-emoji-big { font-size:1.8rem; min-width:36px; text-align:center; }
+.prod-info { flex:1; }
+.prod-nombre-input {
+  background:transparent; border:none; border-bottom:1.5px solid var(--gris-light);
+  color:var(--blanco); font-family:inherit; font-weight:800; font-size:0.88rem;
+  width:100%; outline:none; padding:2px 0; margin-bottom:4px;
+  transition:border-color .2s;
+}
+.prod-nombre-input:focus { border-bottom-color:var(--turquesa); }
+.prod-desc-input {
+  background:transparent; border:none; border-bottom:1.5px solid transparent;
+  color:#777; font-family:inherit; font-size:0.72rem; width:100%; outline:none;
+  padding:2px 0; transition:border-color .2s;
+}
+.prod-desc-input:focus { border-bottom-color:var(--gris-light); color:#aaa; }
+.prod-precio-input {
+  width:90px; padding:6px 10px;
+  border:1.5px solid var(--gris-light); border-radius:8px;
+  background:var(--gris-mid); color:var(--turquesa);
+  font-family:inherit; font-weight:900; font-size:0.9rem; outline:none;
+  text-align:right; transition:border-color .2s; margin-right:8px;
+}
+.prod-precio-input:focus { border-color:var(--turquesa); }
+.btn-del-prod {
+  background:#2a1515; color:var(--rojo); border:1.5px solid #3a1515;
+  border-radius:8px; width:30px; height:30px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.9rem; flex-shrink:0; transition:all .2s;
+}
+.btn-del-prod:hover { background:var(--rojo); color:white; }
+.cat-sep {
+  font-family:'Righteous',cursive; font-size:0.85rem; color:var(--turquesa);
+  letter-spacing:3px; margin:16px 0 8px; display:flex; align-items:center; gap:8px;
+}
+.cat-sep::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--turquesa),transparent); opacity:.25; }
+
 /* PIN LOCK */
 .pin-overlay {
   position:fixed; inset:0; background:#111;
@@ -270,6 +322,7 @@ header {
   <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
   <div class="tab" onclick="cambiarTab('caja')">💰 Caja</div>
   <div class="tab" onclick="cambiarTab('stock')">📦 Stock</div>
+  <div class="tab" onclick="cambiarTab('menu-admin')">✏️ Menú</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -307,6 +360,35 @@ header {
 <div id="panel-stock" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Activá o desactivá productos. Los cambios se reflejan al instante en el menú del cliente.</p>
   <div id="stockGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
+</div>
+
+<div id="panel-menu-admin" class="panel">
+  <p style="font-size:0.8rem;color:#666;margin-bottom:16px;">Editá precios y agregá productos nuevos. Los cambios se aplican al instante en el menú del cliente.</p>
+
+  <!-- AGREGAR PRODUCTO -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;margin-bottom:20px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO PRODUCTO</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <input class="mac-field" id="new-emoji" placeholder="Emoji 🍔" maxlength="4"/>
+      <input class="mac-field" id="new-nombre" placeholder="Nombre del producto"/>
+    </div>
+    <input class="mac-field" id="new-desc" placeholder="Descripción (ingredientes, etc.)" style="margin-bottom:10px;"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <input class="mac-field" id="new-precio" type="number" placeholder="Precio ($)"/>
+      <select class="mac-field" id="new-cat">
+        <option value="🥪 Sánguches">🥪 Sánguches</option>
+        <option value="🍔 Smash Burgers">🍔 Smash Burgers</option>
+        <option value="🫓 Arepas">🫓 Arepas</option>
+        <option value="🍟 Extras">🍟 Extras</option>
+        <option value="🥤 Bebidas">🥤 Bebidas</option>
+        <option value="🍟 Combos">🍟 Combos</option>
+      </select>
+    </div>
+    <button class="btn btn-turquesa" onclick="agregarProducto()" style="margin-bottom:0;">➕ Agregar al menú</button>
+  </div>
+
+  <!-- LISTA DE PRODUCTOS -->
+  <div id="menuAdminLista"></div>
 </div>
 
 <div class="modal-overlay" id="modalCierre">
@@ -530,11 +612,119 @@ function showNotif(msg) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock'];
+  const names=['pedidos','historial','caja','stock','menu-admin'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if (tab === 'stock') renderStock();
+  if (tab === 'menu-admin') renderMenuAdmin();
+};
+
+// ===== MENU ADMIN =====
+let menuAdmin = [];
+
+// Escuchar menú en tiempo real desde Firebase
+onSnapshot(doc(db,'config','menu'), (snap) => {
+  if (snap.exists() && snap.data().items) {
+    menuAdmin = snap.data().items;
+  } else {
+    // Primera vez: cargar menú base
+    menuAdmin = [
+      { id:1,  cat:'🥪 Sánguches',     emoji:'🔥', nombre:'Mordelón de la Casa',       desc:'Bola de lomo desmechada, mozzarella, cebolla caramelizada · Ciabatta', precio:14000 },
+      { id:2,  cat:'🥪 Sánguches',     emoji:'🧅', nombre:'Mordelón de los Aros',      desc:'Bola de lomo desmechada, cheddar, aros de cebolla · Ciabatta',         precio:15000 },
+      { id:3,  cat:'🥪 Sánguches',     emoji:'🐷', nombre:'Cochino pero Fino',         desc:'Bondiola braseada, cheddar, pepinos agridulces · Ciabatta',             precio:14000 },
+      { id:4,  cat:'🥪 Sánguches',     emoji:'🥔', nombre:'Sinvergüenza',              desc:'Papas doradas, carne desmechada, mozzarella · Ciabatta',                precio:14000 },
+      { id:5,  cat:'🥪 Sánguches',     emoji:'🌶️', nombre:'TexMex',                   desc:'Carne picada, guacamole, cheddar, jalapeños · Ciabatta',                precio:14000 },
+      { id:6,  cat:'🍟 Combos',        emoji:'🍟', nombre:'Combo Casa + Papas',        desc:'Mordelón de la Casa + porción de papas',                               precio:16000 },
+      { id:7,  cat:'🍟 Combos',        emoji:'🍟', nombre:'Combo Aros + Papas',        desc:'Mordelón de los Aros + porción de papas',                              precio:17000 },
+      { id:8,  cat:'🍟 Combos',        emoji:'🍟', nombre:'Combo Cochino + Papas',     desc:'Cochino pero Fino + porción de papas',                                 precio:16000 },
+      { id:9,  cat:'🍟 Combos',        emoji:'🍟', nombre:'Combo Sinvergüenza + Papas',desc:'Sinvergüenza + porción de papas',                                      precio:16000 },
+      { id:10, cat:'🍟 Combos',        emoji:'🍟', nombre:'Combo TexMex + Papas',      desc:'TexMex + porción de papas',                                            precio:16000 },
+      { id:11, cat:'🍔 Smash Burgers', emoji:'🍔', nombre:'Smash Cheeseburger',        desc:'Clásica smash cheeseburger estilo americano',                           precio:11000 },
+      { id:12, cat:'🍔 Smash Burgers', emoji:'🔥', nombre:'Smash de la Casa',          desc:'Medallón smash, mozzarella, cebolla caramelizada',                      precio:12000 },
+      { id:13, cat:'🍔 Smash Burgers', emoji:'🌶️', nombre:'Smash TexMex',             desc:'Medallón smash, cheddar, guacamole, jalapeños',                         precio:12500 },
+      { id:14, cat:'🍔 Smash Burgers', emoji:'🧅', nombre:'Smash Onion Burger',        desc:'Medallón smash, cheddar, aros de cebolla',                              precio:12500 },
+      { id:15, cat:'🍔 Smash Burgers', emoji:'➕', nombre:'Medallón Extra',           desc:'Medallón adicional para cualquier burger',                              precio:2000  },
+      { id:16, cat:'🫓 Arepas',        emoji:'🫓', nombre:'Arepa de Bola de Lomo',     desc:'Asada o frita · Bola de lomo desmechada con mozzarella',                precio:9000  },
+      { id:17, cat:'🫓 Arepas',        emoji:'🧀', nombre:'Arepa de Jamón y Queso',    desc:'Asada o frita · Jamón y queso',                                         precio:7500  },
+      { id:18, cat:'🍟 Extras',        emoji:'🍟', nombre:'Porción de Papas',          desc:'Papas fritas crocantes',                                                precio:4000  },
+      { id:19, cat:'🥤 Bebidas',       emoji:'🥤', nombre:'Coca-Cola',                 desc:'Lata 354ml',                                                            precio:2000  },
+      { id:20, cat:'🥤 Bebidas',       emoji:'🥤', nombre:'Sprite',                    desc:'Lata 354ml',                                                            precio:2000  },
+    ];
+  }
+  if (document.getElementById('panel-menu-admin').classList.contains('active')) renderMenuAdmin();
+  // Sync stock list with current menu
+  syncMenuItems();
+});
+
+function syncMenuItems() {
+  // Keep menuItems in sync for stock panel
+  menuItems.length = 0;
+  menuAdmin.forEach(i => menuItems.push({ id:i.id, cat:i.cat, emoji:i.emoji, nombre:i.nombre }));
+}
+
+async function guardarMenu() {
+  try {
+    await setDoc(doc(db,'config','menu'), { items: menuAdmin });
+    showNotif('💾 Menú guardado');
+  } catch(e) {
+    showNotif('❌ Error al guardar');
+    console.error(e);
+  }
+}
+
+function renderMenuAdmin() {
+  const lista = document.getElementById('menuAdminLista');
+  const cats = [...new Set(menuAdmin.map(i => i.cat))];
+  lista.innerHTML = cats.map(cat => `
+    <div class="cat-sep">${cat}</div>
+    ${menuAdmin.filter(i => i.cat === cat).map(item => `
+      <div class="prod-card" id="prod-${item.id}">
+        <div class="prod-emoji-big">${item.emoji}</div>
+        <div class="prod-info">
+          <input class="prod-nombre-input" value="${item.nombre}" 
+            onchange="editarCampo(${item.id},'nombre',this.value)" placeholder="Nombre"/>
+          <input class="prod-desc-input" value="${item.desc || ''}" 
+            onchange="editarCampo(${item.id},'desc',this.value)" placeholder="Descripción"/>
+        </div>
+        <input class="prod-precio-input" type="number" value="${item.precio}"
+          onchange="editarCampo(${item.id},'precio',parseInt(this.value))" />
+        <button class="btn-del-prod" onclick="eliminarProducto(${item.id})">🗑</button>
+      </div>
+    `).join('')}
+  `).join('');
+}
+
+window.editarCampo = function(id, campo, valor) {
+  const item = menuAdmin.find(i => i.id === id);
+  if (item) {
+    item[campo] = valor;
+    guardarMenu();
+  }
+};
+
+window.eliminarProducto = function(id) {
+  if (!confirm('¿Eliminar este producto del menú?')) return;
+  menuAdmin = menuAdmin.filter(i => i.id !== id);
+  guardarMenu();
+  renderMenuAdmin();
+};
+
+window.agregarProducto = function() {
+  const emoji  = document.getElementById('new-emoji').value.trim() || '🍽️';
+  const nombre = document.getElementById('new-nombre').value.trim();
+  const desc   = document.getElementById('new-desc').value.trim();
+  const precio = parseInt(document.getElementById('new-precio').value) || 0;
+  const cat    = document.getElementById('new-cat').value;
+  if (!nombre) { showNotif('⚠️ Poné un nombre al producto'); return; }
+  if (!precio) { showNotif('⚠️ Poné un precio'); return; }
+  const maxId = menuAdmin.reduce((m,i) => Math.max(m, i.id), 0);
+  menuAdmin.push({ id: maxId + 1, cat, emoji, nombre, desc, precio });
+  guardarMenu();
+  renderMenuAdmin();
+  // Clear fields
+  ['new-emoji','new-nombre','new-desc','new-precio'].forEach(id => document.getElementById(id).value = '');
+  showNotif('✅ Producto agregado');
 };
 
 // ===== STOCK =====
