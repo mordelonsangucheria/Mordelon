@@ -339,7 +339,10 @@ select.mac-field option { background:#222; }
   </div>
   <div style="text-align:right;">
     <div id="reloj" style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);"></div>
-    <div id="usuarioActualLabel" style="font-size:0.65rem;color:#888;font-weight:800;text-align:right;"></div>
+    <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">
+    <div id="usuarioActualLabel" style="font-size:0.65rem;color:#888;font-weight:800;"></div>
+    <button onclick="window.cerrarSesion()" style="background:transparent;border:1px solid #444;border-radius:6px;color:#666;font-size:0.6rem;font-weight:800;padding:2px 7px;cursor:pointer;font-family:inherit;">SALIR</button>
+  </div>
     <div id="contadorVivo" style="font-size:0.68rem;color:#666;"></div>
   </div>
 </header>
@@ -432,6 +435,16 @@ select.mac-field option { background:#222; }
       <input id="nuevoPin" class="campo" placeholder="PIN (4 dígitos)" maxlength="4" type="tel" style="flex:1;min-width:100px;padding:10px;" />
     </div>
     <button class="btn btn-turquesa" onclick="window.agregarUsuario()" style="margin-top:10px;width:100%;">➕ Agregar usuario</button>
+
+    <!-- CAMBIAR PIN PROPIO -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:14px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:10px;">🔑 CAMBIAR MI PIN</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="pinActual" class="campo" placeholder="PIN actual" maxlength="4" type="tel" style="flex:1;min-width:80px;padding:10px;" />
+        <input id="pinNuevo" class="campo" placeholder="PIN nuevo (4 dígitos)" maxlength="4" type="tel" style="flex:1;min-width:80px;padding:10px;" />
+      </div>
+      <button class="btn btn-turquesa" onclick="window.cambiarPin()" style="margin-top:10px;width:100%;">💾 Cambiar PIN</button>
+    </div>
     <div style="margin-top:14px;">
       <div style="font-family:'Righteous',cursive;font-size:0.75rem;color:#666;letter-spacing:1px;margin-bottom:8px;">📋 ACTIVIDAD RECIENTE</div>
       <div id="actividadLista" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
@@ -1003,6 +1016,28 @@ function renderUsuarios() {
   });
 }
 
+window.cambiarPin = async function() {
+  const pinActual = document.getElementById('pinActual').value.trim();
+  const pinNuevo = document.getElementById('pinNuevo').value.trim();
+  if (!pinActual || !pinNuevo) { showNotif('⚠️ Completá ambos campos'); return; }
+  if (pinNuevo.length !== 4 || pinNuevo.split('').some(c => c < '0' || c > '9')) {
+    showNotif('⚠️ El PIN nuevo debe tener 4 dígitos'); return;
+  }
+  const user = usuariosData.find(u => u.nombre === usuarioActual);
+  if (!user) { showNotif('⚠️ Usuario no encontrado'); return; }
+  if (user.pin !== pinActual) { showNotif('❌ PIN actual incorrecto'); return; }
+  if (usuariosData.find(u => u.pin === pinNuevo && u.nombre !== usuarioActual)) {
+    showNotif('⚠️ Ese PIN ya lo usa otro usuario'); return;
+  }
+  user.pin = pinNuevo;
+  await guardarUsuarios();
+  renderUsuarios();
+  document.getElementById('pinActual').value = '';
+  document.getElementById('pinNuevo').value = '';
+  registrarActividad('🔑 Cambió su PIN');
+  showNotif('✅ PIN actualizado');
+};
+
 window.agregarUsuario = async function() {
   const nombre = document.getElementById('nuevoNombre').value.trim();
   const pin = document.getElementById('nuevoPin').value.trim();
@@ -1318,6 +1353,23 @@ function updateReloj() {
   if (el && usuarioActual) el.textContent = '👤 ' + usuarioActual;
 }
 updateReloj(); setInterval(updateReloj,1000);
+
+// CERRAR SESIÓN
+window.cerrarSesion = function() {
+  if (!confirm('¿Cerrar sesión de ' + (usuarioActual || 'usuario') + '?')) return;
+  registrarActividad('🚪 Cerró sesión');
+  sessionStorage.removeItem('mordelon-usuario');
+  usuarioActual = null;
+  pinIngresado = '';
+  document.getElementById('pinOverlay').classList.remove('hidden');
+  // Reset dots
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('dot' + i);
+    if (d) { d.classList.remove('filled','error'); }
+  }
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('usuarioActualLabel').textContent = '';
+};
 
 // Registrar actividad
 async function registrarActividad(accion) {
