@@ -111,6 +111,11 @@ header {
 .btn-billete:hover { border-color:var(--turquesa); color:var(--turquesa); }
 .btn-billete.sel { border-color:var(--turquesa); background:rgba(61,191,184,.15); color:var(--turquesa); }
 .btn-imprimir { background:rgba(61,191,184,.15); color:var(--turquesa); border:1.5px solid var(--turquesa); }
+.timer-row { background:var(--gris-mid); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:10px; }
+.timer-nombre { font-weight:900; font-size:0.85rem; flex:1; }
+.timer-display { font-family:'Righteous',cursive; font-size:1.1rem; color:var(--turquesa); min-width:60px; text-align:center; }
+.timer-display.urgente { color:var(--rojo); animation: parpadeo .6s infinite alternate; }
+@keyframes parpadeo { from { opacity:1; } to { opacity:.3; } }
 .btn-cobrar:hover { box-shadow:0 0 14px rgba(61,191,184,.4); }
 
 /* STATS */
@@ -359,6 +364,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('horarios')">🕐 Horarios</div>
   <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
   <div class="tab" onclick="cambiarTab('calculadora')">🧮 Vuelto</div>
+  <div class="tab" onclick="cambiarTab('cronometro')">⏱️ Timer</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -545,6 +551,37 @@ select.mac-field option { background:#222; }
 
     <!-- Limpiar -->
     <button class="btn btn-ghost" onclick="window.limpiarCalc()" style="width:100%;margin-top:14px;">🗑 Limpiar</button>
+  </div>
+</div>
+
+<div id="panel-cronometro" class="panel">
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- CRONÓMETRO PRINCIPAL -->
+    <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:20px;text-align:center;">
+      <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:16px;">⏱️ CRONÓMETRO</div>
+      <div id="cronoDisplay" style="font-family:'Righteous',cursive;font-size:3.5rem;color:var(--blanco);letter-spacing:4px;margin-bottom:20px;">00:00</div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button id="cronoBtnIniciar" class="btn btn-turquesa" onclick="window.cronoIniciar()" style="flex:1;min-width:100px;">▶ Iniciar</button>
+        <button class="btn btn-ghost" onclick="window.cronoPausar()" style="flex:1;min-width:80px;">⏸ Pausa</button>
+        <button class="btn btn-rojo" onclick="window.cronoReset()" style="flex:1;min-width:80px;">↺ Reset</button>
+      </div>
+      <!-- Marcar vuelta -->
+      <button class="btn" onclick="window.cronoVuelta()" style="width:100%;margin-top:10px;background:rgba(212,131,26,.15);color:var(--naranja);border:1.5px solid var(--naranja);">🏁 Marcar tiempo</button>
+      <div id="cronoVueltas" style="margin-top:12px;display:flex;flex-direction:column;gap:6px;max-height:120px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- TIMERS RÁPIDOS -->
+    <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:20px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">🔥 TIMERS RÁPIDOS</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="timersContainer"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <input id="timerNombre" class="campo" placeholder="Nombre (ej: Papas)" style="flex:2;padding:10px;" />
+        <input id="timerMinutos" class="campo" type="number" placeholder="Min" style="flex:1;padding:10px;" min="1" max="99" />
+        <button class="btn btn-turquesa" onclick="window.agregarTimer()" style="flex:1;padding:10px;">➕</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -939,7 +976,7 @@ function showNotif(msg, conSonido = false) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora'];
+  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -948,6 +985,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'horarios') renderHorarios();
   if (tab === 'config') { cargarConfig(); renderUsuarios(); }
   if (tab === 'calculadora') limpiarCalc();
+  if (tab === 'cronometro') renderTimers();
 };
 
 // ===== HORARIOS =====
@@ -1147,6 +1185,143 @@ onSnapshot(
     });
   }
 );
+
+// ===== CRONÓMETRO =====
+let cronoInterval = null;
+let cronoSegundos = 0;
+let cronoActivo = false;
+let vueltas = [];
+
+function cronoFormatear(seg) {
+  const m = Math.floor(seg / 60).toString().padStart(2,'0');
+  const s = (seg % 60).toString().padStart(2,'0');
+  return m + ':' + s;
+}
+
+window.cronoIniciar = function() {
+  if (cronoActivo) return;
+  cronoActivo = true;
+  cronoInterval = setInterval(() => {
+    cronoSegundos++;
+    document.getElementById('cronoDisplay').textContent = cronoFormatear(cronoSegundos);
+  }, 1000);
+  document.getElementById('cronoBtnIniciar').textContent = '▶ Corriendo';
+  document.getElementById('cronoBtnIniciar').disabled = true;
+};
+
+window.cronoPausar = function() {
+  if (!cronoActivo) return;
+  clearInterval(cronoInterval);
+  cronoActivo = false;
+  document.getElementById('cronoBtnIniciar').textContent = '▶ Continuar';
+  document.getElementById('cronoBtnIniciar').disabled = false;
+};
+
+window.cronoReset = function() {
+  clearInterval(cronoInterval);
+  cronoActivo = false;
+  cronoSegundos = 0;
+  vueltas = [];
+  document.getElementById('cronoDisplay').textContent = '00:00';
+  document.getElementById('cronoBtnIniciar').textContent = '▶ Iniciar';
+  document.getElementById('cronoBtnIniciar').disabled = false;
+  document.getElementById('cronoVueltas').innerHTML = '';
+};
+
+window.cronoVuelta = function() {
+  if (!cronoActivo && cronoSegundos === 0) return;
+  const num = vueltas.length + 1;
+  vueltas.push(cronoSegundos);
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;justify-content:space-between;font-size:0.78rem;padding:5px 8px;background:var(--gris-dark);border-radius:8px;';
+  div.innerHTML = '<span style="color:#666;">🏁 Marca ' + num + '</span><span style="font-family:Righteous,cursive;color:var(--naranja);">' + cronoFormatear(cronoSegundos) + '</span>';
+  document.getElementById('cronoVueltas').prepend(div);
+};
+
+// ===== TIMERS RÁPIDOS =====
+let timers = [];
+
+window.agregarTimer = function() {
+  const nombre = document.getElementById('timerNombre').value.trim() || 'Timer';
+  const minutos = parseInt(document.getElementById('timerMinutos').value) || 5;
+  const segundosTotales = minutos * 60;
+  const id = Date.now();
+  const timer = { id, nombre, total: segundosTotales, restante: segundosTotales, activo: false, interval: null };
+  timers.push(timer);
+  document.getElementById('timerNombre').value = '';
+  document.getElementById('timerMinutos').value = '';
+  renderTimers();
+};
+
+function renderTimers() {
+  const cont = document.getElementById('timersContainer');
+  if (!cont) return;
+  cont.innerHTML = '';
+  if (!timers.length) {
+    cont.innerHTML = '<div style="font-size:0.8rem;color:#555;text-align:center;padding:10px;">Agregá un timer arriba ⬆️</div>';
+    return;
+  }
+  timers.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'timer-row';
+    row.id = 'timer-' + t.id;
+    const pct = t.restante / t.total;
+    const color = pct > 0.3 ? 'var(--turquesa)' : 'var(--rojo)';
+    row.innerHTML =
+      '<div class="timer-nombre">' + t.nombre + '</div>' +
+      '<div class="timer-display ' + (pct <= 0.15 ? 'urgente' : '') + '" id="disp-' + t.id + '">' + cronoFormatear(t.restante) + '</div>';
+
+    const btnPlay = document.createElement('button');
+    btnPlay.textContent = t.activo ? '⏸' : '▶';
+    btnPlay.style.cssText = 'background:transparent;border:1.5px solid ' + color + ';color:' + color + ';border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:1rem;';
+    btnPlay.addEventListener('click', () => toggleTimer(t.id));
+
+    const btnDel = document.createElement('button');
+    btnDel.textContent = '🗑';
+    btnDel.style.cssText = 'background:transparent;border:none;color:#555;cursor:pointer;font-size:1rem;';
+    btnDel.addEventListener('click', () => eliminarTimer(t.id));
+
+    row.appendChild(btnPlay);
+    row.appendChild(btnDel);
+    cont.appendChild(row);
+  });
+}
+
+function toggleTimer(id) {
+  const t = timers.find(x => x.id === id);
+  if (!t) return;
+  if (t.activo) {
+    clearInterval(t.interval);
+    t.activo = false;
+  } else {
+    if (t.restante <= 0) return;
+    t.activo = true;
+    t.interval = setInterval(() => {
+      t.restante--;
+      const disp = document.getElementById('disp-' + t.id);
+      if (disp) {
+        disp.textContent = cronoFormatear(t.restante);
+        if (t.restante / t.total <= 0.15) disp.classList.add('urgente');
+      }
+      if (t.restante <= 0) {
+        clearInterval(t.interval);
+        t.activo = false;
+        try { navigator.vibrate && navigator.vibrate([300,100,300,100,600]); } catch(e) {}
+        playBeep();
+        showNotif('⏰ ¡Timer ' + t.nombre + ' terminó!', true);
+        renderTimers();
+      }
+    }, 1000);
+  }
+  renderTimers();
+}
+
+function eliminarTimer(id) {
+  const t = timers.find(x => x.id === id);
+  if (t && t.interval) clearInterval(t.interval);
+  timers = timers.filter(x => x.id !== id);
+  renderTimers();
+}
 
 // ===== CALCULADORA DE VUELTO =====
 window.calcVuelto = function() {
