@@ -187,6 +187,8 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-thumb { background:var(--turquesa); border-radius:10px; }
+.item-card.agotado { opacity:0.5; cursor:default; }
+.item-card.agotado:active { transform:none; border-color:var(--gris-light); }
 </style>
 </head>
 <body>
@@ -346,13 +348,14 @@ function renderMenu() {
     <div class="cat-label">${cat}</div>
     <div class="items-grid">
       ${menu.filter(i => i.cat === cat).map(item => `
-        <div class="item-card" onclick="window.agregarItem(${item.id})">
+        <div class="item-card ${item.agotado ? 'agotado' : ''}" onclick="${item.agotado ? '' : 'window.agregarItem('+item.id+')'}">
           ${item.esCombo ? '<span class="combo-tag">COMBO</span>' : ''}
+          ${item.agotado ? '<span class="combo-tag" style="background:#FF4D4D;">AGOTADO</span>' : ''}
           <span class="item-emoji">${item.emoji}</span>
           <div class="item-nombre">${item.nombre}</div>
           <div class="item-desc">${item.desc}</div>
-          <div class="item-precio">$${fN(item.precio)}</div>
-          <div class="add-pill">+</div>
+          <div class="item-precio" style="${item.agotado ? 'color:#555;text-decoration:line-through;' : ''}">$${fN(item.precio)}</div>
+          ${item.agotado ? '' : '<div class="add-pill">+</div>'}
         </div>`).join('')}
     </div>`).join('');
 }
@@ -521,6 +524,18 @@ function showToast(msg) {
 function fN(n) { return n.toLocaleString('es-AR'); }
 
 renderMenu();
+
+// Escuchar cambios de stock en tiempo real
+import { getFirestore as _getFS, doc as _doc, onSnapshot as _onSnap } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+const _db2 = _getFS(app);
+_onSnap(_doc(_db2, 'config', 'stock'), (snap) => {
+  if (!snap.exists()) return;
+  const stock = snap.data();
+  menu.forEach(item => {
+    item.agotado = stock[item.id] === false;
+  });
+  renderMenu();
+});
 </script>
 </body>
 </html>

@@ -166,6 +166,32 @@ header {
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-thumb { background:var(--turquesa); border-radius:10px; }
 
+.stock-card {
+  background:var(--gris-dark); border:1.5px solid var(--gris-light);
+  border-radius:14px; padding:14px; display:flex; align-items:center; gap:12px;
+  transition: border-color .2s;
+}
+.stock-card.agotado { border-color:#FF4D4D; opacity:.7; }
+.stock-emoji { font-size:1.6rem; }
+.stock-info { flex:1; }
+.stock-nombre { font-weight:800; font-size:0.82rem; line-height:1.2; }
+.stock-cat { font-size:0.65rem; color:#666; margin-top:2px; }
+
+.toggle-switch {
+  position:relative; width:44px; height:24px; flex-shrink:0;
+}
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider {
+  position:absolute; inset:0; background:#2a2a2a; border-radius:30px;
+  cursor:pointer; transition:.3s; border:1.5px solid #444;
+}
+.toggle-slider::before {
+  content:''; position:absolute; width:16px; height:16px;
+  left:3px; bottom:3px; background:#666; border-radius:50%; transition:.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background:rgba(45,198,83,.2); border-color:var(--verde); }
+.toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); background:var(--verde); }
+
 /* PIN LOCK */
 .pin-overlay {
   position:fixed; inset:0; background:#111;
@@ -243,6 +269,7 @@ header {
   <div class="tab active" onclick="cambiarTab('pedidos')">🔴 En Vivo</div>
   <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
   <div class="tab" onclick="cambiarTab('caja')">💰 Caja</div>
+  <div class="tab" onclick="cambiarTab('stock')">📦 Stock</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -275,6 +302,11 @@ header {
     <p style="font-size:.78rem;color:#555;margin-bottom:12px;">Marca todos los pedidos cobrados como archivados.</p>
     <button class="btn btn-rojo" onclick="document.getElementById('modalCierre').classList.add('open')">🔒 Cerrar Caja del Día</button>
   </div>
+</div>
+
+<div id="panel-stock" class="panel">
+  <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Activá o desactivá productos. Los cambios se reflejan al instante en el menú del cliente.</p>
+  <div id="stockGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
 </div>
 
 <div class="modal-overlay" id="modalCierre">
@@ -339,7 +371,7 @@ function verificarPin() {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDom7vxzcnnkc5_y3JquIr6TjMp5GX89_0",
@@ -498,12 +530,73 @@ function showNotif(msg) {
 }
 
 window.cambiarTab = function(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    const names=['pedidos','historial','caja'];
-    t.classList.toggle('active', names[i]===tab);
-  });
+  const names=['pedidos','historial','caja','stock'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
+  if (tab === 'stock') renderStock();
+};
+
+// ===== STOCK =====
+const menuItems = [
+  { id:1,  cat:'🥪 Sánguches',     emoji:'🔥', nombre:'Mordelón de la Casa' },
+  { id:2,  cat:'🥪 Sánguches',     emoji:'🧅', nombre:'Mordelón de los Aros' },
+  { id:3,  cat:'🥪 Sánguches',     emoji:'🐷', nombre:'Cochino pero Fino' },
+  { id:4,  cat:'🥪 Sánguches',     emoji:'🥔', nombre:'Sinvergüenza' },
+  { id:5,  cat:'🥪 Sánguches',     emoji:'🌶️', nombre:'TexMex' },
+  { id:6,  cat:'🥪 Combos',        emoji:'🍟', nombre:'Combo Casa + Papas' },
+  { id:7,  cat:'🥪 Combos',        emoji:'🍟', nombre:'Combo Aros + Papas' },
+  { id:8,  cat:'🥪 Combos',        emoji:'🍟', nombre:'Combo Cochino + Papas' },
+  { id:9,  cat:'🥪 Combos',        emoji:'🍟', nombre:'Combo Sinvergüenza + Papas' },
+  { id:10, cat:'🥪 Combos',        emoji:'🍟', nombre:'Combo TexMex + Papas' },
+  { id:11, cat:'🍔 Smash Burgers', emoji:'🍔', nombre:'Smash Cheeseburger' },
+  { id:12, cat:'🍔 Smash Burgers', emoji:'🔥', nombre:'Smash de la Casa' },
+  { id:13, cat:'🍔 Smash Burgers', emoji:'🌶️', nombre:'Smash TexMex' },
+  { id:14, cat:'🍔 Smash Burgers', emoji:'🧅', nombre:'Smash Onion Burger' },
+  { id:15, cat:'🍔 Smash Burgers', emoji:'➕', nombre:'Medallón Extra' },
+  { id:16, cat:'🫓 Arepas',        emoji:'🫓', nombre:'Arepa de Bola de Lomo' },
+  { id:17, cat:'🫓 Arepas',        emoji:'🧀', nombre:'Arepa de Jamón y Queso' },
+  { id:18, cat:'🍟 Extras',        emoji:'🍟', nombre:'Porción de Papas' },
+  { id:19, cat:'🥤 Bebidas',       emoji:'🥤', nombre:'Coca-Cola' },
+];
+
+let stockActual = {};
+
+// Escuchar stock en tiempo real
+onSnapshot(doc(db,'config','stock'), (snap) => {
+  stockActual = snap.exists() ? snap.data() : {};
+  if (document.getElementById('panel-stock').classList.contains('active')) renderStock();
+});
+
+function renderStock() {
+  const grid = document.getElementById('stockGrid');
+  grid.innerHTML = menuItems.map(item => {
+    const disponible = stockActual[item.id] !== false;
+    return `
+    <div class="stock-card ${disponible ? '' : 'agotado'}" id="sc-${item.id}">
+      <span class="stock-emoji">${item.emoji}</span>
+      <div class="stock-info">
+        <div class="stock-nombre">${item.nombre}</div>
+        <div class="stock-cat">${item.cat}</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" ${disponible ? 'checked' : ''} onchange="window.toggleStock(${item.id}, this.checked)" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+window.toggleStock = async function(id, disponible) {
+  try {
+    stockActual[id] = disponible;
+    const card = document.getElementById('sc-'+id);
+    if (card) card.classList.toggle('agotado', !disponible);
+    await setDoc(doc(db,'config','stock'), stockActual);
+  } catch(e) {
+    console.error(e);
+    showNotif('❌ Error al actualizar stock');
+  }
 };
 
 function fN(n) { return (n||0).toLocaleString('es-AR'); }
