@@ -596,15 +596,30 @@ function renderPedidosLive() {
         <span style="font-size:.72rem;font-weight:800;text-transform:uppercase;color:#777;">Total</span>
         <span class="pc-total-num">$${fN(p.total)}</span>
       </div>
-      <div class="pc-actions">
-        ${p.estado === 'pendiente' ? `<button class="btn-accion btn-preparar" onclick="window.cambiarEstado('${p.firestoreId}','preparando')">👨‍🍳 Preparando</button>` : ''}
-        ${p.estado === 'preparando' ? `<button class="btn-accion btn-listo" onclick="window.cambiarEstado('${p.firestoreId}','listo')">✅ Listo</button>` : ''}
-        ${p.estado === 'listo' ? `<button class="btn-accion btn-cobrar" onclick="window.cambiarEstado('${p.firestoreId}','cobrado')">💰 Cobrado</button>` : ''}
-        ${p.estado === 'pendiente' ? `<button class="btn-accion btn-listo" onclick="window.cambiarEstado('${p.firestoreId}','listo')" style="background:rgba(45,198,83,.15);color:var(--verde);border:1.5px solid var(--verde);">⚡ Listo directo</button>` : ''}
-        ${p.estado !== 'cobrado' ? `<button class="btn-accion btn-rechazar" onclick="window.rechazarPedido('${p.firestoreId}','${p.numeroPedido}')">❌ Rechazar</button>` : ''}
-      </div>
+      <div class="pc-actions" id="actions-${p.firestoreId}"></div>
     </div>`;
   }).join('');
+
+  // Inject action buttons without nested template literals
+  pedidosActivos.forEach(p => {
+    const div = document.getElementById('actions-' + p.firestoreId);
+    if (!div) return;
+    let btns = '';
+    if (p.estado === 'pendiente') {
+      btns += '<button class="btn-accion btn-preparar" onclick="window.cambiarEstado('' + p.firestoreId + '','preparando')">👨‍🍳 Preparando</button>';
+      btns += '<button class="btn-accion btn-listo" onclick="window.cambiarEstado('' + p.firestoreId + '','listo')" style="background:rgba(45,198,83,.15);color:var(--verde);border:1.5px solid var(--verde);">⚡ Listo directo</button>';
+    }
+    if (p.estado === 'preparando') {
+      btns += '<button class="btn-accion btn-listo" onclick="window.cambiarEstado('' + p.firestoreId + '','listo')">✅ Listo</button>';
+    }
+    if (p.estado === 'listo') {
+      btns += '<button class="btn-accion btn-cobrar" onclick="window.cambiarEstado('' + p.firestoreId + '','cobrado')">💰 Cobrado</button>';
+    }
+    if (p.estado !== 'cobrado') {
+      btns += '<button class="btn-accion btn-rechazar" onclick="window.rechazarPedido('' + p.firestoreId + '','' + p.numeroPedido + '')">❌ Rechazar</button>';
+    }
+    div.innerHTML = btns;
+  });
 }
 
 window.cambiarEstado = async function(id, nuevoEstado) {
