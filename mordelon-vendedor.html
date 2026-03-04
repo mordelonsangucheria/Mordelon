@@ -339,6 +339,7 @@ select.mac-field option { background:#222; }
   </div>
   <div style="text-align:right;">
     <div id="reloj" style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);"></div>
+    <div id="usuarioActualLabel" style="font-size:0.65rem;color:#888;font-weight:800;text-align:right;"></div>
     <div id="contadorVivo" style="font-size:0.68rem;color:#666;"></div>
   </div>
 </header>
@@ -422,6 +423,21 @@ select.mac-field option { background:#222; }
 
 <div id="panel-config" class="panel">
 
+  <!-- USUARIOS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:12px;">👥 USUARIOS</div>
+    <div id="usuariosLista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <input id="nuevoNombre" class="campo" placeholder="Nombre" style="flex:1;min-width:100px;padding:10px;" />
+      <input id="nuevoPin" class="campo" placeholder="PIN (4 dígitos)" maxlength="4" type="tel" style="flex:1;min-width:100px;padding:10px;" />
+    </div>
+    <button class="btn btn-turquesa" onclick="window.agregarUsuario()" style="margin-top:10px;width:100%;">➕ Agregar usuario</button>
+    <div style="margin-top:14px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.75rem;color:#666;letter-spacing:1px;margin-bottom:8px;">📋 ACTIVIDAD RECIENTE</div>
+      <div id="actividadLista" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+    </div>
+  </div>
+
   <!-- MODO PAUSA -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -475,11 +491,15 @@ select.mac-field option { background:#222; }
 <script>
 
 // PIN LOCK
-const PIN_CORRECTO = '2198';
+// SISTEMA MULTI-USUARIO
+let usuariosData = [{ nombre: 'Admin', pin: '2198' }];
+let usuarioActual = null;
 let pinIngresado = '';
 
 // Verificar si ya está autenticado en esta sesión
-if (sessionStorage.getItem('mordelon-auth') === 'ok') {
+const sesionUsuario = sessionStorage.getItem('mordelon-usuario');
+if (sesionUsuario) {
+  usuarioActual = sesionUsuario;
   document.getElementById('pinOverlay').classList.add('hidden');
 }
 
@@ -505,9 +525,12 @@ function actualizarDots() {
 }
 
 function verificarPin() {
-  if (pinIngresado === PIN_CORRECTO) {
-    sessionStorage.setItem('mordelon-auth', 'ok');
+  const user = usuariosData.find(u => u.pin === pinIngresado);
+  if (user) {
+    usuarioActual = user.nombre;
+    sessionStorage.setItem('mordelon-usuario', user.nombre);
     document.getElementById('pinOverlay').classList.add('hidden');
+    registrarActividad('🔑 Ingresó al panel');
   } else {
     for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.add('error');
     document.getElementById('pinError').textContent = 'PIN incorrecto, intentá de nuevo';
@@ -523,7 +546,7 @@ function verificarPin() {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, getDoc, query, orderBy, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, serverTimestamp, query, orderBy, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDom7vxzcnnkc5_y3JquIr6TjMp5GX89_0",
@@ -535,6 +558,15 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// CARGAR USUARIOS desde Firebase
+async function cargarUsuarios() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'usuarios'));
+    if (snap.exists() && snap.data().lista) usuariosData = snap.data().lista;
+  } catch(e) {}
+}
+cargarUsuarios();
 
 // PANTALLA SIEMPRE ENCENDIDA
 let wakeLock = null;
@@ -708,6 +740,7 @@ window.imprimirTicket = function(p) {
 window.cambiarEstado = async function(id, nuevoEstado) {
   try {
     await updateDoc(doc(db,'pedidos',id), { estado: nuevoEstado });
+  registrarActividad('📦 Pedido ' + id.slice(-4).toUpperCase() + ' → ' + nuevoEstado);
     if (nuevoEstado === 'cobrado') showNotif('💰 Pedido cobrado');
   } catch(e) { console.error(e); }
 };
@@ -785,6 +818,7 @@ window.ejecutarCierre = async function() {
     renderCaja();
     pedidosCobrados = [];
     renderHistorial();
+    registrarActividad('🔒 Cerró caja — ' + batch.length + ' pedidos');
     showNotif('✅ Caja cerrada — ' + batch.length + ' pedidos archivados');
   } catch(e) {
     console.error(e);
@@ -796,6 +830,7 @@ window.rechazarPedido = async function(id, num) {
   if (!confirm('¿Rechazar el pedido #' + num + '? Se eliminará del sistema.')) return;
   try {
     await deleteDoc(doc(db,'pedidos',id));
+    registrarActividad('❌ Rechazó pedido #' + num);
     showNotif('🗑 Pedido #' + num + ' rechazado');
   } catch(e) {
     showNotif('❌ Error al rechazar');
@@ -840,7 +875,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'stock') renderStock();
   if (tab === 'menu-admin') renderMenuAdmin();
   if (tab === 'horarios') renderHorarios();
-  if (tab === 'config') cargarConfig();
+  if (tab === 'config') { cargarConfig(); renderUsuarios(); }
 };
 
 // ===== HORARIOS =====
@@ -932,11 +967,92 @@ window.guardarHorarios = async function() {
   try {
     await setDoc(doc(db,'config','horarios'), { dias: horariosData });
     showNotif('✅ Horarios guardados');
+    registrarActividad('🕐 Actualizó horarios');
   } catch(e) {
     showNotif('❌ Error al guardar');
     console.error(e);
   }
 };
+
+// ===== USUARIOS =====
+async function guardarUsuarios() {
+  await setDoc(doc(db,'config','usuarios'), { lista: usuariosData });
+}
+
+function renderUsuarios() {
+  const lista = document.getElementById('usuariosLista');
+  if (!lista) return;
+  lista.innerHTML = '';
+  usuariosData.forEach((u, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--gris-mid);border-radius:10px;padding:10px 14px;';
+    row.innerHTML = '<span style="font-weight:800;font-size:0.85rem;">👤 ' + u.nombre + '</span><span style="color:#666;font-size:0.8rem;">PIN: ' + u.pin + '</span>';
+    if (i > 0) {
+      const del = document.createElement('button');
+      del.textContent = '🗑';
+      del.style.cssText = 'background:transparent;border:none;font-size:1rem;cursor:pointer;color:var(--rojo);';
+      del.addEventListener('click', () => eliminarUsuario(i));
+      row.appendChild(del);
+    } else {
+      const lbl = document.createElement('span');
+      lbl.textContent = '👑 Admin';
+      lbl.style.cssText = 'font-size:0.65rem;color:var(--turquesa);font-weight:800;';
+      row.appendChild(lbl);
+    }
+    lista.appendChild(row);
+  });
+}
+
+window.agregarUsuario = async function() {
+  const nombre = document.getElementById('nuevoNombre').value.trim();
+  const pin = document.getElementById('nuevoPin').value.trim();
+  if (!nombre) { showNotif('⚠️ Ingresá un nombre'); return; }
+  if (pin.length !== 4 || pin.split('').some(c => c < '0' || c > '9')) { showNotif('⚠️ El PIN debe tener 4 dígitos'); return; }
+  if (usuariosData.find(u => u.pin === pin)) { showNotif('⚠️ Ese PIN ya existe'); return; }
+  if (usuariosData.find(u => u.nombre.toLowerCase() === nombre.toLowerCase())) { showNotif('⚠️ Ese nombre ya existe'); return; }
+  usuariosData.push({ nombre, pin });
+  await guardarUsuarios();
+  renderUsuarios();
+  document.getElementById('nuevoNombre').value = '';
+  document.getElementById('nuevoPin').value = '';
+  registrarActividad('➕ Creó usuario: ' + nombre);
+  showNotif('✅ Usuario ' + nombre + ' creado');
+};
+
+async function eliminarUsuario(i) {
+  const nombre = usuariosData[i].nombre;
+  if (!confirm('¿Eliminar usuario ' + nombre + '?')) return;
+  usuariosData.splice(i, 1);
+  await guardarUsuarios();
+  renderUsuarios();
+  registrarActividad('🗑 Eliminó usuario: ' + nombre);
+  showNotif('✅ Usuario eliminado');
+}
+
+// Escuchar usuarios y actividad en tiempo real
+onSnapshot(doc(db,'config','usuarios'), (snap) => {
+  if (snap.exists() && snap.data().lista) {
+    usuariosData = snap.data().lista;
+    renderUsuarios();
+  }
+});
+
+onSnapshot(
+  query(collection(db,'actividad'), orderBy('timestamp','desc')),
+  (snap) => {
+    const lista = document.getElementById('actividadLista');
+    if (!lista) return;
+    lista.innerHTML = '';
+    snap.docs.slice(0,20).forEach(d => {
+      const data = d.data();
+      const ts = data.timestamp?.toDate?.() ? data.timestamp.toDate().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : '';
+      const row = document.createElement('div');
+      row.style.cssText = 'font-size:0.75rem;padding:6px 10px;background:var(--gris-mid);border-radius:8px;display:flex;justify-content:space-between;gap:8px;';
+      row.innerHTML = '<span style="font-weight:800;color:var(--turquesa);">' + (data.usuario||'?') + '</span><span style="color:#aaa;flex:1;">' + (data.accion||'') + '</span><span style="color:#555;">' + ts + '</span>';
+      lista.appendChild(row);
+    });
+  }
+);
 
 // ===== MENU ADMIN =====
 let menuAdmin = [];
@@ -1197,8 +1313,25 @@ function fN(n) { return (n||0).toLocaleString('es-AR'); }
 
 function updateReloj() {
   document.getElementById('reloj').textContent = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  // Mostrar usuario actual en header
+  const el = document.getElementById('usuarioActualLabel');
+  if (el && usuarioActual) el.textContent = '👤 ' + usuarioActual;
 }
 updateReloj(); setInterval(updateReloj,1000);
+
+// Registrar actividad
+async function registrarActividad(accion) {
+  if (!usuarioActual) return;
+  try {
+    await addDoc(collection(db,'actividad'), {
+      usuario: usuarioActual,
+      accion,
+      timestamp: serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+
 
 // CONTADOR DE VISITAS
 onSnapshot(doc(db,'config','stats'), (snap) => {
