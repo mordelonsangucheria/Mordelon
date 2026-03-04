@@ -600,25 +600,32 @@ function renderPedidosLive() {
     </div>`;
   }).join('');
 
-  // Inject action buttons without nested template literals
+  // Inject action buttons usando createElement
   pedidosActivos.forEach(p => {
     const div = document.getElementById('actions-' + p.firestoreId);
     if (!div) return;
-    let btns = '';
+    div.innerHTML = '';
+    function btn(cls, txt, fn, extraStyle) {
+      const b = document.createElement('button');
+      b.className = 'btn-accion ' + cls;
+      b.textContent = txt;
+      if (extraStyle) b.style.cssText = extraStyle;
+      b.addEventListener('click', fn);
+      return b;
+    }
     if (p.estado === 'pendiente') {
-      btns += '<button class="btn-accion btn-preparar" onclick="window.cambiarEstado('' + p.firestoreId + '','preparando')">👨‍🍳 Preparando</button>';
-      btns += '<button class="btn-accion btn-listo" onclick="window.cambiarEstado('' + p.firestoreId + '','listo')" style="background:rgba(45,198,83,.15);color:var(--verde);border:1.5px solid var(--verde);">⚡ Listo directo</button>';
+      div.appendChild(btn('btn-preparar', '👨‍🍳 Preparando', () => window.cambiarEstado(p.firestoreId, 'preparando')));
+      div.appendChild(btn('btn-listo', '⚡ Listo directo', () => window.cambiarEstado(p.firestoreId, 'listo'), 'background:rgba(45,198,83,.15);color:var(--verde);border:1.5px solid var(--verde);'));
     }
     if (p.estado === 'preparando') {
-      btns += '<button class="btn-accion btn-listo" onclick="window.cambiarEstado('' + p.firestoreId + '','listo')">✅ Listo</button>';
+      div.appendChild(btn('btn-listo', '✅ Listo', () => window.cambiarEstado(p.firestoreId, 'listo')));
     }
     if (p.estado === 'listo') {
-      btns += '<button class="btn-accion btn-cobrar" onclick="window.cambiarEstado('' + p.firestoreId + '','cobrado')">💰 Cobrado</button>';
+      div.appendChild(btn('btn-cobrar', '💰 Cobrado', () => window.cambiarEstado(p.firestoreId, 'cobrado')));
     }
     if (p.estado !== 'cobrado') {
-      btns += '<button class="btn-accion btn-rechazar" onclick="window.rechazarPedido('' + p.firestoreId + '','' + p.numeroPedido + '')">❌ Rechazar</button>';
+      div.appendChild(btn('btn-rechazar', '❌ Rechazar', () => window.rechazarPedido(p.firestoreId, p.numeroPedido)));
     }
-    div.innerHTML = btns;
   });
 }
 
