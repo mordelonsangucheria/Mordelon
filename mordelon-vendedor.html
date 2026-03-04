@@ -703,16 +703,18 @@ onSnapshot(doc(db,'config','horarios'), (snap) => {
 
 function renderHorarios() {
   const grid = document.getElementById('horariosGrid');
-  grid.innerHTML = horariosData.map((h, i) => `
-    <div class="horario-row ${h.abierto ? '' : 'cerrado'}" id="hrow-${i}">
-      <div style="width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div class="dia-label">${h.dia}</div>
-        <label class="toggle-abierto">
-          <input type="checkbox" ${h.abierto ? 'checked' : ''} onchange="window.toggleDia(${i}, this.checked)" />
-          ${h.abierto ? '<span style="color:var(--verde);">Abierto</span>' : '<span style="color:var(--rojo);">Cerrado</span>'}
-        </label>
-      </div>
-      ${h.abierto ? `
+  let html = '';
+  horariosData.forEach((h, i) => {
+    const estadoColor = h.abierto ? 'var(--verde)' : 'var(--rojo)';
+    const estadoTxt   = h.abierto ? 'Abierto' : 'Cerrado';
+    let turnoHtml = '';
+    if (h.abierto) {
+      const t2dis   = h.turno2 ? '' : 'disabled';
+      const t2op    = h.turno2 ? '1' : '0.3';
+      const t2chk   = h.turno2 ? 'checked' : '';
+      const desde2  = h.desde2 || '12:00';
+      const hasta2  = h.hasta2 || '14:00';
+      turnoHtml = `
         <div class="horario-inputs" style="width:100%;margin-top:8px;">
           <span style="font-size:.72rem;color:#888;min-width:50px;">Turno 1</span>
           <input class="time-input" type="time" value="${h.desde}"
@@ -723,22 +725,34 @@ function renderHorarios() {
         </div>
         <div class="horario-inputs" style="width:100%;margin-top:6px;align-items:center;">
           <label style="font-size:.72rem;color:#888;min-width:50px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-            <input type="checkbox" ${h.turno2 ? 'checked' : ''} 
+            <input type="checkbox" ${t2chk}
               onchange="window.toggleTurno2(${i}, this.checked)"
               style="accent-color:var(--turquesa);width:14px;height:14px;" />
             Turno 2
           </label>
-          <input class="time-input" type="time" value="${h.desde2 || '12:00'}" ${h.turno2 ? '' : 'disabled'}
+          <input class="time-input" type="time" value="${desde2}" ${t2dis}
             onchange="window.cambiarHora(${i},'desde2',this.value)"
-            style="${h.turno2 ? '' : 'opacity:.3'}" />
+            style="opacity:${t2op}" />
           <span style="font-size:.75rem;color:#666;">a</span>
-          <input class="time-input" type="time" value="${h.hasta2 || '14:00'}" ${h.turno2 ? '' : 'disabled'}
+          <input class="time-input" type="time" value="${hasta2}" ${t2dis}
             onchange="window.cambiarHora(${i},'hasta2',this.value)"
-            style="${h.turno2 ? '' : 'opacity:.3'}" />
+            style="opacity:${t2op}" />
+        </div>`;
+    }
+    html += `
+      <div class="horario-row ${h.abierto ? '' : 'cerrado'}" id="hrow-${i}">
+        <div style="width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="dia-label">${h.dia}</div>
+          <label class="toggle-abierto">
+            <input type="checkbox" ${h.abierto ? 'checked' : ''}
+              onchange="window.toggleDia(${i}, this.checked)" />
+            <span style="color:${estadoColor};">${estadoTxt}</span>
+          </label>
         </div>
-      ` : ''}
-    </div>
-  `).join('');
+        ${turnoHtml}
+      </div>`;
+  });
+  grid.innerHTML = html;
 }
 
 window.toggleDia = function(i, abierto) {
