@@ -882,8 +882,9 @@ function mostrarHorarios(dias) {
   `).join('');
 }
 
-// Mostrar horarios por defecto inmediatamente
-mostrarHorarios(horariosDefault);
+// Mostrar horarios — esperar DOM listo
+document.addEventListener('DOMContentLoaded', () => mostrarHorarios(horariosDefault));
+if (document.readyState !== 'loading') mostrarHorarios(horariosDefault);
 
 onSnapshot(doc(db,'config','horarios'), (snap) => {
   const dias = (snap.exists() && snap.data().dias) ? snap.data().dias : horariosDefault;
