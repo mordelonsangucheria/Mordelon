@@ -206,15 +206,35 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 /* HORARIOS */
 .horarios-banner {
   background:var(--gris-dark); border:1.5px solid var(--gris-light);
-  border-radius:14px; padding:14px 16px; margin:12px 0;
+  border-radius:14px; margin:12px 0; overflow:hidden;
 }
+.horarios-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 16px; cursor:pointer; user-select:none;
+  transition: background .2s;
+}
+.horarios-header:hover { background:var(--gris-mid); }
 .horarios-titulo {
   font-family:'Righteous',cursive; font-size:0.8rem; color:var(--turquesa);
-  letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;
+  letter-spacing:2px; text-transform:uppercase;
+}
+.horarios-chevron {
+  font-size:0.9rem; color:var(--turquesa);
+  transition: transform .3s ease;
+}
+.horarios-chevron.abierto { transform: rotate(180deg); }
+.horarios-body {
+  max-height:0; overflow:hidden;
+  transition: max-height .35s ease, padding .35s ease;
+  padding:0 16px;
+}
+.horarios-body.abierto {
+  max-height:400px;
+  padding:0 16px 14px;
 }
 .horario-fila {
   display:flex; justify-content:space-between; align-items:center;
-  padding:5px 0; border-bottom:1px solid var(--gris-mid); font-size:0.8rem;
+  padding:6px 0; border-bottom:1px solid var(--gris-mid); font-size:0.8rem;
 }
 .horario-fila:last-child { border-bottom:none; }
 .horario-dia { font-weight:800; color:var(--blanco); }
@@ -390,8 +410,13 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 <!-- PANTALLA: MENÚ -->
 <div class="screen active" id="screen-menu">
   <div id="horariosBanner" style="display:none;" class="horarios-banner">
-    <div class="horarios-titulo">🕐 Horarios</div>
-    <div id="horariosLista"></div>
+    <div class="horarios-header" onclick="window.toggleHorarios()">
+      <span class="horarios-titulo">🕐 Horarios</span>
+      <span class="horarios-chevron" id="horariosChevron">▼</span>
+    </div>
+    <div class="horarios-body" id="horariosBody">
+      <div id="horariosLista"></div>
+    </div>
   </div>
   <div id="menuContainer"></div>
   <div style="height:80px;"></div>
@@ -784,6 +809,14 @@ window.compartirMenu = async function() {
 setTimeout(() => {
   document.getElementById('splash').classList.add('oculto');
 }, 2000);
+
+// TOGGLE HORARIOS
+window.toggleHorarios = function() {
+  const body = document.getElementById('horariosBody');
+  const chevron = document.getElementById('horariosChevron');
+  body.classList.toggle('abierto');
+  chevron.classList.toggle('abierto');
+};
 
 // MODO CLARO/OSCURO
 window.toggleTheme = function() {
