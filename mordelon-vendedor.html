@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest-vendedor.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -456,6 +457,19 @@ select.mac-field option { background:#222; }
 </div>
 
 <div id="panel-config" class="panel">
+
+  <!-- QR DEL MENÚ -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">📱 QR DEL MENÚ</div>
+    <div style="text-align:center;">
+      <div id="qrContainer" style="display:inline-block;background:white;padding:16px;border-radius:16px;margin-bottom:14px;"></div>
+      <div style="font-size:0.75rem;color:#666;margin-bottom:12px;" id="qrUrl"></div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-turquesa" onclick="window.imprimirQR()">🖨️ Imprimir QR</button>
+        <button class="btn btn-ghost" onclick="window.descargarQR()">⬇️ Descargar PNG</button>
+      </div>
+    </div>
+  </div>
 
   <!-- USUARIOS -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
@@ -1066,7 +1080,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'stock') renderStock();
   if (tab === 'menu-admin') renderMenuAdmin();
   if (tab === 'horarios') renderHorarios();
-  if (tab === 'config') { cargarConfig(); renderUsuarios(); }
+  if (tab === 'config') { cargarConfig(); renderUsuarios(); generarQR(); }
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
@@ -1269,6 +1283,69 @@ onSnapshot(
     });
   }
 );
+
+// ===== QR DEL MENÚ =====
+let qrInstance = null;
+const URL_CLIENTE = 'https://mordelonsangucheria.github.io/Mordelon/mordelon-cliente.html';
+
+function generarQR() {
+  const cont = document.getElementById('qrContainer');
+  const urlEl = document.getElementById('qrUrl');
+  if (!cont) return;
+  cont.innerHTML = '';
+  urlEl.textContent = URL_CLIENTE;
+  try {
+    qrInstance = new QRCode(cont, {
+      text: URL_CLIENTE,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) { cont.innerHTML = '<div style="color:var(--rojo);">Error generando QR</div>'; }
+}
+
+window.imprimirQR = function() {
+  const canvas = document.querySelector('#qrContainer canvas');
+  const img    = document.querySelector('#qrContainer img');
+  const src    = canvas ? canvas.toDataURL() : (img ? img.src : null);
+  if (!src) { showNotif('⚠️ Esperá que cargue el QR'); return; }
+  const win = window.open('', '_blank', 'width=500,height=600');
+  win.document.write(`
+    <html><head><title>QR Mordelón</title>
+    <style>
+      body { font-family: sans-serif; text-align:center; padding:40px; }
+      img { width:250px; height:250px; }
+      h2 { font-size:1.6rem; margin-bottom:6px; }
+      p  { color:#666; font-size:0.9rem; margin-bottom:20px; }
+      .url { font-size:0.7rem; color:#999; margin-top:14px; word-break:break-all; }
+      @media print { button { display:none; } }
+    </style></head>
+    <body>
+      <h2>🔥 Mordelón</h2>
+      <p>Escaneá el QR para ver el menú y hacer tu pedido</p>
+      <img src="${src}" />
+      <div class="url">${URL_CLIENTE}</div>
+      <br><button onclick="window.print()" style="margin-top:20px;padding:10px 24px;font-size:1rem;cursor:pointer;">🖨️ Imprimir</button>
+    </body>
+    <script>window.onload = () => window.print();<\/script>
+    </html>
+  `);
+  win.document.close();
+};
+
+window.descargarQR = function() {
+  const canvas = document.querySelector('#qrContainer canvas');
+  const img    = document.querySelector('#qrContainer img');
+  const src    = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+  if (!src) { showNotif('⚠️ Esperá que cargue el QR'); return; }
+  const a = document.createElement('a');
+  a.href = src;
+  a.download = 'qr-mordelon.png';
+  a.click();
+  showNotif('✅ QR descargado');
+};
 
 // ===== CRONÓMETRO =====
 let cronoInterval = null;
