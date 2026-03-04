@@ -590,6 +590,8 @@ function renderPedidosLive() {
       </div>
       <div class="pc-body">
         ${p.items.map(i=>`<div class="pc-item"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
+        ${p.nombre ? `<div class="pc-nota" style="color:var(--blanco);">👤 ${p.nombre}</div>` : ''}
+        ${p.direccion ? `<div class="pc-nota" style="color:#aaa;">📍 ${p.direccion}</div>` : ''}
         ${p.nota ? `<div class="pc-nota">📝 ${p.nota}</div>` : ''}
         ${p.whatsapp ? `<div class="pc-nota" style="color:#2DC653;">📱 <a href="https://wa.me/549${p.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#2DC653;text-decoration:none;font-weight:800;">${p.whatsapp} — Escribir</a></div>` : ''}
       </div>
@@ -641,6 +643,8 @@ window.imprimirTicket = function(p) {
   const recargo = p.recargo ? '\nRecargo tarjeta:        $' + fN(p.recargo) : '';
   const nota = p.nota ? '\nNota: ' + p.nota : '';
   const wa = p.whatsapp ? '\nWhatsApp: ' + p.whatsapp : '';
+  const nombre = p.nombre ? '\nCliente: ' + p.nombre : '';
+  const direccion = p.direccion ? '\nDirección: ' + p.direccion : '';
   const ticket = [
     '================================',
     '        MORDELÓN 🔥',
@@ -655,6 +659,8 @@ window.imprimirTicket = function(p) {
     'TOTAL:                  $' + fN(p.total),
     '--------------------------------',
     'Pago: ' + p.metodo,
+    nombre,
+    direccion,
     wa,
     nota,
     '================================',
@@ -699,6 +705,8 @@ function renderHistorial() {
         <h3>${p.metodo}</h3>
         <div class="hist-items">${p.items.map(i=>`${i.emoji} ${i.nombre} x${i.qty}`).join(' · ')}</div>
         ${p.nota?`<div style="font-size:.7rem;color:#666;font-style:italic;margin-top:3px;">📝 ${p.nota}</div>`:''}
+        ${p.nombre?`<div style="font-size:.72rem;font-weight:800;margin-top:3px;color:var(--blanco);">👤 ${p.nombre}</div>`:''}
+        ${p.direccion?`<div style="font-size:.72rem;color:#777;margin-top:2px;">📍 ${p.direccion}</div>`:''}
         ${p.whatsapp?`<div style="font-size:.72rem;margin-top:3px;"><a href="https://wa.me/549${p.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#2DC653;font-weight:800;text-decoration:none;">📱 ${p.whatsapp}</a></div>`:''}
       </div>
       <div class="hist-meta">

@@ -431,6 +431,8 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <span class="total-label">Total</span>
       <span class="total-num" id="carritoTotal">$0</span>
     </div>
+    <input type="text" class="campo" id="nombreCliente" placeholder="👤 Tu nombre — requerido" />
+    <input type="text" class="campo" id="direccionCliente" placeholder="📍 Tu dirección — requerido" />
     <div style="position:relative;">
       <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp — requerido" oninput="validarWA(this)" style="padding-right:36px;border-color:var(--rojo);"/>
       <span id="waCheck" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1rem;display:none;">✅</span>
@@ -654,6 +656,22 @@ window.validarWA = function(el) {
 window.irAPago = function() {
   if (!carrito.length) { showToast('⚠️ Tu carrito está vacío'); return; }
   if (window.localPausado) { showToast('⏸️ El local está en pausa, volvé en unos minutos'); return; }
+  const nombre = document.getElementById('nombreCliente').value.trim();
+  if (!nombre) {
+    document.getElementById('nombreCliente').focus();
+    document.getElementById('nombreCliente').style.borderColor = 'var(--rojo)';
+    showToast('⚠️ Ingresá tu nombre para continuar');
+    return;
+  }
+  document.getElementById('nombreCliente').style.borderColor = '';
+  const direccion = document.getElementById('direccionCliente').value.trim();
+  if (!direccion) {
+    document.getElementById('direccionCliente').focus();
+    document.getElementById('direccionCliente').style.borderColor = 'var(--rojo)';
+    showToast('⚠️ Ingresá tu dirección para continuar');
+    return;
+  }
+  document.getElementById('direccionCliente').style.borderColor = '';
   const wa = document.getElementById('whatsappCliente').value.trim();
   if (!wa || wa.length < 8) {
     document.getElementById('whatsappCliente').focus();
@@ -707,6 +725,8 @@ window.selMetodo = function(m) {
 window.confirmarPedido = async function() {
   if (!metodoPago) { showToast('⚠️ Elegí un método de pago'); return; }
   const waCliente = document.getElementById('whatsappCliente').value.trim();
+  const nombreCliente = document.getElementById('nombreCliente').value.trim();
+  const direccionCliente = document.getElementById('direccionCliente').value.trim();
   if (!waCliente) { showToast('⚠️ Ingresá tu número de WhatsApp'); return; }
   if (metodoPago === 'Tarjeta') {
     const num = document.getElementById('numTarjeta').value.replace(/\s/g,'');
@@ -725,6 +745,8 @@ window.confirmarPedido = async function() {
       recargo: metodoPago === 'Tarjeta' ? Math.round(total * 0.1) : 0,
       nota,
       whatsapp: waCliente,
+      nombre: nombreCliente,
+      direccion: direccionCliente,
       estado: 'pendiente',
       timestamp: serverTimestamp()
     });
@@ -737,8 +759,10 @@ window.confirmarPedido = async function() {
     const resumenWA = carrito.map(i => `• ${i.emoji} ${i.nombre} x${i.qty} — $${fN(i.precio*i.qty)}`).join('\n');
     const notaWA = nota ? `\n📝 Nota: ${nota}` : '';
     const metodoWA = metodoPago === 'Tarjeta' ? 'Tarjeta (+10% recargo)' : metodoPago;
-    const waNum = waCliente ? `\n📱 *WhatsApp cliente:* ${waCliente}` : '';
-    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNum}`;
+    const waNum = waCliente ? `\n📱 *WhatsApp:* ${waCliente}` : '';
+    const waNombre = nombreCliente ? `\n👤 *Nombre:* ${nombreCliente}` : '';
+    const waDireccion = direccionCliente ? `\n📍 *Dirección:* ${direccionCliente}` : '';
+    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNombre}${waDireccion}${waNum}`;
     window.open(`https://wa.me/5492271415751?text=${encodeURIComponent(msgWA)}`, '_blank');
 
     showScreen('confirmado');
@@ -753,6 +777,8 @@ window.nuevoPedido = function() {
   metodoPago = null;
   document.getElementById('notaPedido').value = '';
   document.getElementById('whatsappCliente').value = '';
+  document.getElementById('nombreCliente').value = '';
+  document.getElementById('direccionCliente').value = '';
   if (unsubEstado) { unsubEstado(); unsubEstado = null; }
   pedidoActivoId = null;
   document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
