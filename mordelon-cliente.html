@@ -845,6 +845,16 @@ function showToast(msg) {
 
 function fN(n) { return n.toLocaleString('es-AR'); }
 
+// ENTREGA
+let tipoEntrega = null;
+window.selEntrega = function(tipo) {
+  tipoEntrega = tipo;
+  document.querySelectorAll('#entregaSelector .metodo-btn').forEach(b => b.classList.remove('entrega-sel'));
+  document.getElementById('ebtn-' + tipo).classList.add('entrega-sel');
+  document.getElementById('infoRetiro').style.display   = tipo === 'retiro'   ? 'block' : 'none';
+  document.getElementById('infoDelivery').style.display = tipo === 'delivery' ? 'block' : 'none';
+};
+
 // COMPARTIR MENÚ
 window.compartirMenu = async function() {
   const url = window.location.href;
