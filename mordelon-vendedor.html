@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-vendedor.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mordelón 🔥">
+<meta name="theme-color" content="#3DBFB8">
 <title>Mordelón — Vendedor</title>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -530,6 +536,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// PANTALLA SIEMPRE ENCENDIDA
+let wakeLock = null;
+async function activarWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake lock activado');
+    }
+  } catch(e) {}
+}
+activarWakeLock();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') activarWakeLock();
+});
+
 let pedidosActivos = [];
 let pedidosCobrados = [];
 let caja = { total:0, transferencia:0, tarjeta:0, pedidos:0 };
@@ -783,6 +804,9 @@ window.rechazarPedido = async function(id, num) {
 };
 
 function playBeep() {
+  // Vibración
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 400]); } catch(e) {}
+  // Sonido
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [0, 150, 300].forEach(delay => {
@@ -1182,6 +1206,13 @@ onSnapshot(doc(db,'config','stats'), (snap) => {
   const el = document.getElementById('cajaVisitas');
   if (el) el.textContent = visitas.toLocaleString('es-AR');
 });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-vendedor.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  }
 </script>
 </body>
 </html>
