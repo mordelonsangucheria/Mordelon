@@ -111,6 +111,11 @@ header {
 .btn-billete:hover { border-color:var(--turquesa); color:var(--turquesa); }
 .btn-billete.sel { border-color:var(--turquesa); background:rgba(61,191,184,.15); color:var(--turquesa); }
 .btn-imprimir { background:rgba(61,191,184,.15); color:var(--turquesa); border:1.5px solid var(--turquesa); }
+.color-opt { width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s; }
+.color-opt.sel { border-color:white;transform:scale(1.2); }
+.promo-card { background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:14px;padding:14px; }
+.promo-badge { display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:900;margin-bottom:6px; }
+
 .timer-row { background:var(--gris-mid); border-radius:12px; padding:12px 14px; display:flex; align-items:center; gap:10px; }
 .timer-nombre { font-weight:900; font-size:0.85rem; flex:1; }
 .timer-display { font-family:'Righteous',cursive; font-size:1.1rem; color:var(--turquesa); min-width:60px; text-align:center; }
@@ -365,6 +370,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
   <div class="tab" onclick="cambiarTab('calculadora')">🧮 Vuelto</div>
   <div class="tab" onclick="cambiarTab('cronometro')">⏱️ Timer</div>
+  <div class="tab" onclick="cambiarTab('promos')">🎉 Promos</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -582,6 +588,68 @@ select.mac-field option { background:#222; }
       </div>
     </div>
 
+  </div>
+</div>
+
+<div id="panel-promos" class="panel">
+  <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Las promos activas aparecen como banner y badge en el menú del cliente en tiempo real.</p>
+
+  <!-- PROMOS ACTIVAS -->
+  <div id="promosActivas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+
+  <!-- CREAR PROMO -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVA PROMO</div>
+
+    <div style="margin-bottom:10px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">TIPO</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="promoTipoSelector">
+        <button class="btn-billete" onclick="window.selPromoTipo('descuento',this)">% Descuento</button>
+        <button class="btn-billete" onclick="window.selPromoTipo('combo',this)">🍔 Combo</button>
+        <button class="btn-billete" onclick="window.selPromoTipo('texto',this)">📢 Texto libre</button>
+      </div>
+    </div>
+
+    <input id="promoTitulo" class="campo" placeholder="Título (ej: Promo del jueves 🔥)" style="margin-bottom:8px;" />
+    <textarea id="promoDescripcion" class="campo" placeholder="Descripción (ej: 20% en todos los sánguches)" rows="2"
+      style="resize:none;padding:10px;font-family:inherit;margin-bottom:8px;width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);border-radius:12px;color:var(--blanco);font-size:0.85rem;"></textarea>
+
+    <!-- Descuento -->
+    <div id="promoExtraDescuento" style="display:none;margin-bottom:8px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">PRODUCTO Y DESCUENTO</div>
+      <div style="display:flex;gap:8px;">
+        <input id="promoProducto" class="campo" placeholder="Nombre del producto" style="flex:2;" />
+        <input id="promoDescuento" class="campo" type="number" placeholder="% off" min="1" max="99" style="flex:1;" />
+      </div>
+    </div>
+
+    <!-- Combo -->
+    <div id="promoExtraCombo" style="display:none;margin-bottom:8px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">PRECIO DEL COMBO</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="color:#666;">$</span>
+        <input id="promoPrecioCombo" class="campo" type="number" placeholder="0" style="flex:1;" />
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div style="flex:1;">
+        <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">EMOJI</div>
+        <input id="promoEmoji" class="campo" placeholder="🔥" maxlength="2" style="text-align:center;font-size:1.4rem;padding:8px;" />
+      </div>
+      <div style="flex:2;">
+        <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">COLOR BADGE</div>
+        <div style="display:flex;gap:6px;" id="promoColorSelector">
+          <button class="color-opt" onclick="window.selColor('#FF4D4D',this)" style="background:#FF4D4D;"></button>
+          <button class="color-opt" onclick="window.selColor('#FF9500',this)" style="background:#FF9500;"></button>
+          <button class="color-opt" onclick="window.selColor('#3DBFB8',this)" style="background:#3DBFB8;"></button>
+          <button class="color-opt" onclick="window.selColor('#2DC653',this)" style="background:#2DC653;"></button>
+          <button class="color-opt" onclick="window.selColor('#A855F7',this)" style="background:#A855F7;"></button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-turquesa" onclick="window.crearPromo()" style="width:100%;">🎉 Publicar promo</button>
   </div>
 </div>
 
@@ -976,7 +1044,7 @@ function showNotif(msg, conSonido = false) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro'];
+  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro','promos'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -986,6 +1054,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'config') { cargarConfig(); renderUsuarios(); }
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
+  if (tab === 'promos') renderPromos();
 };
 
 // ===== HORARIOS =====
@@ -1322,6 +1391,130 @@ function eliminarTimer(id) {
   timers = timers.filter(x => x.id !== id);
   renderTimers();
 }
+
+// ===== SISTEMA DE PROMOCIONES =====
+let promosData = [];
+let promoTipoActual = null;
+let promoColorActual = '#FF4D4D';
+
+window.selPromoTipo = function(tipo, el) {
+  promoTipoActual = tipo;
+  document.querySelectorAll('#promoTipoSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('promoExtraDescuento').style.display = tipo === 'descuento' ? 'block' : 'none';
+  document.getElementById('promoExtraCombo').style.display = tipo === 'combo' ? 'block' : 'none';
+};
+
+window.selColor = function(color, el) {
+  promoColorActual = color;
+  document.querySelectorAll('#promoColorSelector .color-opt').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+};
+
+window.crearPromo = async function() {
+  const titulo = document.getElementById('promoTitulo').value.trim();
+  const desc   = document.getElementById('promoDescripcion').value.trim();
+  const emoji  = document.getElementById('promoEmoji').value.trim() || '🔥';
+  if (!titulo) { showNotif('⚠️ Ingresá un título'); return; }
+  if (!promoTipoActual) { showNotif('⚠️ Elegí un tipo de promo'); return; }
+
+  const promo = {
+    id: Date.now(),
+    tipo: promoTipoActual,
+    titulo,
+    descripcion: desc,
+    emoji,
+    color: promoColorActual,
+    activa: true,
+    creadaPor: usuarioActual || 'Admin',
+    timestamp: Date.now(),
+  };
+
+  if (promoTipoActual === 'descuento') {
+    promo.producto  = document.getElementById('promoProducto').value.trim();
+    promo.descuento = parseInt(document.getElementById('promoDescuento').value) || 0;
+    if (!promo.producto || !promo.descuento) { showNotif('⚠️ Completá producto y descuento'); return; }
+  }
+  if (promoTipoActual === 'combo') {
+    promo.precioCombo = parseInt(document.getElementById('promoPrecioCombo').value) || 0;
+    if (!promo.precioCombo) { showNotif('⚠️ Ingresá el precio del combo'); return; }
+  }
+
+  promosData.push(promo);
+  await setDoc(doc(db,'config','promos'), { lista: promosData });
+  registrarActividad('🎉 Publicó promo: ' + titulo);
+  limpiarFormPromo();
+  showNotif('✅ Promo publicada');
+};
+
+window.togglePromo = async function(id) {
+  const p = promosData.find(x => x.id === id);
+  if (!p) return;
+  p.activa = !p.activa;
+  await setDoc(doc(db,'config','promos'), { lista: promosData });
+  registrarActividad((p.activa ? '✅ Activó' : '⏸ Pausó') + ' promo: ' + p.titulo);
+};
+
+window.eliminarPromo = async function(id) {
+  const p = promosData.find(x => x.id === id);
+  if (!confirm('¿Eliminar promo "' + (p ? p.titulo : '') + '"?')) return;
+  promosData = promosData.filter(x => x.id !== id);
+  await setDoc(doc(db,'config','promos'), { lista: promosData });
+  registrarActividad('🗑 Eliminó promo: ' + (p ? p.titulo : ''));
+  showNotif('✅ Promo eliminada');
+};
+
+function limpiarFormPromo() {
+  document.getElementById('promoTitulo').value = '';
+  document.getElementById('promoDescripcion').value = '';
+  document.getElementById('promoEmoji').value = '';
+  document.getElementById('promoProducto').value = '';
+  document.getElementById('promoDescuento').value = '';
+  document.getElementById('promoPrecioCombo').value = '';
+  document.querySelectorAll('#promoTipoSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  document.getElementById('promoExtraDescuento').style.display = 'none';
+  document.getElementById('promoExtraCombo').style.display = 'none';
+  promoTipoActual = null;
+}
+
+function renderPromos() {
+  const cont = document.getElementById('promosActivas');
+  if (!cont) return;
+  if (!promosData.length) {
+    cont.innerHTML = '<div style="font-size:0.8rem;color:#555;text-align:center;padding:14px;">No hay promos creadas todavía</div>';
+    return;
+  }
+  cont.innerHTML = '';
+  promosData.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'promo-card';
+    card.style.opacity = p.activa ? '1' : '0.5';
+    card.style.borderColor = p.activa ? p.color : 'var(--gris-light)';
+    let extra = '';
+    if (p.tipo === 'descuento' && p.producto) extra = '<span style="color:#aaa;font-size:0.75rem;">📦 ' + p.producto + ' — ' + p.descuento + '% off</span>';
+    if (p.tipo === 'combo' && p.precioCombo) extra = '<span style="color:#aaa;font-size:0.75rem;">💰 Precio combo: $' + fN(p.precioCombo) + '</span>';
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
+        '<div style="flex:1;">' +
+          '<span class="promo-badge" style="background:' + p.color + '22;color:' + p.color + ';border:1px solid ' + p.color + ';">' + p.emoji + ' ' + p.tipo.toUpperCase() + '</span>' +
+          '<div style="font-weight:900;font-size:0.9rem;">' + p.titulo + '</div>' +
+          (p.descripcion ? '<div style="color:#888;font-size:0.78rem;margin-top:3px;">' + p.descripcion + '</div>' : '') +
+          (extra ? '<div style="margin-top:4px;">' + extra + '</div>' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button onclick="window.togglePromo(' + p.id + ')" style="background:transparent;border:1.5px solid ' + p.color + ';color:' + p.color + ';border-radius:8px;padding:4px 8px;cursor:pointer;font-size:0.75rem;font-weight:800;">' + (p.activa ? '⏸ Pausar' : '▶ Activar') + '</button>' +
+          '<button onclick="window.eliminarPromo(' + p.id + ')" style="background:transparent;border:none;color:#555;cursor:pointer;font-size:1rem;">🗑</button>' +
+        '</div>' +
+      '</div>';
+    cont.appendChild(card);
+  });
+}
+
+// Escuchar promos en tiempo real
+onSnapshot(doc(db,'config','promos'), (snap) => {
+  promosData = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
+  renderPromos();
+});
 
 // ===== CALCULADORA DE VUELTO =====
 window.calcVuelto = function() {

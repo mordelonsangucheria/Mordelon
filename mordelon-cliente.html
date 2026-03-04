@@ -205,6 +205,19 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 .item-card.agotado:active { transform:none; border-color:var(--gris-light); }
 .metodo-btn.entrega-sel { border-color:var(--turquesa); background:rgba(61,191,184,.12); color:var(--turquesa); }
 
+/* PROMOS */
+.promo-banner {
+  border-radius:14px; padding:14px 16px; margin:12px 0;
+  animation: promoEntrada .4s ease;
+}
+@keyframes promoEntrada { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+.promo-banner-titulo { font-weight:900; font-size:0.95rem; margin-bottom:3px; }
+.promo-banner-desc { font-size:0.78rem; opacity:.85; }
+.promo-item-badge {
+  display:inline-block; padding:2px 8px; border-radius:12px;
+  font-size:0.65rem; font-weight:900; margin-top:4px;
+}
+
 /* HORARIOS */
 .horarios-banner {
   background:var(--gris-dark); border:1.5px solid var(--gris-light);
@@ -411,6 +424,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
 <!-- PANTALLA: MENÚ -->
 <div class="screen active" id="screen-menu">
+  <div id="promosBanner" style="display:none;"></div>
   <div id="horariosBanner" style="display:none;" class="horarios-banner">
     <div class="horarios-header" onclick="window.toggleHorarios()">
       <span class="horarios-titulo">🕐 Horarios</span>
@@ -610,19 +624,28 @@ let menu = [];
 function renderMenu() {
   const cont = document.getElementById('menuContainer');
   const cats = [...new Set(menu.map(i => i.cat))];
+  const promos = window._promosActivas || [];
   cont.innerHTML = cats.map(cat => `
     <div class="cat-label">${cat}</div>
     <div class="items-grid">
-      ${menu.filter(i => i.cat === cat).map(item => `
+      ${menu.filter(i => i.cat === cat).map(item => {
+        const promoItem = promos.find(p => p.tipo === 'descuento' && p.producto &&
+          item.nombre.toLowerCase().includes(p.producto.toLowerCase()));
+        const badge = promoItem
+          ? `<span class="promo-item-badge" style="background:${promoItem.color}22;color:${promoItem.color};border:1px solid ${promoItem.color};">${promoItem.emoji} -${promoItem.descuento}%</span>`
+          : '';
+        return `
         <div class="item-card ${item.agotado ? 'agotado' : ''}" onclick="${item.agotado ? '' : 'window.agregarItem('+item.id+')'}">
           ${item.esCombo ? '<span class="combo-tag">COMBO</span>' : ''}
           ${item.agotado ? '<span class="combo-tag" style="background:#FF4D4D;">AGOTADO</span>' : ''}
           <span class="item-emoji">${item.emoji}</span>
           <div class="item-nombre">${item.nombre}</div>
           <div class="item-desc">${item.desc}</div>
+          ${badge}
           <div class="item-precio" style="${item.agotado ? 'color:#555;text-decoration:line-through;' : ''}">$${fN(item.precio)}</div>
           ${item.agotado ? '' : '<div class="add-pill">+</div>'}
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`).join('');
 }
 
@@ -992,6 +1015,27 @@ function mostrarHorarios(dias) {
     </div>
   `).join('');
 }
+
+// PROMOS EN TIEMPO REAL
+onSnapshot(doc(db,'config','promos'), (snap) => {
+  const cont = document.getElementById('promosBanner');
+  if (!cont) return;
+  const lista = (snap.exists() && snap.data().lista) ? snap.data().lista.filter(p => p.activa) : [];
+  if (!lista.length) { cont.style.display='none'; cont.innerHTML=''; return; }
+  cont.style.display = 'block';
+  cont.innerHTML = lista.map(p => `
+    <div class="promo-banner" style="background:${p.color}18;border:1.5px solid ${p.color};">
+      <div class="promo-banner-titulo" style="color:${p.color};">${p.emoji} ${p.titulo}</div>
+      ${p.descripcion ? `<div class="promo-banner-desc" style="color:${p.color};">${p.descripcion}</div>` : ''}
+      ${p.tipo==='descuento' && p.producto ? `<div style="font-size:0.72rem;color:${p.color};opacity:.8;margin-top:3px;">📦 ${p.producto} — ${p.descuento}% off</div>` : ''}
+      ${p.tipo==='combo' && p.precioCombo ? `<div style="font-size:0.72rem;color:${p.color};opacity:.8;margin-top:3px;">💰 Precio especial: $${p.precioCombo.toLocaleString('es-AR')}</div>` : ''}
+    </div>
+  `).join('');
+
+  // Aplicar badges en items del menú
+  window._promosActivas = lista;
+  if (typeof renderMenu === 'function') renderMenu();
+});
 
 // Mostrar horarios — esperar DOM listo
 document.addEventListener('DOMContentLoaded', () => mostrarHorarios(horariosDefault));
