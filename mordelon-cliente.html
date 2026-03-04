@@ -904,7 +904,14 @@ const horariosDefault = [
 function mostrarHorarios(dias) {
   const banner = document.getElementById('horariosBanner');
   const lista = document.getElementById('horariosLista');
+  const body = document.getElementById('horariosBody');
+  const chevron = document.getElementById('horariosChevron');
   banner.style.display = 'block';
+  // Abrir acordeón por defecto la primera vez
+  if (body && !body.classList.contains('abierto')) {
+    body.classList.add('abierto');
+    if (chevron) chevron.classList.add('abierto');
+  }
   lista.innerHTML = dias.map(h => `
     <div class="horario-fila">
       <span class="horario-dia">${h.dia}</span>
