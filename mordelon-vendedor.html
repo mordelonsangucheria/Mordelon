@@ -264,6 +264,7 @@ header {
     <div class="stat-card n"><div class="stat-label">Ticket Prom.</div><div class="stat-val n" id="cajaPromedio">$0</div></div>
     <div class="stat-card t"><div class="stat-label">Transferencia</div><div class="stat-val t" id="cajaTransf">$0</div></div>
     <div class="stat-card t"><div class="stat-label">Tarjeta</div><div class="stat-val t" id="cajaTarjeta">$0</div></div>
+    <div class="stat-card v"><div class="stat-label">Efectivo</div><div class="stat-val v" id="cajaEfectivo">$0</div></div>
   </div>
   <div class="ranking-box">
     <div class="ranking-title">🏆 MÁS VENDIDOS</div>
@@ -361,7 +362,7 @@ const q = query(collection(db,'pedidos'), orderBy('timestamp','desc'));
 onSnapshot(q, (snap) => {
   pedidosActivos = [];
   pedidosCobrados = [];
-  caja = { total:0, transferencia:0, tarjeta:0, pedidos:0 };
+  caja = { total:0, transferencia:0, tarjeta:0, efectivo:0, pedidos:0 };
 
   snap.forEach(d => {
     const p = { ...d.data(), firestoreId: d.id };
@@ -371,6 +372,7 @@ onSnapshot(q, (snap) => {
       caja.pedidos++;
       if (p.metodo === 'Transferencia') caja.transferencia += p.total || 0;
       if (p.metodo === 'Tarjeta') caja.tarjeta += p.total || 0;
+      if (p.metodo === 'Efectivo') caja.efectivo += p.total || 0;
     } else {
       pedidosActivos.push(p);
     }
@@ -411,6 +413,7 @@ function renderPedidosLive() {
       <div class="pc-body">
         ${p.items.map(i=>`<div class="pc-item"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
         ${p.nota ? `<div class="pc-nota">📝 ${p.nota}</div>` : ''}
+        ${p.whatsapp ? `<div class="pc-nota" style="color:#2DC653;">📱 <a href="https://wa.me/549${p.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#2DC653;text-decoration:none;font-weight:800;">${p.whatsapp} — Escribir</a></div>` : ''}
       </div>
       <div class="pc-total">
         <span style="font-size:.72rem;font-weight:800;text-transform:uppercase;color:#777;">Total</span>
@@ -449,6 +452,7 @@ function renderHistorial() {
         <h3>${p.metodo}</h3>
         <div class="hist-items">${p.items.map(i=>`${i.emoji} ${i.nombre} x${i.qty}`).join(' · ')}</div>
         ${p.nota?`<div style="font-size:.7rem;color:#666;font-style:italic;margin-top:3px;">📝 ${p.nota}</div>`:''}
+        ${p.whatsapp?`<div style="font-size:.72rem;margin-top:3px;"><a href="https://wa.me/549${p.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#2DC653;font-weight:800;text-decoration:none;">📱 ${p.whatsapp}</a></div>`:''}
       </div>
       <div class="hist-meta">
         <div class="hist-hora">${hora}</div>
@@ -465,6 +469,7 @@ function renderCaja() {
   document.getElementById('cajaPromedio').textContent = caja.pedidos ? '$'+fN(Math.round(caja.total/caja.pedidos)) : '$0';
   document.getElementById('cajaTransf').textContent = '$'+fN(caja.transferencia);
   document.getElementById('cajaTarjeta').textContent = '$'+fN(caja.tarjeta);
+  document.getElementById('cajaEfectivo').textContent = '$'+fN(caja.efectivo);
   const conteo = {};
   pedidosCobrados.forEach(p => p.items.forEach(i => { conteo[i.nombre]=(conteo[i.nombre]||0)+i.qty; }));
   const ranking = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,5);

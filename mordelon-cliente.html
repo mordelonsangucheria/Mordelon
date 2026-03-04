@@ -211,6 +211,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <span class="total-label">Total</span>
       <span class="total-num" id="carritoTotal">$0</span>
     </div>
+    <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp (ej: 2271234567)" />
     <textarea class="campo" id="notaPedido" rows="2" placeholder="📝 Notas: sin cebolla, extra queso..."></textarea>
     <button class="btn btn-turquesa" onclick="irAPago()">💳 Continuar al pago</button>
     <button class="btn btn-ghost" onclick="irAMenu()">← Seguir eligiendo</button>
@@ -225,6 +226,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     <div class="metodos">
       <button class="metodo-btn" onclick="selMetodo('Transferencia')" id="mbtn-Transferencia"><span>📲</span>Transferencia / Lemon</button>
       <button class="metodo-btn" onclick="selMetodo('Tarjeta')" id="mbtn-Tarjeta"><span>💳</span>Tarjeta (+10%)</button>
+      <button class="metodo-btn" onclick="selMetodo('Efectivo')" id="mbtn-Efectivo" style="grid-column:span 2;"><span>💵</span>Efectivo en el local</button>
     </div>
     <div class="recargo-box" id="recargoBox">⚠️ Se aplica un recargo del 10% por pago con tarjeta.</div>
 
@@ -256,6 +258,20 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <input class="campo" id="cvvTarjeta" placeholder="CVV" maxlength="4" type="password"/>
       </div>
       <button class="btn btn-verde" onclick="confirmarPedido()">✅ Confirmar y pagar</button>
+    </div>
+
+    <!-- EFECTIVO -->
+    <div id="pagoEfectivo" style="display:none;">
+      <div class="alias-box" style="border-color:#2DC653;">
+        <div class="alias-label">Pagás en el local</div>
+        <div class="alias-val" style="color:#2DC653;">💵 Efectivo</div>
+        <div class="alias-sub">Tené el monto exacto listo al retirar</div>
+      </div>
+      <div class="monto-pagar">
+        <div class="monto-label">Monto a pagar</div>
+        <div class="monto-num" id="montoEfectivo">$0</div>
+      </div>
+      <button class="btn btn-verde" onclick="confirmarPedido()">✅ Confirmar pedido</button>
     </div>
 
     <button class="btn btn-ghost" onclick="irACarrito()" style="margin-top:4px;">← Volver al carrito</button>
@@ -392,6 +408,7 @@ window.irAPago = function() {
   document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('sel'));
   document.getElementById('pagoTransferencia').style.display = 'none';
   document.getElementById('pagoTarjeta').style.display = 'none';
+  document.getElementById('pagoEfectivo').style.display = 'none';
   document.getElementById('recargoBox').classList.remove('show');
   renderResumen();
   showScreen('pago');
@@ -411,20 +428,26 @@ window.selMetodo = function(m) {
   const total = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
   document.getElementById('pagoTransferencia').style.display = 'none';
   document.getElementById('pagoTarjeta').style.display = 'none';
+  document.getElementById('pagoEfectivo').style.display = 'none';
   document.getElementById('recargoBox').classList.remove('show');
   if (m === 'Transferencia') {
     document.getElementById('montoFinal').textContent = '$' + fN(total);
     document.getElementById('pagoTransferencia').style.display = 'block';
-  } else {
+  } else if (m === 'Tarjeta') {
     const conRecargo = Math.round(total * 1.1);
     document.getElementById('montoTarjeta').textContent = '$' + fN(conRecargo);
     document.getElementById('recargoBox').classList.add('show');
     document.getElementById('pagoTarjeta').style.display = 'block';
+  } else if (m === 'Efectivo') {
+    document.getElementById('montoEfectivo').textContent = '$' + fN(total);
+    document.getElementById('pagoEfectivo').style.display = 'block';
   }
 };
 
 window.confirmarPedido = async function() {
   if (!metodoPago) { showToast('⚠️ Elegí un método de pago'); return; }
+  const waCliente = document.getElementById('whatsappCliente').value.trim();
+  if (!waCliente) { showToast('⚠️ Ingresá tu número de WhatsApp'); return; }
   if (metodoPago === 'Tarjeta') {
     const num = document.getElementById('numTarjeta').value.replace(/\s/g,'');
     if (num.length < 15) { showToast('⚠️ Número de tarjeta inválido'); return; }
@@ -441,6 +464,7 @@ window.confirmarPedido = async function() {
       metodo: metodoPago,
       recargo: metodoPago === 'Tarjeta' ? Math.round(total * 0.1) : 0,
       nota,
+      whatsapp: waCliente,
       estado: 'pendiente',
       timestamp: serverTimestamp()
     });
@@ -451,7 +475,8 @@ window.confirmarPedido = async function() {
     const resumenWA = carrito.map(i => `• ${i.emoji} ${i.nombre} x${i.qty} — $${fN(i.precio*i.qty)}`).join('\n');
     const notaWA = nota ? `\n📝 Nota: ${nota}` : '';
     const metodoWA = metodoPago === 'Tarjeta' ? 'Tarjeta (+10% recargo)' : metodoPago;
-    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}`;
+    const waNum = waCliente ? `\n📱 *WhatsApp cliente:* ${waCliente}` : '';
+    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNum}`;
     window.open(`https://wa.me/5492271415751?text=${encodeURIComponent(msgWA)}`, '_blank');
 
     showScreen('confirmado');
@@ -465,6 +490,7 @@ window.nuevoPedido = function() {
   carrito = [];
   metodoPago = null;
   document.getElementById('notaPedido').value = '';
+  document.getElementById('whatsappCliente').value = '';
   actualizarFab();
   showScreen('menu');
 };
