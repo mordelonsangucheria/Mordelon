@@ -202,6 +202,37 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 ::-webkit-scrollbar-thumb { background:var(--turquesa); border-radius:10px; }
 .item-card.agotado { opacity:0.5; cursor:default; }
 .item-card.agotado:active { transform:none; border-color:var(--gris-light); }
+
+/* ESTADO PEDIDO */
+.paso-circulo {
+  width:44px; height:44px; border-radius:50%;
+  background:var(--gris-mid); border:2px solid var(--gris-light);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; margin:0 auto 6px; transition:all .4s;
+}
+.paso-circulo.activo {
+  background:rgba(61,191,184,.15); border-color:var(--turquesa);
+  box-shadow:0 0 14px rgba(61,191,184,.4);
+}
+.paso-circulo.listo-ok {
+  background:rgba(45,198,83,.15); border-color:var(--verde);
+  box-shadow:0 0 14px rgba(45,198,83,.4);
+}
+.paso-label { font-size:0.65rem; font-weight:800; color:#666; text-transform:uppercase; letter-spacing:.5px; }
+.paso-linea {
+  flex:1; height:2px; background:var(--gris-light);
+  align-self:center; margin-bottom:20px; transition:background .4s;
+}
+.paso-linea.activa { background:var(--turquesa); }
+
+/* BANNER BIENVENIDA */
+.banner-bienvenida {
+  background:linear-gradient(135deg,rgba(212,131,26,.15),rgba(212,131,26,.05));
+  border:1.5px solid rgba(212,131,26,.3); border-radius:14px;
+  padding:12px 16px; margin:12px 0; display:none; align-items:center; gap:10px;
+}
+.banner-bienvenida.show { display:flex; }
+.banner-texto { font-size:0.82rem; font-weight:700; color:var(--naranja); line-height:1.4; }
 </style>
 </head>
 <body>
@@ -219,6 +250,12 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     ">🌙</button>
   </div>
 </header>
+
+<!-- BANNER BIENVENIDA -->
+<div class="banner-bienvenida" id="bannerBienvenida">
+  <span style="font-size:1.5rem;">📢</span>
+  <span class="banner-texto" id="bannerTexto"></span>
+</div>
 
 <!-- PANTALLA: MENÚ -->
 <div class="screen active" id="screen-menu">
@@ -306,13 +343,34 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   </div>
 </div>
 
-<!-- PANTALLA: CONFIRMADO -->
+<!-- PANTALLA: CONFIRMADO / ESTADO -->
 <div class="screen" id="screen-confirmado">
   <div class="estado-box">
-    <div class="estado-icon">🔥</div>
-    <div class="estado-titulo">¡Pedido enviado!</div>
+    <div class="estado-icon" id="estadoIcon">🔥</div>
+    <div class="estado-titulo" id="estadoTitulo">¡Pedido enviado!</div>
     <div class="num-pedido" id="numPedidoConfirmado">#0</div>
-    <div class="estado-sub">Tu pedido está en camino a la cocina.<br>¡Gracias por elegir Mordelón!</div>
+    <div class="estado-sub" id="estadoSub">Tu pedido está en camino a la cocina.<br>¡Gracias por elegir Mordelón!</div>
+
+    <!-- BARRA DE PROGRESO -->
+    <div style="width:100%;max-width:320px;margin:24px auto 0;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <div class="paso" id="paso-pendiente" style="text-align:center;flex:1;">
+          <div class="paso-circulo" id="circulo-pendiente">📋</div>
+          <div class="paso-label">Recibido</div>
+        </div>
+        <div class="paso-linea" id="linea-1"></div>
+        <div class="paso" id="paso-preparando" style="text-align:center;flex:1;">
+          <div class="paso-circulo" id="circulo-preparando">👨‍🍳</div>
+          <div class="paso-label">Preparando</div>
+        </div>
+        <div class="paso-linea" id="linea-2"></div>
+        <div class="paso" id="paso-listo" style="text-align:center;flex:1;">
+          <div class="paso-circulo" id="circulo-listo">✅</div>
+          <div class="paso-label">¡Listo!</div>
+        </div>
+      </div>
+    </div>
+
     <div style="margin-top:28px;">
       <button class="btn btn-turquesa" onclick="nuevoPedido()">🛒 Hacer otro pedido</button>
     </div>
@@ -422,6 +480,7 @@ window.validarWA = function(el) {
 
 window.irAPago = function() {
   if (!carrito.length) { showToast('⚠️ Tu carrito está vacío'); return; }
+  if (window.localPausado) { showToast('⏸️ El local está en pausa, volvé en unos minutos'); return; }
   const wa = document.getElementById('whatsappCliente').value.trim();
   if (!wa || wa.length < 8) {
     document.getElementById('whatsappCliente').focus();
@@ -498,6 +557,8 @@ window.confirmarPedido = async function() {
     });
     numeroPedidoLocal = docRef.id.slice(-4).toUpperCase();
     document.getElementById('numPedidoConfirmado').textContent = '#' + numeroPedidoLocal;
+    actualizarBarraEstado('pendiente');
+    escucharEstadoPedido(docRef.id);
 
     // Enviar WhatsApp al local
     const resumenWA = carrito.map(i => `• ${i.emoji} ${i.nombre} x${i.qty} — $${fN(i.precio*i.qty)}`).join('\n');
@@ -519,6 +580,8 @@ window.nuevoPedido = function() {
   metodoPago = null;
   document.getElementById('notaPedido').value = '';
   document.getElementById('whatsappCliente').value = '';
+  if (unsubEstado) { unsubEstado(); unsubEstado = null; }
+  pedidoActivoId = null;
   document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
   document.getElementById('waCheck').style.display = 'none';
   document.getElementById('waError').style.display = 'none';
@@ -561,6 +624,66 @@ const savedTheme = localStorage.getItem('mordelon-theme');
 if (savedTheme === 'light') {
   document.body.classList.add('light');
   document.getElementById('themeToggle').textContent = '☀️';
+}
+
+// ESCUCHAR CONFIG (bienvenida + modo pausa)
+onSnapshot(doc(db, 'config', 'general'), (snap) => {
+  const cfg = snap.exists() ? snap.data() : {};
+  // Banner bienvenida
+  const banner = document.getElementById('bannerBienvenida');
+  const texto = document.getElementById('bannerTexto');
+  if (cfg.bienvenida && cfg.bienvenida.trim()) {
+    texto.textContent = cfg.bienvenida;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+  // Modo pausa
+  window.localPausado = cfg.pausado || false;
+});
+
+// SEGUIMIENTO DE ESTADO DEL PEDIDO
+let pedidoActivoId = null;
+let unsubEstado = null;
+
+function escucharEstadoPedido(firestoreId) {
+  if (unsubEstado) unsubEstado();
+  pedidoActivoId = firestoreId;
+  unsubEstado = onSnapshot(doc(db, 'pedidos', firestoreId), (snap) => {
+    if (!snap.exists()) return;
+    const estado = snap.data().estado;
+    actualizarBarraEstado(estado);
+  });
+}
+
+function actualizarBarraEstado(estado) {
+  const pasos = ['pendiente','preparando','listo'];
+  const iconos = { pendiente:'📋', preparando:'👨‍🍳', listo:'✅' };
+  const titulos = { pendiente:'¡Pedido recibido!', preparando:'¡Lo estamos preparando!', listo:'¡Tu pedido está listo!' };
+  const subs = {
+    pendiente:'Tu pedido llegó a la cocina.<br>En unos instantes empezamos a prepararlo.',
+    preparando:'Estamos cocinando con fuego 🔥<br>Ya casi está listo.',
+    listo:'Pasá a retirar tu pedido.<br>¡Gracias por elegir Mordelón!'
+  };
+  const colores = { pendiente:'var(--turquesa)', preparando:'var(--naranja)', listo:'var(--verde)' };
+
+  document.getElementById('estadoIcon').textContent = iconos[estado] || '🔥';
+  document.getElementById('estadoTitulo').textContent = titulos[estado] || '¡Pedido enviado!';
+  document.getElementById('estadoSub').innerHTML = subs[estado] || '';
+  document.getElementById('estadoTitulo').style.color = colores[estado] || 'var(--turquesa)';
+
+  // Actualizar círculos
+  ['pendiente','preparando','listo'].forEach((p, i) => {
+    const circ = document.getElementById('circulo-'+p);
+    const idx = pasos.indexOf(estado);
+    if (i < idx) { circ.className = 'paso-circulo listo-ok'; }
+    else if (i === idx) { circ.className = 'paso-circulo activo'; }
+    else { circ.className = 'paso-circulo'; }
+  });
+  // Líneas
+  const idx = pasos.indexOf(estado);
+  document.getElementById('linea-1').className = 'paso-linea' + (idx >= 1 ? ' activa' : '');
+  document.getElementById('linea-2').className = 'paso-linea' + (idx >= 2 ? ' activa' : '');
 }
 
 // Cargar menú desde Firebase en tiempo real

@@ -323,6 +323,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('caja')">💰 Caja</div>
   <div class="tab" onclick="cambiarTab('stock')">📦 Stock</div>
   <div class="tab" onclick="cambiarTab('menu-admin')">✏️ Menú</div>
+  <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -391,6 +392,41 @@ select.mac-field option { background:#222; }
   <div id="menuAdminLista"></div>
 </div>
 
+<div id="panel-config" class="panel">
+
+  <!-- MODO PAUSA -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div>
+        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;">⏸️ MODO PAUSA</div>
+        <div style="font-size:0.75rem;color:#666;margin-top:3px;">Cuando está activo, los clientes no pueden hacer pedidos</div>
+      </div>
+      <label class="toggle-switch" style="width:52px;height:28px;">
+        <input type="checkbox" id="togglePausa" onchange="window.togglePausa(this.checked)" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div id="pausaStatus" style="font-size:0.78rem;color:#555;"></div>
+  </div>
+
+  <!-- MENSAJE BIENVENIDA -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--naranja);letter-spacing:2px;margin-bottom:10px;">📢 MENSAJE DE BIENVENIDA</div>
+    <p style="font-size:0.75rem;color:#666;margin-bottom:10px;">Aparece arriba del menú del cliente. Dejalo vacío para ocultarlo.</p>
+    <textarea id="inputBienvenida" rows="3" placeholder="Ej: ¡Hoy tenemos promo en tequeños! 2x1 hasta las 21hs 🔥" style="width:100%;padding:11px 14px;border:1.5px solid var(--gris-light);border-radius:12px;background:var(--gris-mid);color:var(--blanco);font-family:inherit;font-size:0.85rem;outline:none;resize:none;margin-bottom:10px;"></textarea>
+    <button class="btn btn-turquesa" onclick="window.guardarBienvenida()" style="margin-bottom:0;">💾 Guardar mensaje</button>
+  </div>
+
+  <!-- NOTAS INTERNAS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
+    <div style="font-family:'Righteous',cursive;font-size:1rem;color:#888;letter-spacing:2px;margin-bottom:10px;">📝 NOTAS INTERNAS</div>
+    <p style="font-size:0.75rem;color:#666;margin-bottom:10px;">Anotá lo que necesites. Solo vos lo ves.</p>
+    <textarea id="inputNotas" rows="4" placeholder="Ej: Hoy falta cheddar. Reponer mañana." style="width:100%;padding:11px 14px;border:1.5px solid var(--gris-light);border-radius:12px;background:var(--gris-mid);color:var(--blanco);font-family:inherit;font-size:0.85rem;outline:none;resize:none;margin-bottom:10px;"></textarea>
+    <button class="btn btn-turquesa" onclick="window.guardarNotas()" style="margin-bottom:0;">💾 Guardar notas</button>
+  </div>
+
+</div>
+
 <div class="modal-overlay" id="modalCierre">
   <div class="modal">
     <h2>🔒 Cerrar Caja</h2>
@@ -453,7 +489,7 @@ function verificarPin() {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, getDoc, query, orderBy, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDom7vxzcnnkc5_y3JquIr6TjMp5GX89_0",
@@ -612,12 +648,13 @@ function showNotif(msg) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin'];
+  const names=['pedidos','historial','caja','stock','menu-admin','config'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if (tab === 'stock') renderStock();
   if (tab === 'menu-admin') renderMenuAdmin();
+  if (tab === 'config') cargarConfig();
 };
 
 // ===== MENU ADMIN =====
@@ -837,6 +874,42 @@ window.toggleStock = async function(id, disponible) {
     console.error(e);
     showNotif('❌ Error al actualizar stock');
   }
+};
+
+// ===== CONFIG =====
+async function cargarConfig() {
+  try {
+    const snap = await getDoc(doc(db,'config','general'));
+    const cfg = snap.exists() ? snap.data() : {};
+    document.getElementById('togglePausa').checked = cfg.pausado || false;
+    document.getElementById('pausaStatus').textContent = cfg.pausado ? '⏸️ Local en pausa — los clientes no pueden pedir' : '✅ Local abierto';
+    document.getElementById('inputBienvenida').value = cfg.bienvenida || '';
+    document.getElementById('inputNotas').value = cfg.notas || '';
+  } catch(e) { console.error(e); }
+}
+
+window.togglePausa = async function(val) {
+  try {
+    await setDoc(doc(db,'config','general'), { pausado: val }, { merge: true });
+    document.getElementById('pausaStatus').textContent = val ? '⏸️ Local en pausa — los clientes no pueden pedir' : '✅ Local abierto';
+    showNotif(val ? '⏸️ Local en pausa' : '✅ Local abierto');
+  } catch(e) { console.error(e); }
+};
+
+window.guardarBienvenida = async function() {
+  const texto = document.getElementById('inputBienvenida').value.trim();
+  try {
+    await setDoc(doc(db,'config','general'), { bienvenida: texto }, { merge: true });
+    showNotif(texto ? '📢 Mensaje guardado' : '🗑️ Mensaje eliminado');
+  } catch(e) { console.error(e); }
+};
+
+window.guardarNotas = async function() {
+  const notas = document.getElementById('inputNotas').value;
+  try {
+    await setDoc(doc(db,'config','general'), { notas }, { merge: true });
+    showNotif('📝 Notas guardadas');
+  } catch(e) { console.error(e); }
 };
 
 function fN(n) { return (n||0).toLocaleString('es-AR'); }
