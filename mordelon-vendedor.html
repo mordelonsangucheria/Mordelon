@@ -590,6 +590,7 @@ function renderPedidosLive() {
       </div>
       <div class="pc-body">
         ${p.items.map(i=>`<div class="pc-item"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
+        ${p.entrega ? `<div class="pc-nota" style="color:${p.entrega==='delivery'?'var(--naranja)':'var(--turquesa)'};">${p.entrega==='delivery'?'🛵 Delivery':'🏠 Retiro en local'}</div>` : ''}
         ${p.nombre ? `<div class="pc-nota" style="color:var(--blanco);">👤 ${p.nombre}</div>` : ''}
         ${p.direccion ? `<div class="pc-nota" style="color:#aaa;">📍 ${p.direccion}</div>` : ''}
         ${p.nota ? `<div class="pc-nota">📝 ${p.nota}</div>` : ''}
@@ -658,6 +659,7 @@ window.imprimirTicket = function(p) {
     recargo,
     'TOTAL:                  $' + fN(p.total),
     '--------------------------------',
+    'Entrega: ' + (p.entrega === 'delivery' ? '🛵 Delivery' : '🏠 Retiro en local'),
     'Pago: ' + p.metodo,
     nombre,
     direccion,

@@ -202,6 +202,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 ::-webkit-scrollbar-thumb { background:var(--turquesa); border-radius:10px; }
 .item-card.agotado { opacity:0.5; cursor:default; }
 .item-card.agotado:active { transform:none; border-color:var(--gris-light); }
+.metodo-btn.entrega-sel { border-color:var(--turquesa); background:rgba(61,191,184,.12); color:var(--turquesa); }
 
 /* HORARIOS */
 .horarios-banner {
@@ -447,7 +448,31 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 <!-- PANTALLA: PAGO -->
 <div class="screen" id="screen-pago">
   <div style="padding-top:8px;">
-    <div class="seccion-titulo">💳 Método de pago</div>
+    <div class="seccion-titulo">🛵 ¿Cómo lo recibís?</div>
+    <div class="metodos" id="entregaSelector">
+      <button class="metodo-btn" onclick="window.selEntrega('retiro')" id="ebtn-retiro"><span>🏠</span>Retiro en local</button>
+      <button class="metodo-btn" onclick="window.selEntrega('delivery')" id="ebtn-delivery"><span>🛵</span>Delivery</button>
+    </div>
+
+    <!-- INFO RETIRO -->
+    <div id="infoRetiro" style="display:none;">
+      <div class="alias-box" style="border-color:var(--turquesa);">
+        <div class="alias-label">Dirección del local</div>
+        <div class="alias-val" style="font-size:1rem;">📍 Yrigoyen 631</div>
+        <div class="alias-sub">San Miguel del Monte</div>
+      </div>
+    </div>
+
+    <!-- INFO DELIVERY -->
+    <div id="infoDelivery" style="display:none;">
+      <div class="alias-box" style="border-color:var(--naranja);">
+        <div class="alias-label">Delivery a tu domicilio</div>
+        <div class="alias-val" style="font-size:0.9rem;color:var(--naranja);">🛵 Gratis en zona cercana</div>
+        <div class="alias-sub">Si quedás lejos del local puede aplicar un recargo de $500</div>
+      </div>
+    </div>
+
+    <div class="seccion-titulo" style="margin-top:16px;">💳 Método de pago</div>
     <div class="resumen-box" id="resumenPago"></div>
     <div class="metodos">
       <button class="metodo-btn" onclick="selMetodo('Transferencia')" id="mbtn-Transferencia"><span>📲</span>Transferencia / Lemon</button>
@@ -723,6 +748,7 @@ window.selMetodo = function(m) {
 };
 
 window.confirmarPedido = async function() {
+  if (!tipoEntrega) { showToast('⚠️ Elegí si retirás o querés delivery'); return; }
   if (!metodoPago) { showToast('⚠️ Elegí un método de pago'); return; }
   const waCliente = document.getElementById('whatsappCliente').value.trim();
   const nombreCliente = document.getElementById('nombreCliente').value.trim();
@@ -744,6 +770,7 @@ window.confirmarPedido = async function() {
       metodo: metodoPago,
       recargo: metodoPago === 'Tarjeta' ? Math.round(total * 0.1) : 0,
       nota,
+      entrega: tipoEntrega,
       whatsapp: waCliente,
       nombre: nombreCliente,
       direccion: direccionCliente,
@@ -762,7 +789,8 @@ window.confirmarPedido = async function() {
     const waNum = waCliente ? `\n📱 *WhatsApp:* ${waCliente}` : '';
     const waNombre = nombreCliente ? `\n👤 *Nombre:* ${nombreCliente}` : '';
     const waDireccion = direccionCliente ? `\n📍 *Dirección:* ${direccionCliente}` : '';
-    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNombre}${waDireccion}${waNum}`;
+    const entregaWA = tipoEntrega === 'delivery' ? '🛵 Delivery' : '🏠 Retiro en local';
+    const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n🛵 *Entrega:* ${entregaWA}\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNombre}${waDireccion}${waNum}`;
     window.open(`https://wa.me/5492271415751?text=${encodeURIComponent(msgWA)}`, '_blank');
 
     showScreen('confirmado');
@@ -779,6 +807,10 @@ window.nuevoPedido = function() {
   document.getElementById('whatsappCliente').value = '';
   document.getElementById('nombreCliente').value = '';
   document.getElementById('direccionCliente').value = '';
+  tipoEntrega = null;
+  document.querySelectorAll('#entregaSelector .metodo-btn').forEach(b => b.classList.remove('entrega-sel'));
+  document.getElementById('infoRetiro').style.display = 'none';
+  document.getElementById('infoDelivery').style.display = 'none';
   if (unsubEstado) { unsubEstado(); unsubEstado = null; }
   pedidoActivoId = null;
   document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
