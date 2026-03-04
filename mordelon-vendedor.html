@@ -418,7 +418,22 @@ select.mac-field option { background:#222; }
   <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;margin-bottom:20px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO PRODUCTO</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-      <input class="mac-field" id="new-emoji" placeholder="Emoji 🍔" maxlength="4"/>
+      <div style="position:relative;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div id="new-emoji-preview" onclick="window.toggleEmojiPicker()"
+            style="width:52px;height:52px;border-radius:12px;background:var(--gris-mid);border:1.5px solid var(--gris-light);
+            display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:pointer;user-select:none;"
+            title="Elegir emoji">🍔</div>
+          <input type="hidden" id="new-emoji" value="🍔"/>
+          <span style="font-size:0.7rem;color:#555;">Tocá para<br>elegir emoji</span>
+        </div>
+        <div id="emojiPicker" style="display:none;position:absolute;top:60px;left:0;z-index:999;
+          background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;
+          padding:12px;width:280px;box-shadow:0 8px 32px #0008;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="emojiCategoriaBtns"></div>
+          <div id="emojiGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:200px;overflow-y:auto;"></div>
+        </div>
+      </div>
       <input class="mac-field" id="new-nombre" placeholder="Nombre del producto"/>
     </div>
     <input class="mac-field" id="new-desc" placeholder="Descripción (ingredientes, etc.)" style="margin-bottom:10px;"/>
@@ -1548,6 +1563,63 @@ window.limpiarCalc = function() {
   document.querySelectorAll('.btn-billete').forEach(b => b.classList.remove('sel'));
 };
 
+// ===== EMOJI PICKER =====
+const EMOJIS = {
+  'Comidas': ['🍔','🍟','🌭','🌮','🌯','🥙','🥪','🥨','🧆','🥚','🍳','🧇','🥞','🧈','🍖','🍗','🥩','🥓','🍕','🫔','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍣','🍤','🍥','🥮','🍡','🧁','🎂','🍰','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯'],
+  'Sandwiches': ['🥖','🍞','🥐','🥯','🧀','🥗','🫓','🥙','🌮','🥪','🫕','🫙'],
+  'Bebidas': ['🥤','🧃','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧉','☕','🫖','🍵','🧋','🍶','🥛','🫗'],
+  'Dulces': ['🍦','🍧','🍨','🍩','🍪','🎂','🍰','🧁','🍫','🍬','🍭','🍮','🍯','🧇','🥞','🫐','🍓','🍒','🍑','🍇'],
+  'Frutas': ['🍎','🍊','🍋','🍌','🍍','🥭','🍓','🫐','🍒','🍑','🍇','🍉','🍈','🍏','🥝','🍅','🫒','🥥','🥑'],
+  'Verduras': ['🥦','🥬','🥒','🌶','🫑','🧄','🧅','🥔','🍠','🫚','🌽','🥕','🍆','🧆','🫛'],
+  'Fuego🔥': ['🔥','⭐','💥','✨','🎉','🎊','👑','💎','🏆','🥇','🎯','💪','🙌','👏','❤️','🧡','💛','💚','💙','💜'],
+};
+let emojiCatActual = 'Comidas';
+
+function renderEmojiPicker() {
+  // Category buttons
+  const catCont = document.getElementById('emojiCategoriaBtns');
+  catCont.innerHTML = '';
+  Object.keys(EMOJIS).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.textContent = cat;
+    btn.style.cssText = 'background:' + (cat===emojiCatActual?'var(--turquesa)':'var(--gris-mid)') + ';color:' + (cat===emojiCatActual?'var(--negro)':'#aaa') + ';border:none;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;';
+    btn.addEventListener('click', () => { emojiCatActual = cat; renderEmojiPicker(); });
+    catCont.appendChild(btn);
+  });
+  // Emoji grid
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  EMOJIS[emojiCatActual].forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.style.cssText = 'background:transparent;border:1.5px solid transparent;border-radius:8px;padding:4px;font-size:1.3rem;cursor:pointer;transition:all .15s;';
+    btn.addEventListener('mouseenter', () => btn.style.borderColor='var(--turquesa)');
+    btn.addEventListener('mouseleave', () => btn.style.borderColor='transparent');
+    btn.addEventListener('click', () => {
+      document.getElementById('new-emoji').value = emoji;
+      document.getElementById('new-emoji-preview').textContent = emoji;
+      document.getElementById('emojiPicker').style.display = 'none';
+    });
+    grid.appendChild(btn);
+  });
+}
+
+
+window.toggleEmojiPicker = function() {
+  const picker = document.getElementById('emojiPicker');
+  const showing = picker.style.display === 'block';
+  picker.style.display = showing ? 'none' : 'block';
+  if (!showing) renderEmojiPicker();
+};
+
+// Close picker on outside click
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('emojiPicker');
+  if (picker && !picker.contains(e.target) && !document.getElementById('new-emoji-preview').contains(e.target)) {
+    picker.style.display = 'none';
+  }
+});
+
 // ===== MENU ADMIN =====
 let menuAdmin = [];
 
@@ -1689,7 +1761,9 @@ window.agregarProducto = function() {
   guardarMenu();
   renderMenuAdmin();
   // Clear fields
-  ['new-emoji','new-nombre','new-desc','new-precio'].forEach(id => document.getElementById(id).value = '');
+  ['new-nombre','new-desc','new-precio'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('new-emoji').value = '🍔';
+  document.getElementById('new-emoji-preview').textContent = '🍔';
   showNotif('✅ Producto agregado');
 };
 
