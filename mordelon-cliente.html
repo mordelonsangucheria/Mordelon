@@ -858,11 +858,19 @@ function actualizarBarraEstado(estado) {
 }
 
 // Cargar horarios desde Firebase
-onSnapshot(doc(db,'config','horarios'), (snap) => {
+const horariosDefault = [
+  { dia:'Lunes',     abierto:false, desde:'19:30', hasta:'23:00' },
+  { dia:'Martes',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Miércoles', abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Jueves',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Viernes',   abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Sábado',    abierto:true,  desde:'19:30', hasta:'23:00' },
+  { dia:'Domingo',   abierto:true,  desde:'19:30', hasta:'23:00' },
+];
+
+function mostrarHorarios(dias) {
   const banner = document.getElementById('horariosBanner');
   const lista = document.getElementById('horariosLista');
-  if (!snap.exists() || !snap.data().dias) { banner.style.display='none'; return; }
-  const dias = snap.data().dias;
   banner.style.display = 'block';
   lista.innerHTML = dias.map(h => `
     <div class="horario-fila">
@@ -872,6 +880,14 @@ onSnapshot(doc(db,'config','horarios'), (snap) => {
         : `<span class="horario-cerrado">Cerrado</span>`}
     </div>
   `).join('');
+}
+
+// Mostrar horarios por defecto inmediatamente
+mostrarHorarios(horariosDefault);
+
+onSnapshot(doc(db,'config','horarios'), (snap) => {
+  const dias = (snap.exists() && snap.data().dias) ? snap.data().dias : horariosDefault;
+  mostrarHorarios(dias);
 });
 
 // Cargar menú desde Firebase en tiempo real
