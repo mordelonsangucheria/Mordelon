@@ -101,6 +101,7 @@ header {
 .btn-listo:hover { background:var(--verde); color:white; }
 .btn-cobrar { background:linear-gradient(135deg,var(--turquesa-dark),var(--turquesa)); color:var(--negro); border:none; }
 .btn-rechazar { background:rgba(255,77,77,.15); color:var(--rojo); border:1.5px solid var(--rojo); margin-top:6px; }
+.btn-imprimir { background:rgba(61,191,184,.15); color:var(--turquesa); border:1.5px solid var(--turquesa); }
 .btn-cobrar:hover { box-shadow:0 0 14px rgba(61,191,184,.4); }
 
 /* STATS */
@@ -556,7 +557,7 @@ onSnapshot(q, (snap) => {
   });
 
   if (!primeraCarga && snap.docChanges().some(c => c.type === 'added' && c.doc.data().estado === 'pendiente')) {
-    showNotif('🔔 ¡Nuevo pedido!');
+    showNotif('🔔 ¡Nuevo pedido!', true);
   }
   primeraCarga = false;
 
@@ -626,8 +627,54 @@ function renderPedidosLive() {
     if (p.estado !== 'cobrado') {
       div.appendChild(btn('btn-rechazar', '❌ Rechazar', () => window.rechazarPedido(p.firestoreId, p.numeroPedido)));
     }
+    const bp = btn('btn-imprimir', '🖨️ Ticket', () => window.imprimirTicket(p));
+    bp.style.cssText = 'background:rgba(61,191,184,.15);color:var(--turquesa);border:1.5px solid var(--turquesa);';
+    div.appendChild(bp);
   });
 }
+
+window.imprimirTicket = function(p) {
+  const fecha = p.timestamp?.toDate ? p.timestamp.toDate().toLocaleString('es-AR') : new Date().toLocaleString('es-AR');
+  const items = p.items.map(i => 
+    i.nombre.padEnd(24,' ') + 'x' + i.qty + '   $' + fN(i.precio * i.qty)
+  ).join('\n');
+  const recargo = p.recargo ? '\nRecargo tarjeta:        $' + fN(p.recargo) : '';
+  const nota = p.nota ? '\nNota: ' + p.nota : '';
+  const wa = p.whatsapp ? '\nWhatsApp: ' + p.whatsapp : '';
+  const ticket = [
+    '================================',
+    '        MORDELÓN 🔥',
+    '      Del Fuego al Pan',
+    '================================',
+    'Pedido #' + (p.numeroPedido || p.firestoreId.slice(-4).toUpperCase()),
+    'Fecha: ' + fecha,
+    '--------------------------------',
+    items,
+    '--------------------------------',
+    recargo,
+    'TOTAL:                  $' + fN(p.total),
+    '--------------------------------',
+    'Pago: ' + p.metodo,
+    wa,
+    nota,
+    '================================',
+    '   ¡Gracias por elegirnos!',
+    '================================',
+  ].filter(Boolean).join('\n');
+
+  const win = window.open('', '_blank', 'width=400,height=600');
+  win.document.write(`
+    <html><head><title>Ticket #${p.numeroPedido || ''}</title>
+    <style>
+      body { font-family: monospace; font-size: 13px; padding: 20px; white-space: pre; }
+      @media print { body { padding: 0; } }
+    </style></head>
+    <body>${ticket}</body>
+    <script>window.onload = () => { window.print(); }<\/script>
+    </html>
+  `);
+  win.document.close();
+};
 
 window.cambiarEstado = async function(id, nuevoEstado) {
   try {
@@ -725,12 +772,30 @@ window.rechazarPedido = async function(id, num) {
   }
 };
 
-function showNotif(msg) {
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 150, 300].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + delay/1000);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.25);
+      osc.start(ctx.currentTime + delay/1000);
+      osc.stop(ctx.currentTime + delay/1000 + 0.25);
+    });
+  } catch(e) {}
+}
+
+function showNotif(msg, conSonido = false) {
   const b = document.getElementById('notifBanner');
   b.textContent = msg; b.classList.add('show');
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 3000);
-  try { new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAA').play(); } catch(e) {}
+  b._t = setTimeout(() => b.classList.remove('show'), 4000);
+  if (conSonido) playBeep();
 }
 
 window.cambiarTab = function(tab) {
