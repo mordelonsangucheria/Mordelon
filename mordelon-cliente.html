@@ -720,6 +720,12 @@ window.validarWA = function(el) {
 window.irAPago = function() {
   if (!carrito.length) { showToast('⚠️ Tu carrito está vacío'); return; }
   if (window.localPausado) { showToast('⏸️ El local está en pausa, volvé en unos minutos'); return; }
+  if (!estaAbiertoAhora(30)) {
+    const prox = proximaApertura();
+    const msg = prox ? '🕐 Abrimos a las ' + prox + '. ¡Ya podés hacer tu pedido 30 min antes!' : '🕐 El local está cerrado por hoy.';
+    showToast(msg, 5000);
+    return;
+  }
   const nombre = document.getElementById('nombreCliente').value.trim();
   if (!nombre) {
     document.getElementById('nombreCliente').focus();
@@ -913,11 +919,11 @@ function showScreen(name) {
   window.scrollTo(0,0);
 }
 
-function showToast(msg) {
+function showToast(msg, duracion = 3000) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove('show'), 2500);
+  t._t = setTimeout(() => t.classList.remove('show'), duracion);
 }
 
 function fN(n) { return n.toLocaleString('es-AR'); }
@@ -1143,7 +1149,7 @@ onSnapshot(doc(db,'config','horarios'), (snap) => {
   mostrarHorarios(horariosData);
 });
 
-function estaAbiertoAhora() {
+function estaAbiertoAhora(margenMinutos = 0) {
   const ahora = new Date();
   const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const diaActual = dias[ahora.getDay()];
@@ -1151,9 +1157,26 @@ function estaAbiertoAhora() {
   if (!horario || !horario.abierto) return false;
   const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
   const now = ahora.getHours()*60 + ahora.getMinutes();
-  if (now >= toMin(horario.desde) && now <= toMin(horario.hasta)) return true;
-  if (horario.turno2 && now >= toMin(horario.desde2) && now <= toMin(horario.hasta2)) return true;
+  if (now >= toMin(horario.desde) - margenMinutos && now <= toMin(horario.hasta)) return true;
+  if (horario.turno2 && now >= toMin(horario.desde2) - margenMinutos && now <= toMin(horario.hasta2)) return true;
   return false;
+}
+
+function proximaApertura() {
+  const ahora = new Date();
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const diaActual = dias[ahora.getDay()];
+  const horario = horariosData.find(h => h.dia === diaActual);
+  if (horario && horario.abierto) {
+    if (horario.turno2) return horario.desde2;
+    return horario.desde;
+  }
+  // Buscar el próximo día abierto
+  for (let i = 1; i <= 7; i++) {
+    const sig = horariosData[(ahora.getDay() + i) % 7];
+    if (sig && sig.abierto) return sig.dia + ' a las ' + sig.desde;
+  }
+  return null;
 }
 
 // Cargar menú desde Firebase en tiempo real
