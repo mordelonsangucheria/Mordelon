@@ -1136,8 +1136,10 @@ function showNotif(msg, conSonido = false) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro','promos','descuentos'];
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
+  document.querySelectorAll('.tab').forEach(t => {
+    const tabName = t.getAttribute('onclick').match(/cambiarTab\('([^']+)'\)/)?.[1];
+    t.classList.toggle('active', tabName === tab);
+  });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if (tab === 'stock') renderStock();
