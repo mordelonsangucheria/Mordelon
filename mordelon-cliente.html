@@ -526,6 +526,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onclick="window.elegirJuego('tetris')" id="btnJuegoTetris" style="background:var(--gris-mid);border:2px solid var(--turquesa);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🧱 Tetris</button>
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
         <button onclick="window.elegirJuego('2048')" id="btnJuego2048" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🔢 2048</button>
+        <button onclick="window.elegirJuego('dino')" id="btnJuegoDino" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🦕 Dino</button>
       </div>
     </div>
 
@@ -592,7 +593,18 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onpointerdown="window.g2048Move('down')" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:52px;height:52px;">▼</button>
         <button onpointerdown="window.g2048Move('right')" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:52px;height:52px;">▶</button>
       </div>
-      <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:4px;">Swipe o D-pad para mover</p>
+    <!-- DINO -->
+    <div id="juegoDino" style="display:none;">
+      <div style="text-align:center;margin-bottom:6px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
+        <span>Puntos: <strong id="dinoScore" style="color:var(--turquesa)">0</strong></span>
+        <span>Récord: <strong id="dinoHi" style="color:var(--naranja)">0</strong></span>
+      </div>
+      <canvas id="dinoCanvas" width="320" height="160" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
+        <button onpointerdown="window.dinoJump()" style="background:var(--turquesa);border:none;color:#111;border-radius:14px;padding:12px 40px;font-family:'Righteous',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;">▲ SALTAR</button>
+        <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
+      </div>
+      <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Espacio / Tap para saltar · Agacharse: ↓</p>
     </div>
   </div>
 </div>
@@ -1667,21 +1679,21 @@ onSnapshot(doc(db, 'config', 'menu'), (snap) => {
 <script>
 // ===================== SELECTOR DE JUEGO =====================
 window.elegirJuego = function(juego) {
-  ['tetris','snake','2048'].forEach(j => {
-    document.getElementById('juegoTetris').style.display = j==='tetris'&&juego==='tetris'?'block':'none';
-    document.getElementById('juegoSnake').style.display = j==='snake'&&juego==='snake'?'block':'none';
-    document.getElementById('juego2048').style.display = j==='2048'&&juego==='2048'?'block':'none';
-    const btn = document.getElementById('btnJuego'+j.charAt(0).toUpperCase()+j.slice(1));
+  const juegos = ['tetris','snake','2048','dino'];
+  juegos.forEach(j => {
+    const el = document.getElementById('juego' + j.charAt(0).toUpperCase() + j.slice(1));
+    if(el) el.style.display = 'none';
+    const btn = document.getElementById('btnJuego' + j.charAt(0).toUpperCase() + j.slice(1));
     if(btn) btn.style.borderColor = 'var(--gris-light)';
   });
-  document.getElementById('juegoTetris').style.display = juego==='tetris'?'block':'none';
-  document.getElementById('juegoSnake').style.display = juego==='snake'?'block':'none';
-  document.getElementById('juego2048').style.display = juego==='2048'?'block':'none';
-  const actBtn = document.getElementById('btnJuego'+juego.charAt(0).toUpperCase()+juego.slice(1));
+  const show = document.getElementById('juego' + juego.charAt(0).toUpperCase() + juego.slice(1));
+  if(show) show.style.display = 'block';
+  const actBtn = document.getElementById('btnJuego' + juego.charAt(0).toUpperCase() + juego.slice(1));
   if(actBtn) actBtn.style.borderColor = 'var(--turquesa)';
   if(juego==='tetris' && !tetrisRunning) tetrisInit();
   if(juego==='snake' && !snakeRunning) snakeInit();
   if(juego==='2048') g2048Init();
+  if(juego==='dino') dinoInit();
 };
 
 // ===================== TETRIS =====================
@@ -1818,6 +1830,156 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='ArrowRight')window.g2048Move('right');
 });
 (()=>{let sx,sy;const bd=document.getElementById('g2048Board');bd.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});bd.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>Math.abs(dy)){window.g2048Move(dx>0?'right':'left');}else{window.g2048Move(dy>0?'down':'up');}},{passive:true});})();
+</script>
+
+<script>
+// ===================== DINO =====================
+const DC = document.getElementById('dinoCanvas');
+const DX = DC.getContext('2d');
+const DW = 320, DH = 160;
+const GROUND = DH - 28;
+const TURQ = '#3DBFB8';
+const NARANJ = '#D4831A';
+
+let dino, obstacles, dScore, dHi = parseInt(localStorage.getItem('dinoHiC')||'0');
+let dSpeed, dFrame, dRunning, dOver, dAnimFrame;
+
+function dinoInit() {
+  dino = { x:40, y:GROUND, w:22, h:26, vy:0, onGround:true, ducking:false, frame:0 };
+  obstacles = [];
+  dScore = 0; dSpeed = 4; dFrame = 0; dRunning = true; dOver = false;
+  document.getElementById('dinoScore').textContent = 0;
+  document.getElementById('dinoHi').textContent = dHi;
+  cancelAnimationFrame(dAnimFrame);
+  dinoLoop();
+}
+
+function dinoLoop() {
+  if(!dRunning) return;
+  dFrame++;
+  dSpeed = 4 + Math.floor(dScore / 300) * 0.5;
+
+  // Physics
+  if(!dino.onGround) {
+    dino.vy += 0.7;
+    dino.y += dino.vy;
+    if(dino.y >= GROUND) { dino.y = GROUND; dino.vy = 0; dino.onGround = true; }
+  }
+  dino.frame = Math.floor(dFrame / 6) % 2;
+
+  // Spawn obstacles
+  if(obstacles.length === 0 || obstacles[obstacles.length-1].x < DW - (180 + Math.random()*120)) {
+    const h = 20 + Math.floor(Math.random()*22);
+    const w = 12 + Math.floor(Math.random()*10);
+    const isBird = dScore > 400 && Math.random() < 0.3;
+    obstacles.push({ x:DW+10, y: isBird ? GROUND-30 : GROUND, w, h: isBird ? 14 : h, bird:isBird, frame:0 });
+  }
+
+  // Move obstacles & collision
+  for(let i = obstacles.length-1; i >= 0; i--) {
+    obstacles[i].x -= dSpeed;
+    obstacles[i].frame = Math.floor(dFrame / 8) % 2;
+    if(obstacles[i].x + obstacles[i].w < 0) { obstacles.splice(i,1); continue; }
+    const dinoH = dino.ducking ? 14 : dino.h;
+    const dinoY = dino.ducking ? GROUND+12 : dino.y;
+    const pad = 4;
+    if(dino.x+pad < obstacles[i].x+obstacles[i].w-pad &&
+       dino.x+dino.w-pad > obstacles[i].x+pad &&
+       dinoY-dinoH+pad < obstacles[i].y &&
+       dinoY > obstacles[i].y-obstacles[i].h+pad) {
+      dinoDead(); return;
+    }
+  }
+
+  dScore++;
+  document.getElementById('dinoScore').textContent = dScore;
+  if(dScore > dHi) { dHi = dScore; localStorage.setItem('dinoHiC', dHi); document.getElementById('dinoHi').textContent = dHi; }
+
+  dinoDraw();
+  dAnimFrame = requestAnimationFrame(dinoLoop);
+}
+
+function dinoDraw() {
+  DX.fillStyle = '#0a0a0a'; DX.fillRect(0,0,DW,DH);
+
+  // Ground
+  DX.strokeStyle = '#333'; DX.lineWidth = 1;
+  DX.beginPath(); DX.moveTo(0,GROUND+2); DX.lineTo(DW,GROUND+2); DX.stroke();
+
+  // Dino
+  DX.fillStyle = TURQ;
+  const dinoH = dino.ducking ? 14 : dino.h;
+  const dinoTopY = dino.ducking ? GROUND+12-dinoH : dino.y-dino.h;
+  const dinoW = dino.ducking ? 30 : dino.w;
+  DX.fillRect(dino.x, dinoTopY, dinoW, dinoH);
+  if(!dino.ducking) {
+    DX.fillRect(dino.x+8, dinoTopY-10, 16, 12); // head
+    DX.fillStyle = '#0a0a0a'; DX.fillRect(dino.x+20, dinoTopY-8, 3, 3); // eye
+    DX.fillStyle = TURQ;
+    DX.fillRect(dino.x+22, dinoTopY-4, 6, 3); // jaw
+    DX.fillRect(dino.x-6, dinoTopY+6, 8, 6); // tail
+  }
+  // Legs
+  if(dino.onGround && !dino.ducking) {
+    if(dino.frame===0) { DX.fillRect(dino.x+4,dino.y,6,8); DX.fillRect(dino.x+12,dino.y-4,6,4); }
+    else               { DX.fillRect(dino.x+4,dino.y-4,6,4); DX.fillRect(dino.x+12,dino.y,6,8); }
+  } else if(!dino.ducking) {
+    DX.fillRect(dino.x+4,dino.y,6,6); DX.fillRect(dino.x+12,dino.y,6,6);
+  }
+
+  // Obstacles
+  obstacles.forEach(ob => {
+    if(ob.bird) {
+      DX.fillStyle = NARANJ;
+      DX.fillRect(ob.x, ob.y-ob.h, ob.w, ob.h);
+      DX.fillRect(ob.x-4, ob.y-ob.h+(ob.frame===0?-6:4), ob.w+8, 5);
+      DX.fillRect(ob.x+ob.w, ob.y-ob.h+3, 6, 3);
+    } else {
+      DX.fillStyle = '#2DC653';
+      DX.fillRect(ob.x+3, ob.y-ob.h, ob.w-6, ob.h);
+      DX.fillRect(ob.x, ob.y-ob.h+6, ob.w, 5);
+      DX.fillRect(ob.x, ob.y-ob.h+6, 4, -6);
+      DX.fillRect(ob.x+ob.w-4, ob.y-ob.h+6, 4, -8);
+    }
+  });
+
+  if(dScore>0 && dScore%100===0 && dFrame%20<10) {
+    DX.fillStyle='rgba(61,191,184,0.12)'; DX.fillRect(0,0,DW,DH);
+  }
+}
+
+function dinoDead() {
+  dRunning=false; dOver=true; cancelAnimationFrame(dAnimFrame);
+  dinoDraw();
+  DX.fillStyle='rgba(0,0,0,0.65)'; DX.fillRect(0,50,DW,60);
+  DX.fillStyle='#fff'; DX.font='bold 15px Nunito'; DX.textAlign='center';
+  DX.fillText('GAME OVER',DW/2,74);
+  DX.font='11px Nunito'; DX.fillStyle='#aaa';
+  DX.fillText('Puntos: '+dScore+'  |  Récord: '+dHi,DW/2,94);
+  DX.font='10px Nunito'; DX.fillStyle='#555';
+  DX.fillText('Tap o Espacio para reiniciar',DW/2,110);
+}
+
+window.dinoJump = function() { if(dOver){dinoInit();return;} if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;} };
+window.dinoDuck = function(on) { if(dRunning) dino.ducking=on; };
+window.dinoReset = function() { cancelAnimationFrame(dAnimFrame); dinoInit(); };
+
+document.addEventListener('keydown', e=>{
+  if(document.getElementById('juegoDino').style.display==='none') return;
+  if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();window.dinoJump();}
+  if(e.key==='ArrowDown'){e.preventDefault();window.dinoDuck(true);}
+});
+document.addEventListener('keyup', e=>{ if(e.key==='ArrowDown') window.dinoDuck(false); });
+DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
+(()=>{
+  let sy;
+  DC.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+  DC.addEventListener('touchend',e=>{
+    const dy=e.changedTouches[0].clientY-sy;
+    if(dy>20){window.dinoDuck(true);setTimeout(()=>window.dinoDuck(false),300);}
+    else window.dinoJump();
+  },{passive:true});
+})();
 </script>
 </body>
 </html>
