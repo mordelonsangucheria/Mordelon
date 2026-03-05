@@ -862,25 +862,25 @@ window.confirmarPedido = async function() {
 
     // Marcar cupón como usado en Firebase
     if (cuponAplicado) {
+      const codigoCupon = cuponAplicado.codigo;
+      cuponAplicado = null; // limpiar inmediatamente para evitar doble uso
       try {
-        // Verificar que el cupón siga sin usarse antes de marcarlo
         const cuponesSnap = await getDoc(doc(db,'config','cupones'));
-        if (cuponesSnap.exists()) {
-          const listaActual = cuponesSnap.data().lista || [];
-          const cuponFresh = listaActual.find(c => c.codigo === cuponAplicado.codigo);
-          if (cuponFresh && !cuponFresh.usado) {
-            const lista = listaActual.map(c =>
-              c.codigo === cuponAplicado.codigo
-                ? { ...c, usado: true, activo: false, usadoPor: nombreCliente, usadoEn: Date.now() }
-                : c
-            );
-            await setDoc(doc(db,'config','cupones'), { lista });
-          }
-        }
-      } catch(e) { console.error('Error marcando cupón:', e); }
-      cuponAplicado = null;
-      document.getElementById('cuponInput').value = '';
-      document.getElementById('cuponMsg').textContent = '';
+        const listaActual = cuponesSnap.exists() ? (cuponesSnap.data().lista || []) : [];
+        const lista = listaActual.map(c =>
+          c.codigo === codigoCupon
+            ? { ...c, usado: true, activo: false, usadoPor: nombreCliente, usadoEn: Date.now() }
+            : c
+        );
+        await setDoc(doc(db,'config','cupones'), { lista });
+        console.log('✅ Cupón ' + codigoCupon + ' marcado como usado');
+      } catch(e) {
+        console.error('❌ Error marcando cupón:', e);
+      }
+      const inp = document.getElementById('cuponInput');
+      const msg = document.getElementById('cuponMsg');
+      if (inp) inp.value = '';
+      if (msg) msg.textContent = '';
     }
 
     showScreen('confirmado');
