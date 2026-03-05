@@ -2176,10 +2176,10 @@ window.elegirJuego = function(juego) {
   if(show) show.style.display = 'block';
   const actBtn = document.getElementById('btnJuego' + juego.charAt(0).toUpperCase() + juego.slice(1));
   if(actBtn) actBtn.style.borderColor = 'var(--turquesa)';
-  if(juego==='tetris' && !tetrisRunning) tetrisInit();
-  if(juego==='snake' && !snakeRunning) snakeInit();
-  if(juego==='2048') g2048Init();
-  if(juego==='dino') dinoInit();
+  if(juego==='tetris' && !tetrisRunning) window.tetrisInit();
+  if(juego==='snake' && !snakeRunning) window.snakeInit();
+  if(juego==='2048') window.g2048Init();
+  if(juego==='dino') window.dinoInit();
   if(juego==='minas') window.minasInit();
   // Actualizar sistema de recompensa para el juego seleccionado
   window.juegoActualRecompensa = juego;
@@ -2224,6 +2224,7 @@ function tDraw(){
 }
 function tetrisOver(){ clearInterval(tTimer); tetrisRunning=false; TX.fillStyle='rgba(0,0,0,0.7)'; TX.fillRect(0,150,200,60); TX.fillStyle='#fff'; TX.font='bold 16px Nunito'; TX.textAlign='center'; TX.fillText('GAME OVER',100,175); TX.font='12px Nunito'; TX.fillText('Puntos: '+tScore,100,195); }
 window.tetrisPause=function(){tPaused=!tPaused;};
+window.tetrisInit=tetrisInit;
 window.tetrisReset=function(){clearInterval(tTimer);tetrisInit();tDraw();};
 window.tetrisDir=function(d){
   if(!tetrisRunning||tPaused)return;
@@ -2275,6 +2276,7 @@ function sDraw(){
 }
 function snakeOver(){clearInterval(sTimer);snakeRunning=false;SX.fillStyle='rgba(0,0,0,0.7)';SX.fillRect(0,100,280,60);SX.fillStyle='#fff';SX.font='bold 16px Nunito';SX.textAlign='center';SX.fillText('GAME OVER',140,125);SX.font='12px Nunito';SX.fillText('Puntos: '+sScore,140,145);}
 window.snakeDir=function(dx,dy){if(!snakeRunning)return;if(dx!==0&&sDir.x!==0)return;if(dy!==0&&sDir.y!==0)return;sNext={x:dx,y:dy};};
+window.snakeInit=snakeInit;
 window.snakeReset=function(){clearInterval(sTimer);snakeInit();sDraw();};
 document.addEventListener('keydown',e=>{
   if(document.getElementById('juegoSnake').style.display==='none')return;
@@ -2311,6 +2313,7 @@ window.g2048Move=function(dir){
   else if(dir==='down')b=rotate(rotate(rotate(b)));
   if(moved){g2Board=b;g2Spawn();document.getElementById('g2048Score').textContent=g2Score;if(g2Score>g2Hi){g2Hi=g2Score;localStorage.setItem('g2048HiC',g2Hi);document.getElementById('g2048Hi').textContent=g2Hi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('2048',g2Hi);}g2Render();}
 };
+window.g2048Init=g2048Init;
 window.g2048Reset=function(){g2048Init();};
 document.addEventListener('keydown',e=>{
   if(document.getElementById('juego2048').style.display==='none')return;
@@ -2591,6 +2594,7 @@ function dinoDead() {
 
 window.dinoJump = function() { if(dOver){dinoInit();return;} if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;} };
 window.dinoDuck = function(on) { if(dRunning) dino.ducking=on; };
+window.dinoInit  = dinoInit;
 window.dinoReset = function() { cancelAnimationFrame(dAnimFrame); dinoInit(); };
 
 document.addEventListener('keydown', e=>{
