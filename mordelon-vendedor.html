@@ -1271,7 +1271,7 @@ window.editarNombreUsuario = async function(idx, nombreActual) {
   showNotif('✅ Nombre actualizado');
 };
 
-function guardarUsuarios() {
+async function guardarUsuarios() {
   await setDoc(doc(db,'config','usuarios'), { lista: usuariosData });
 }
 
