@@ -372,6 +372,7 @@ select.mac-field option { background:#222; }
   <div class="tab" onclick="cambiarTab('calculadora')">🧮 Vuelto</div>
   <div class="tab" onclick="cambiarTab('cronometro')">⏱️ Timer</div>
   <div class="tab" onclick="cambiarTab('promos')">🎉 Promos</div>
+  <div class="tab" onclick="cambiarTab('descuentos')">🎟️ Cupones</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -475,11 +476,13 @@ select.mac-field option { background:#222; }
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:12px;">👥 USUARIOS</div>
     <div id="usuariosLista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+    <div id="seccionAgregarUsuario" style="display:none;">
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <input id="nuevoNombre" class="campo" placeholder="Nombre" style="flex:1;min-width:100px;padding:10px;" />
       <input id="nuevoPin" class="campo" placeholder="PIN (4 dígitos)" maxlength="4" type="tel" style="flex:1;min-width:100px;padding:10px;" />
     </div>
     <button class="btn btn-turquesa" onclick="window.agregarUsuario()" style="margin-top:10px;width:100%;">➕ Agregar usuario</button>
+    </div><!-- /seccionAgregarUsuario -->
 
     <!-- CAMBIAR PIN PROPIO -->
     <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:14px;">
@@ -682,6 +685,39 @@ select.mac-field option { background:#222; }
   </div>
 </div>
 
+<div id="panel-descuentos" class="panel">
+  <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Creá códigos de descuento de un solo uso. El cliente lo ingresa antes de confirmar el pedido.</p>
+
+  <!-- CUPONES ACTIVOS -->
+  <div id="cuponesLista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+
+  <!-- CREAR CUPÓN -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN</div>
+
+    <div style="margin-bottom:10px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">CÓDIGO</div>
+      <input id="cuponCodigo" class="campo" placeholder="Ej: MORDELON20" style="text-transform:uppercase;letter-spacing:2px;font-weight:900;" oninput="this.value=this.value.toUpperCase()" />
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:8px;">DESCUENTO</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="cuponPctSelector">
+        <button class="btn-billete" onclick="window.selCuponPct(10,this)">10%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(15,this)">15%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(20,this)">20%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(30,this)">30%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(35,this)">35%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(40,this)">40%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(50,this)">50%</button>
+        <button class="btn-billete" onclick="window.selCuponPct(100,this)">100% 🎁</button>
+      </div>
+    </div>
+
+    <button class="btn btn-turquesa" onclick="window.crearCupon()" style="width:100%;">🎟️ Crear cupón</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalCierre">
   <div class="modal">
     <h2>🔒 Cerrar Caja</h2>
@@ -702,11 +738,23 @@ let usuarioActual = null;
 let pinIngresado = '';
 
 // Verificar si ya está autenticado en esta sesión
-const sesionUsuario = sessionStorage.getItem('mordelon-usuario');
-if (sesionUsuario) {
-  usuarioActual = sesionUsuario;
-  document.getElementById('pinOverlay').classList.add('hidden');
+// Sesión con expiración de 8 horas
+function chequearSesion() {
+  try {
+    const raw = localStorage.getItem('mordelon-sesion');
+    if (!raw) return;
+    const sesion = JSON.parse(raw);
+    const ahora = Date.now();
+    const OCHO_HORAS = 8 * 60 * 60 * 1000;
+    if (sesion.nombre && (ahora - sesion.timestamp) < OCHO_HORAS) {
+      usuarioActual = sesion.nombre;
+      document.getElementById('pinOverlay').classList.add('hidden');
+    } else {
+      localStorage.removeItem('mordelon-sesion');
+    }
+  } catch(e) { localStorage.removeItem('mordelon-sesion'); }
 }
+chequearSesion();
 
 function pinPress(num) {
   if (pinIngresado.length >= 4) return;
@@ -733,7 +781,7 @@ function verificarPin() {
   const user = usuariosData.find(u => u.pin === pinIngresado);
   if (user) {
     usuarioActual = user.nombre;
-    sessionStorage.setItem('mordelon-usuario', user.nombre);
+    localStorage.setItem('mordelon-sesion', JSON.stringify({ nombre: user.nombre, timestamp: Date.now() }));
     document.getElementById('pinOverlay').classList.add('hidden');
     registrarActividad('🔑 Ingresó al panel');
   } else {
@@ -1088,7 +1136,7 @@ function showNotif(msg, conSonido = false) {
 }
 
 window.cambiarTab = function(tab) {
-  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro','promos'];
+  const names=['pedidos','historial','caja','stock','menu-admin','horarios','config','calculadora','cronometro','promos','descuentos'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===tab));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -1099,6 +1147,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
+  if (tab === 'descuentos') renderCupones();
 };
 
 // ===== HORARIOS =====
@@ -1198,7 +1247,30 @@ window.guardarHorarios = async function() {
 };
 
 // ===== USUARIOS =====
-async function guardarUsuarios() {
+async window.editarNombreUsuario = async function(idx, nombreActual) {
+  const nuevoNombre = prompt('Nuevo nombre para "' + nombreActual + '":', nombreActual);
+  if (!nuevoNombre || nuevoNombre.trim() === '') return;
+  if (nuevoNombre.trim() === nombreActual) return;
+  const nombre = nuevoNombre.trim();
+  // Check duplicate
+  if (usuariosData.some((u, i) => i !== idx && u.nombre.toLowerCase() === nombre.toLowerCase())) {
+    showNotif('⚠️ Ya existe un usuario con ese nombre'); return;
+  }
+  const nombreViejo = usuariosData[idx].nombre;
+  usuariosData[idx].nombre = nombre;
+  // Si el usuario que editó es el actual, actualizar sesión
+  if (usuarioActual === nombreViejo) {
+    usuarioActual = nombre;
+    localStorage.setItem('mordelon-sesion', JSON.stringify({ nombre, timestamp: Date.now() }));
+    document.getElementById('usuarioActualLabel').textContent = '👤 ' + nombre;
+  }
+  await guardarUsuarios();
+  renderUsuarios();
+  registrarActividad('✏️ Renombró usuario: ' + nombreViejo + ' → ' + nombre);
+  showNotif('✅ Nombre actualizado');
+};
+
+function guardarUsuarios() {
   await setDoc(doc(db,'config','usuarios'), { lista: usuariosData });
 }
 
@@ -1206,10 +1278,35 @@ function renderUsuarios() {
   const lista = document.getElementById('usuariosLista');
   if (!lista) return;
   lista.innerHTML = '';
+  const esAdmin = usuarioActual === 'Admin';
+  // Show/hide admin-only sections
+  const secAgregar = document.getElementById('seccionAgregarUsuario');
+  if (secAgregar) secAgregar.style.display = esAdmin ? 'block' : 'none';
   usuariosData.forEach((u, i) => {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:var(--gris-mid);border-radius:10px;padding:10px 14px;';
-    row.innerHTML = '<span style="font-weight:800;font-size:0.85rem;">👤 ' + u.nombre + '</span><span style="color:#666;font-size:0.8rem;">PIN: ' + u.pin + '</span>';
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--gris-mid);border-radius:10px;padding:10px 14px;';
+
+    // Nombre — editable
+    const nombreSpan = document.createElement('span');
+    nombreSpan.style.cssText = 'font-weight:800;font-size:0.85rem;flex:1;';
+    nombreSpan.textContent = (i === 0 ? '👑 ' : '👤 ') + u.nombre;
+
+    // PIN — solo Admin lo ve
+    const pinSpan = document.createElement('span');
+    pinSpan.style.cssText = 'color:#666;font-size:0.8rem;min-width:70px;text-align:right;';
+    pinSpan.textContent = esAdmin ? 'PIN: ' + u.pin : 'PIN: ****';
+
+    // Botón editar nombre
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️';
+    editBtn.style.cssText = 'background:transparent;border:none;cursor:pointer;font-size:0.9rem;padding:2px 4px;';
+    editBtn.title = 'Cambiar nombre';
+    editBtn.addEventListener('click', () => window.editarNombreUsuario(i, u.nombre));
+
+    row.appendChild(nombreSpan);
+    row.appendChild(pinSpan);
+    row.appendChild(editBtn);
+
     if (i > 0) {
       const del = document.createElement('button');
       del.textContent = '🗑';
@@ -1623,6 +1720,103 @@ onSnapshot(doc(db,'config','promos'), (snap) => {
   renderPromos();
 });
 
+// ===== SISTEMA DE CUPONES =====
+let cuponesData = [];
+let cuponPctActual = null;
+
+window.selCuponPct = function(pct, el) {
+  cuponPctActual = pct;
+  document.querySelectorAll('#cuponPctSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+};
+
+window.crearCupon = async function() {
+  const codigo = document.getElementById('cuponCodigo').value.trim().toUpperCase();
+  if (!codigo) { showNotif('⚠️ Ingresá un código'); return; }
+  if (!cuponPctActual) { showNotif('⚠️ Elegí el % de descuento'); return; }
+  if (cuponesData.find(c => c.codigo === codigo)) { showNotif('⚠️ Ese código ya existe'); return; }
+  const cupon = {
+    id: Date.now(),
+    codigo,
+    pct: cuponPctActual,
+    activo: true,
+    usado: false,
+    usadoPor: null,
+    creadoEn: Date.now(),
+  };
+  cuponesData.push(cupon);
+  await setDoc(doc(db,'config','cupones'), { lista: cuponesData });
+  registrarActividad('🎟️ Creó cupón: ' + codigo + ' (' + cuponPctActual + '% off)');
+  document.getElementById('cuponCodigo').value = '';
+  document.querySelectorAll('#cuponPctSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  cuponPctActual = null;
+  showNotif('✅ Cupón creado');
+};
+
+window.toggleCupon = async function(id) {
+  const c = cuponesData.find(x => x.id === id);
+  if (!c || c.usado) return;
+  c.activo = !c.activo;
+  await setDoc(doc(db,'config','cupones'), { lista: cuponesData });
+  showNotif(c.activo ? '✅ Cupón activado' : '⏸ Cupón pausado');
+};
+
+window.eliminarCupon = async function(id) {
+  const c = cuponesData.find(x => x.id === id);
+  if (!confirm('¿Eliminar cupón "' + (c ? c.codigo : '') + '"?')) return;
+  cuponesData = cuponesData.filter(x => x.id !== id);
+  await setDoc(doc(db,'config','cupones'), { lista: cuponesData });
+  showNotif('✅ Cupón eliminado');
+};
+
+function renderCupones() {
+  const cont = document.getElementById('cuponesLista');
+  if (!cont) return;
+  if (!cuponesData.length) {
+    cont.innerHTML = '<div style="font-size:0.8rem;color:#555;text-align:center;padding:14px;">No hay cupones creados todavía</div>';
+    return;
+  }
+  cont.innerHTML = '';
+  // Sort: activos primero, usados al final
+  const sorted = [...cuponesData].sort((a,b) => {
+    if (a.usado && !b.usado) return 1;
+    if (!a.usado && b.usado) return -1;
+    return b.creadoEn - a.creadoEn;
+  });
+  sorted.forEach(c => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--gris-dark);border:1.5px solid ' +
+      (c.usado ? '#333' : c.activo ? 'var(--turquesa)' : 'var(--gris-light)') +
+      ';border-radius:14px;padding:14px;opacity:' + (c.usado ? '0.5' : '1') + ';';
+    const estado = c.usado
+      ? '<span style="background:#33333388;color:#666;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;">✅ USADO</span>'
+      : c.activo
+        ? '<span style="background:rgba(61,191,184,.15);color:var(--turquesa);border:1px solid var(--turquesa);padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;">ACTIVO</span>'
+        : '<span style="background:#33333388;color:#666;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;">PAUSADO</span>';
+    const usadoPorTxt = c.usado && c.usadoPor ? '<div style="font-size:0.7rem;color:#555;margin-top:4px;">Usado por: ' + c.usadoPor + '</div>' : '';
+    card.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+        '<div>' +
+          '<div style="font-family:Righteous,cursive;font-size:1.1rem;letter-spacing:2px;color:var(--blanco);">' + c.codigo + '</div>' +
+          '<div style="font-size:0.8rem;color:var(--turquesa);font-weight:800;">' + c.pct + '% de descuento</div>' +
+          usadoPorTxt +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;">' +
+          estado +
+          (!c.usado ? '<button onclick="window.toggleCupon(' + c.id + ')" style="background:transparent;border:1.5px solid #444;color:#aaa;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:0.75rem;">⏸</button>' : '') +
+          '<button onclick="window.eliminarCupon(' + c.id + ')" style="background:transparent;border:none;color:#555;cursor:pointer;font-size:1rem;">🗑</button>' +
+        '</div>' +
+      '</div>';
+    cont.appendChild(card);
+  });
+}
+
+// Escuchar cupones en tiempo real
+onSnapshot(doc(db,'config','cupones'), (snap) => {
+  cuponesData = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
+  renderCupones();
+});
+
 // ===== CALCULADORA DE VUELTO =====
 window.calcVuelto = function() {
   const total = parseFloat(document.getElementById('calcTotal').value) || 0;
@@ -1983,7 +2177,7 @@ updateReloj(); setInterval(updateReloj,1000);
 window.cerrarSesion = function() {
   if (!confirm('¿Cerrar sesión de ' + (usuarioActual || 'usuario') + '?')) return;
   registrarActividad('🚪 Cerró sesión');
-  sessionStorage.removeItem('mordelon-usuario');
+  localStorage.removeItem('mordelon-sesion');
   usuarioActual = null;
   pinIngresado = '';
   document.getElementById('pinOverlay').classList.remove('hidden');

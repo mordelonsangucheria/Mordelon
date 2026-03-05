@@ -489,6 +489,21 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
     <div class="seccion-titulo" style="margin-top:16px;">💳 Método de pago</div>
     <div class="resumen-box" id="resumenPago"></div>
+
+    <!-- CUPÓN DE DESCUENTO -->
+    <div style="margin-top:10px;margin-bottom:4px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">🎟️ Tenés un cupón de descuento?</div>
+      <div style="display:flex;gap:8px;">
+        <input id="cuponInput" class="campo" placeholder="Ej: MORDELON20" maxlength="20"
+          style="text-transform:uppercase;letter-spacing:2px;font-weight:900;flex:1;"
+          oninput="this.value=this.value.toUpperCase()" />
+        <button onclick="window.aplicarCupon()" style="background:var(--turquesa);color:#000;border:none;border-radius:12px;padding:10px 14px;font-weight:900;font-size:0.85rem;cursor:pointer;white-space:nowrap;">Aplicar</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:20px;margin-top:5px;">
+        <span id="cuponMsg" style="font-size:0.78rem;font-weight:800;"></span>
+        <button id="cuponQuitarBtn" onclick="window.quitarCupon()" style="display:none;background:transparent;border:none;color:#666;font-size:0.75rem;cursor:pointer;text-decoration:underline;">Quitar</button>
+      </div>
+    </div>
     <div class="metodos">
       <button class="metodo-btn" onclick="selMetodo('Transferencia')" id="mbtn-Transferencia"><span>📲</span>Transferencia / Lemon</button>
       <button class="metodo-btn" onclick="selMetodo('Tarjeta')" id="mbtn-Tarjeta"><span>💳</span>Tarjeta (+10%)</button>
@@ -742,10 +757,26 @@ window.irAPago = function() {
 };
 
 function renderResumen() {
-  const total = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const subtotal = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const descuento = cuponAplicado ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
+  const total = subtotal - descuento;
+  const descuentoRow = cuponAplicado
+    ? `<div class="res-fila" style="color:var(--verde)"><span>🎟️ Cupón ${cuponAplicado.codigo} (-${cuponAplicado.pct}%)</span><span>-$${fN(descuento)}</span></div>`
+    : '';
   document.getElementById('resumenPago').innerHTML = `
     ${carrito.map(i=>`<div class="res-fila"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
-    <div class="res-fila total"><span>Subtotal</span><span>$${fN(total)}</span></div>`;
+    <div class="res-fila total"><span>Subtotal</span><span>$${fN(subtotal)}</span></div>
+    ${descuentoRow}
+    ${cuponAplicado ? `<div class="res-fila total" style="color:var(--verde)"><span>Total con descuento</span><span>$${fN(total)}</span></div>` : ''}`;
+  // Show/hide quitar btn
+  const qBtn = document.getElementById('cuponQuitarBtn');
+  if (qBtn) qBtn.style.display = cuponAplicado ? 'inline' : 'none';
+}
+
+function actualizarResumenPago() {
+  renderResumen();
+  // Re-trigger selMetodo to update payment amounts
+  if (metodoPago) window.selMetodo(metodoPago);
 }
 
 window.selMetodo = function(m) {
@@ -782,7 +813,9 @@ window.confirmarPedido = async function() {
     const num = document.getElementById('numTarjeta').value.replace(/\s/g,'');
     if (num.length < 15) { showToast('⚠️ Número de tarjeta inválido'); return; }
   }
-  const total = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const subtotalBase = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const descuentoCupon = cuponAplicado ? Math.round(subtotalBase * cuponAplicado.pct / 100) : 0;
+  const total = subtotalBase - descuentoCupon;
   const totalFinal = metodoPago === 'Tarjeta' ? Math.round(total * 1.1) : total;
   const nota = document.getElementById('notaPedido').value;
 
@@ -790,7 +823,9 @@ window.confirmarPedido = async function() {
     const docRef = await addDoc(collection(db, 'pedidos'), {
       items: carrito.map(i => ({ id:i.id, emoji:i.emoji, nombre:i.nombre, precio:i.precio, qty:i.qty })),
       total: totalFinal,
-      subtotal: total,
+      subtotal: subtotalBase,
+      descuento: descuentoCupon,
+      cupon: cuponAplicado ? cuponAplicado.codigo : null,
       metodo: metodoPago,
       recargo: metodoPago === 'Tarjeta' ? Math.round(total * 0.1) : 0,
       nota,
@@ -816,6 +851,24 @@ window.confirmarPedido = async function() {
     const entregaWA = tipoEntrega === 'delivery' ? '🛵 Delivery' : '🏠 Retiro en local';
     const msgWA = `🔥 *NUEVO PEDIDO #${numeroPedidoLocal}*\n\n${resumenWA}${notaWA}\n\n🛵 *Entrega:* ${entregaWA}\n💳 *Pago:* ${metodoWA}\n💰 *Total:* $${fN(totalFinal)}${waNombre}${waDireccion}${waNum}`;
     window.open(`https://wa.me/5492271415751?text=${encodeURIComponent(msgWA)}`, '_blank');
+
+    // Marcar cupón como usado en Firebase
+    if (cuponAplicado) {
+      try {
+        const cuponesSnap = await getDoc(doc(db,'config','cupones'));
+        if (cuponesSnap.exists()) {
+          const lista = cuponesSnap.data().lista.map(c =>
+            c.codigo === cuponAplicado.codigo
+              ? { ...c, usado: true, usadoPor: nombreCliente, usadoEn: Date.now() }
+              : c
+          );
+          await setDoc(doc(db,'config','cupones'), { lista });
+        }
+      } catch(e) { console.error('Error marcando cupón:', e); }
+      cuponAplicado = null;
+      document.getElementById('cuponInput').value = '';
+      document.getElementById('cuponMsg').textContent = '';
+    }
 
     showScreen('confirmado');
   } catch(e) {
@@ -1015,6 +1068,43 @@ function mostrarHorarios(dias) {
     </div>
   `).join('');
 }
+
+// CUPONES EN TIEMPO REAL
+let cuponesDisponibles = [];
+let cuponAplicado = null;
+
+onSnapshot(doc(db,'config','cupones'), (snap) => {
+  cuponesDisponibles = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
+});
+
+window.aplicarCupon = function() {
+  const input = document.getElementById('cuponInput');
+  const codigo = input.value.trim().toUpperCase();
+  if (!codigo) return;
+  const cuponExiste = cuponesDisponibles.find(c => c.codigo === codigo);
+  const cupon = cuponExiste && cuponExiste.activo && !cuponExiste.usado ? cuponExiste : null;
+  if (!cupon) {
+    const msg = cuponExiste && cuponExiste.usado
+      ? '😅 ¡Este cupón ya fue usado! ¡Más suerte la próxima!'
+      : '❌ Código inválido';
+    document.getElementById('cuponMsg').textContent = msg;
+    document.getElementById('cuponMsg').style.color = 'var(--rojo)';
+    cuponAplicado = null;
+    actualizarResumenPago();
+    return;
+  }
+  cuponAplicado = cupon;
+  document.getElementById('cuponMsg').textContent = '✅ -' + cupon.pct + '% aplicado!';
+  document.getElementById('cuponMsg').style.color = 'var(--verde)';
+  actualizarResumenPago();
+};
+
+window.quitarCupon = function() {
+  cuponAplicado = null;
+  document.getElementById('cuponInput').value = '';
+  document.getElementById('cuponMsg').textContent = '';
+  actualizarResumenPago();
+};
 
 // PROMOS EN TIEMPO REAL
 onSnapshot(doc(db,'config','promos'), (snap) => {
