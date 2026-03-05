@@ -79,6 +79,86 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 }
 
 /* CARRITO FLOTANTE */
+/* FAB PEDIDO ANTERIOR */
+.fab-pedido-ant {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  z-index: 98;
+  background: var(--gris-dark);
+  border: 1.5px solid var(--turquesa);
+  color: var(--blanco);
+  border-radius: 50px;
+  padding: 10px 16px;
+  font-family: 'Righteous', cursive;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.fab-pedido-ant .fab-estado-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulseDot 1.5s infinite;
+}
+@keyframes pulseDot {
+  0%,100% { opacity:1; } 50% { opacity:0.4; }
+}
+
+/* POPUP PEDIDO ANTERIOR */
+.popup-pedido-ant {
+  position: fixed;
+  bottom: 70px;
+  right: 16px;
+  z-index: 99;
+  background: var(--gris-dark);
+  border: 1.5px solid var(--turquesa);
+  border-radius: 18px;
+  padding: 16px;
+  width: 240px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: none;
+}
+.popup-pedido-ant.show { display: block; }
+.popup-pedido-ant .pop-titulo {
+  font-family: 'Righteous', cursive;
+  font-size: 0.75rem;
+  color: var(--turquesa);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.popup-pedido-ant .pop-num {
+  font-family: 'Righteous', cursive;
+  font-size: 1.4rem;
+  color: var(--blanco);
+  margin-bottom: 4px;
+}
+.popup-pedido-ant .pop-estado {
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+.popup-pedido-ant .pop-cerrar {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px solid #333;
+  color: #666;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 4px;
+}
+
 .carrito-fab {
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   z-index:97;
@@ -593,6 +673,19 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   </div>
 </div>
 
+<!-- FAB PEDIDO ANTERIOR -->
+<button class="fab-pedido-ant" id="fabPedidoAnt" onclick="window.togglePopupPedidoAnt()">
+  <span class="fab-estado-dot" id="fabAntDot"></span>
+  <span id="fabAntLabel">Pedido anterior</span>
+</button>
+
+<div class="popup-pedido-ant" id="popupPedidoAnt">
+  <div class="pop-titulo">📋 TU PEDIDO ANTERIOR</div>
+  <div class="pop-num" id="popAntNum">#----</div>
+  <span class="pop-estado" id="popAntEstado">—</span>
+  <button class="pop-cerrar" onclick="window.cerrarPopupPedidoAnt()">✕ Cerrar</button>
+</div>
+
 <!-- FAB CARRITO -->
 <button class="carrito-fab" id="carritoFab" onclick="irACarrito()">
   🛒 Ver pedido <span class="fab-badge" id="fabCount">0</span>
@@ -897,7 +990,76 @@ window.confirmarPedido = async function() {
   }
 };
 
-window.nuevoPedido = function() {
+window.// ===== PEDIDO ANTERIOR FAB =====
+let unsubPedidoAnt = null;
+const ESTADOS_LABEL = {
+  pendiente:  { txt: '📋 Pendiente',   color: 'var(--turquesa)', dot: '#3DBFB8' },
+  preparando: { txt: '👨‍🍳 Preparando', color: 'var(--naranja)',  dot: '#FF9800' },
+  listo:      { txt: '✅ Listo',        color: 'var(--turquesa)', dot: '#3DBFB8' },
+  cobrado:    { txt: '💰 Cobrado',      color: '#666',            dot: '#666'    },
+};
+
+function mostrarFabPedidoAnt(firestoreId, numeroPedido, estado) {
+  const fab = document.getElementById('fabPedidoAnt');
+  const dot = document.getElementById('fabAntDot');
+  const label = document.getElementById('fabAntLabel');
+  const popNum = document.getElementById('popAntNum');
+  const popEst = document.getElementById('popAntEstado');
+  const info = ESTADOS_LABEL[estado] || ESTADOS_LABEL['pendiente'];
+
+  fab.style.display = 'flex';
+  dot.style.background = info.dot;
+  label.textContent = '#' + numeroPedido;
+  popNum.textContent = '#' + numeroPedido;
+  popEst.textContent = info.txt;
+  popEst.style.background = info.color + '22';
+  popEst.style.color = info.color;
+
+  // Escuchar cambios en tiempo real
+  if (unsubPedidoAnt) unsubPedidoAnt();
+  unsubPedidoAnt = onSnapshot(doc(db, 'pedidos', firestoreId), (snap) => {
+    if (!snap.exists()) {
+      ocultarFabPedidoAnt();
+      return;
+    }
+    const est = snap.data().estado;
+    const inf = ESTADOS_LABEL[est] || ESTADOS_LABEL['pendiente'];
+    popEst.textContent = inf.txt;
+    popEst.style.background = inf.color + '22';
+    popEst.style.color = inf.color;
+    dot.style.background = inf.dot;
+    if (est === 'cobrado') {
+      if (unsubPedidoAnt) { unsubPedidoAnt(); unsubPedidoAnt = null; }
+    }
+  });
+}
+
+function ocultarFabPedidoAnt() {
+  document.getElementById('fabPedidoAnt').style.display = 'none';
+  document.getElementById('popupPedidoAnt').classList.remove('show');
+  if (unsubPedidoAnt) { unsubPedidoAnt(); unsubPedidoAnt = null; }
+  localStorage.removeItem('mordelon-pedido-ant');
+}
+
+window.togglePopupPedidoAnt = function() {
+  document.getElementById('popupPedidoAnt').classList.toggle('show');
+};
+window.cerrarPopupPedidoAnt = function() {
+  document.getElementById('popupPedidoAnt').classList.remove('show');
+};
+
+// Al hacer nuevo pedido: mover pedido activo a "anterior"
+nuevoPedido = function() {
+  // Guardar pedido actual como anterior antes de limpiar
+  const rawActivo = localStorage.getItem('mordelon-pedido-activo');
+  if (rawActivo) {
+    localStorage.setItem('mordelon-pedido-ant', rawActivo);
+    const pedAnt = JSON.parse(rawActivo);
+    mostrarFabPedidoAnt(pedAnt.firestoreId, pedAnt.numeroPedido, 'pendiente');
+  }
+  localStorage.removeItem('mordelon-pedido-activo');
+  if (unsubEstado) { unsubEstado(); unsubEstado = null; }
+  pedidoActivoId = null;
   carrito = [];
   metodoPago = null;
   document.getElementById('notaPedido').value = '';
@@ -1062,6 +1224,28 @@ function actualizarBarraEstado(estado) {
   document.getElementById('linea-1').className = 'paso-linea' + (idx >= 1 ? ' activa' : '');
   document.getElementById('linea-2').className = 'paso-linea' + (idx >= 2 ? ' activa' : '');
 }
+
+// Recuperar pedido activo si el cliente cerró el navegador
+(function recuperarPedido() {
+  // Recuperar pedido anterior (FAB)
+  try {
+    const rawAnt = localStorage.getItem('mordelon-pedido-ant');
+    if (rawAnt) {
+      const pedAnt = JSON.parse(rawAnt);
+      if (pedAnt.firestoreId && (Date.now() - pedAnt.timestamp) < 4 * 60 * 60 * 1000) {
+        getDoc(doc(db, 'pedidos', pedAnt.firestoreId)).then(snap => {
+          if (snap.exists() && snap.data().estado !== 'cobrado') {
+            mostrarFabPedidoAnt(pedAnt.firestoreId, pedAnt.numeroPedido, snap.data().estado);
+          } else {
+            localStorage.removeItem('mordelon-pedido-ant');
+          }
+        }).catch(() => localStorage.removeItem('mordelon-pedido-ant'));
+      } else {
+        localStorage.removeItem('mordelon-pedido-ant');
+      }
+    }
+  } catch(e) { localStorage.removeItem('mordelon-pedido-ant'); }
+})();
 
 // Recuperar pedido activo si el cliente cerró el navegador
 (function recuperarPedido() {
