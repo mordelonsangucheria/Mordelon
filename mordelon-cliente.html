@@ -883,6 +883,13 @@ window.confirmarPedido = async function() {
       if (msg) msg.textContent = '';
     }
 
+    // Guardar pedido en localStorage para recuperarlo si cierra el navegador
+    localStorage.setItem('mordelon-pedido-activo', JSON.stringify({
+      firestoreId: docRef.id,
+      numeroPedido: numeroPedidoLocal,
+      timestamp: Date.now()
+    }));
+
     showScreen('confirmado');
   } catch(e) {
     showToast('❌ Error al enviar el pedido. Intentá de nuevo.');
@@ -1012,9 +1019,17 @@ function escucharEstadoPedido(firestoreId) {
   if (unsubEstado) unsubEstado();
   pedidoActivoId = firestoreId;
   unsubEstado = onSnapshot(doc(db, 'pedidos', firestoreId), (snap) => {
-    if (!snap.exists()) return;
+    if (!snap.exists()) {
+      // Pedido eliminado (rechazado)
+      localStorage.removeItem('mordelon-pedido-activo');
+      return;
+    }
     const estado = snap.data().estado;
     actualizarBarraEstado(estado);
+    // Limpiar localStorage si el pedido ya fue cobrado
+    if (estado === 'cobrado') {
+      localStorage.removeItem('mordelon-pedido-activo');
+    }
   });
 }
 
@@ -1047,6 +1062,35 @@ function actualizarBarraEstado(estado) {
   document.getElementById('linea-1').className = 'paso-linea' + (idx >= 1 ? ' activa' : '');
   document.getElementById('linea-2').className = 'paso-linea' + (idx >= 2 ? ' activa' : '');
 }
+
+// Recuperar pedido activo si el cliente cerró el navegador
+(function recuperarPedido() {
+  try {
+    const raw = localStorage.getItem('mordelon-pedido-activo');
+    if (!raw) return;
+    const pedido = JSON.parse(raw);
+    // Solo recuperar pedidos de las últimas 4 horas
+    if (!pedido.firestoreId || (Date.now() - pedido.timestamp) > 4 * 60 * 60 * 1000) {
+      localStorage.removeItem('mordelon-pedido-activo');
+      return;
+    }
+    // Verificar que el pedido siga activo en Firebase
+    getDoc(doc(db, 'pedidos', pedido.firestoreId)).then(snap => {
+      if (!snap.exists() || snap.data().estado === 'cobrado') {
+        localStorage.removeItem('mordelon-pedido-activo');
+        return;
+      }
+      // Restaurar estado
+      numeroPedidoLocal = pedido.numeroPedido;
+      document.getElementById('numPedidoConfirmado').textContent = '#' + numeroPedidoLocal;
+      actualizarBarraEstado(snap.data().estado);
+      escucharEstadoPedido(pedido.firestoreId);
+      showScreen('confirmado');
+    }).catch(() => localStorage.removeItem('mordelon-pedido-activo'));
+  } catch(e) {
+    localStorage.removeItem('mordelon-pedido-activo');
+  }
+})();
 
 // Cargar horarios desde Firebase
 const horariosDefault = [
