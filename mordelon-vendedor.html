@@ -984,7 +984,7 @@ window.imprimirTicket = function(p) {
       @media print { body { padding: 0; } }
     </style></head>
     <body>${ticket}</body>
-    <script>window.onload = () => { window.print(); }<\/script>
+    <scr' + 'ipt>window.onload = () => { window.print(); }</scr' + 'ipt>
     </html>
   `);
   win.document.close();
@@ -1443,7 +1443,7 @@ window.imprimirQR = function() {
       <div class="url">${URL_CLIENTE}</div>
       <br><button onclick="window.print()" style="margin-top:20px;padding:10px 24px;font-size:1rem;cursor:pointer;">🖨️ Imprimir</button>
     </body>
-    <script>window.onload = () => window.print();<\/script>
+    <scr' + 'ipt>window.onload = () => window.print();</scr' + 'ipt>
     </html>
   `);
   win.document.close();
