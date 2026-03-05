@@ -361,18 +361,18 @@ select.mac-field option { background:#222; }
   </div>
 </header>
 
-<div class="tabs">
-  <div class="tab active" onclick="cambiarTab('pedidos')">🔴 En Vivo</div>
-  <div class="tab" onclick="cambiarTab('historial')">📋 Historial</div>
-  <div class="tab" onclick="cambiarTab('caja')">💰 Caja</div>
-  <div class="tab" onclick="cambiarTab('stock')">📦 Stock</div>
-  <div class="tab" onclick="cambiarTab('menu-admin')">✏️ Menú</div>
-  <div class="tab" onclick="cambiarTab('horarios')">🕐 Horarios</div>
-  <div class="tab" onclick="cambiarTab('config')">⚙️ Config</div>
-  <div class="tab" onclick="cambiarTab('calculadora')">🧮 Vuelto</div>
-  <div class="tab" onclick="cambiarTab('cronometro')">⏱️ Timer</div>
-  <div class="tab" onclick="cambiarTab('promos')">🎉 Promos</div>
-  <div class="tab" onclick="cambiarTab('descuentos')">🎟️ Cupones</div>
+<div class="tabs" id="tabsContainer">
+  <div class="tab active" data-tab="pedidos">🔴 En Vivo</div>
+  <div class="tab" data-tab="historial">📋 Historial</div>
+  <div class="tab" data-tab="caja">💰 Caja</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="menu-admin">✏️ Menú</div>
+  <div class="tab" data-tab="horarios">🕐 Horarios</div>
+  <div class="tab" data-tab="config">⚙️ Config</div>
+  <div class="tab" data-tab="calculadora">🧮 Vuelto</div>
+  <div class="tab" data-tab="cronometro">⏱️ Timer</div>
+  <div class="tab" data-tab="promos">🎉 Promos</div>
+  <div class="tab" data-tab="descuentos">🎟️ Cupones</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -1137,8 +1137,7 @@ function showNotif(msg, conSonido = false) {
 
 window.cambiarTab = function(tab) {
   document.querySelectorAll('.tab').forEach(t => {
-    const tabName = t.getAttribute('onclick').match(/cambiarTab\('([^']+)'\)/)?.[1];
-    t.classList.toggle('active', tabName === tab);
+    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -2211,6 +2210,11 @@ onSnapshot(doc(db,'config','stats'), (snap) => {
   const visitas = snap.exists() ? (snap.data().visitas || 0) : 0;
   const el = document.getElementById('cajaVisitas');
   if (el) el.textContent = visitas.toLocaleString('es-AR');
+});
+
+// Bind tab clicks after module loads
+document.querySelectorAll('.tab[data-tab]').forEach(t => {
+  t.addEventListener('click', () => window.cambiarTab(t.getAttribute('data-tab')));
 });
 </script>
 <script>
