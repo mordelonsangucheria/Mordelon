@@ -1846,7 +1846,7 @@ let dino, obstacles, dScore, dHi = parseInt(localStorage.getItem('dinoHiC')||'0'
 let dSpeed, dFrame, dRunning, dOver, dAnimFrame;
 
 function dinoInit() {
-  dino = { x:40, y:GROUND, w:22, h:26, vy:0, onGround:true, ducking:false, frame:0 };
+  dino = { x:40, y:GROUND, w:26, h:32, vy:0, onGround:true, ducking:false, frame:0 };
   obstacles = [];
   dScore = 0; dSpeed = 4; dFrame = 0; dRunning = true; dOver = false;
   document.getElementById('dinoScore').textContent = 0;
@@ -1881,8 +1881,8 @@ function dinoLoop() {
     obstacles[i].x -= dSpeed;
     obstacles[i].frame = Math.floor(dFrame / 8) % 2;
     if(obstacles[i].x + obstacles[i].w < 0) { obstacles.splice(i,1); continue; }
-    const dinoH = dino.ducking ? 14 : dino.h;
-    const dinoY = dino.ducking ? GROUND+12 : dino.y;
+    const dinoH = dino.ducking ? 22 : dino.h;
+    const dinoY = dino.ducking ? GROUND+4 : dino.y;
     const pad = 4;
     if(dino.x+pad < obstacles[i].x+obstacles[i].w-pad &&
        dino.x+dino.w-pad > obstacles[i].x+pad &&
@@ -1900,32 +1900,170 @@ function dinoLoop() {
   dAnimFrame = requestAnimationFrame(dinoLoop);
 }
 
+// ── Llama de Mordelón – pixel-art sprite ──────────────────────────────────
+// Each sprite is drawn on a 2px pixel grid relative to (px, py) = top-left corner.
+// Colors from the reference image:
+//   TURQ      = '#3DBFB8'  (mid flame)
+//   LIGHT     = '#7EEEE9'  (highlight / bright flame tips)
+//   DARK      = '#1A8C87'  (shadow / depth)
+//   WHITE     = '#FFFFFF'  (eye whites)
+//   EYEDARK   = '#0a1a1a'  (pupils)
+//   SPARK     = '#B2F5F2'  (tiny sparks around flame)
+
+function px(ctx, color, x, y, w, h) {
+  // draw a pixel block scaled ×2
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawLlamaRun1(px0, py0) {
+  // CORRIENDO 1 — flame leans right, left leg forward
+  const T='#3DBFB8', L='#7EEEE9', D='#1A8C87', W='#FFFFFF', E='#0a1a1a', S='#B2F5F2';
+  const p=(c,x,y,w,h)=>{ DX.fillStyle=c; DX.fillRect(px0+x,py0+y,w,h); };
+
+  // sparks
+  p(S, 20,0, 3,3);  p(S, 2,6, 3,3);  p(S, 28,10, 3,3);
+
+  // flame tip (top)
+  p(L, 12,2, 6,4);
+  p(T, 10,4, 10,6);
+  p(L, 8,6, 4,4);   p(L, 16,6, 6,4);
+
+  // flame body
+  p(T, 6,10, 18,14);
+  p(L, 8,10, 6,6);   p(L, 18,12, 6,4);
+  p(D, 6,16, 4,8);   p(D, 22,14, 4,10);
+
+  // face area
+  p(W, 8,14, 7,7);   p(W, 17,15, 7,7);   // eye whites
+  p(E, 10,16, 3,3);  p(E, 19,16, 3,3);   // pupils
+  p(L, 9,22, 12,4);                        // smile
+
+  // legs (frame 1: left forward, right back)
+  p(T, 8,24, 5,6);   p(D, 8,28, 5,3);    // left leg
+  p(D, 18,24, 5,3);  p(T, 18,24, 5,5);   // right leg (back, shorter)
+
+  // bottom sparks
+  p(S, 4,28, 2,2);  p(S, 24,30, 2,2);
+}
+
+function drawLlamaRun2(px0, py0) {
+  // CORRIENDO 2 — flame centered, right leg forward
+  const T='#3DBFB8', L='#7EEEE9', D='#1A8C87', W='#FFFFFF', E='#0a1a1a', S='#B2F5F2';
+  const p=(c,x,y,w,h)=>{ DX.fillStyle=c; DX.fillRect(px0+x,py0+y,w,h); };
+
+  // sparks
+  p(S, 2,4, 3,3);  p(S, 26,8, 3,3);  p(S, 18,0, 2,2);
+
+  // flame tip
+  p(L, 10,2, 8,4);
+  p(T, 8,4, 12,8);
+  p(L, 6,8, 5,5);   p(L, 18,6, 6,4);
+
+  // flame body
+  p(T, 5,12, 20,12);
+  p(L, 7,12, 7,6);   p(L, 17,14, 6,4);
+  p(D, 5,18, 4,6);   p(D, 22,16, 4,8);
+
+  // face
+  p(W, 8,14, 7,7);   p(W, 17,15, 7,7);
+  p(E, 10,16, 3,3);  p(E, 19,16, 3,3);
+  p(L, 9,22, 12,4);
+
+  // legs (frame 2: right forward, left back)
+  p(D, 8,24, 5,3);   p(T, 8,24, 5,5);    // left leg (back)
+  p(T, 18,24, 5,6);  p(D, 18,28, 5,3);   // right leg (forward)
+
+  // bottom sparks
+  p(S, 6,30, 2,2);  p(S, 22,28, 2,2);
+}
+
+function drawLlamaJump(px0, py0) {
+  // SALTANDO — flame tall, stretched up, legs tucked
+  const T='#3DBFB8', L='#7EEEE9', D='#1A8C87', W='#FFFFFF', E='#0a1a1a', S='#B2F5F2';
+  const p=(c,x,y,w,h)=>{ DX.fillStyle=c; DX.fillRect(px0+x,py0+y,w,h); };
+
+  // sparks (more scattered, sense of height)
+  p(S, 0,2, 2,2);  p(S, 26,0, 3,3);  p(S, 30,14, 2,2);  p(S, 4,20, 2,2);
+
+  // tall flame tip
+  p(L, 14,0, 6,3);
+  p(T, 12,2, 10,6);
+  p(L, 10,4, 5,6);  p(L, 20,4, 6,6);
+  p(T, 8,8, 16,8);
+  p(D, 24,8, 4,10);
+
+  // flame body (taller / stretched)
+  p(T, 6,14, 20,12);
+  p(L, 8,14, 8,6);
+  p(D, 6,20, 4,6);
+
+  // face
+  p(W, 9,15, 7,7);   p(W, 18,16, 6,6);
+  p(E, 11,17, 3,3);  p(E, 20,17, 2,3);
+  p(L, 10,22, 11,3);
+
+  // legs tucked up (both bent inward)
+  p(T, 9,26, 4,4);   p(D, 9,28, 4,2);
+  p(T, 18,26, 4,4);  p(D, 18,28, 4,2);
+
+  // trail sparks below
+  p(S, 12,32, 3,2);  p(S, 18,34, 2,2);
+}
+
+function drawLlamaDuck(px0, py0) {
+  // AGACHADO — flat & wide, flame compressed
+  const T='#3DBFB8', L='#7EEEE9', D='#1A8C87', W='#FFFFFF', E='#0a1a1a', S='#B2F5F2';
+  const p=(c,x,y,w,h)=>{ DX.fillStyle=c; DX.fillRect(px0+x,py0+y,w,h); };
+
+  // sparks (side)
+  p(S, 0,6, 2,2);  p(S, 36,4, 2,2);  p(S, 4,18, 2,2);
+
+  // flat flame (wide, low)
+  p(L, 8,0, 8,4);   p(L, 22,2, 6,4);    // flame tips low
+  p(T, 4,4, 30,6);
+  p(L, 6,4, 10,4);  p(L, 22,4, 8,4);
+  p(D, 0,8, 4,8);   p(D, 34,8, 4,8);
+
+  // body (squashed)
+  p(T, 2,8, 34,10);
+  p(L, 4,8, 12,6);
+  p(D, 28,10, 6,6);
+
+  // face (wider apart, lower)
+  p(W, 7,9, 7,7);   p(W, 22,9, 7,7);
+  p(E, 9,11, 3,3);  p(E, 24,11, 3,3);
+  p(L, 8,16, 20,3);   // wide smile
+
+  // tiny legs flat outward
+  p(T, 4,18, 6,4);   p(D, 4,20, 6,2);
+  p(T, 28,18, 6,4);  p(D, 28,20, 6,2);
+
+  // ground sparks
+  p(S, 10,22, 2,2);  p(S, 26,22, 2,2);
+}
+
 function dinoDraw() {
   DX.fillStyle = '#0a0a0a'; DX.fillRect(0,0,DW,DH);
 
-  // Ground
+  // Ground line
   DX.strokeStyle = '#333'; DX.lineWidth = 1;
   DX.beginPath(); DX.moveTo(0,GROUND+2); DX.lineTo(DW,GROUND+2); DX.stroke();
 
-  // Dino
-  DX.fillStyle = TURQ;
-  const dinoH = dino.ducking ? 14 : dino.h;
-  const dinoTopY = dino.ducking ? GROUND+12-dinoH : dino.y-dino.h;
-  const dinoW = dino.ducking ? 30 : dino.w;
-  DX.fillRect(dino.x, dinoTopY, dinoW, dinoH);
-  if(!dino.ducking) {
-    DX.fillRect(dino.x+8, dinoTopY-10, 16, 12); // head
-    DX.fillStyle = '#0a0a0a'; DX.fillRect(dino.x+20, dinoTopY-8, 3, 3); // eye
-    DX.fillStyle = TURQ;
-    DX.fillRect(dino.x+22, dinoTopY-4, 6, 3); // jaw
-    DX.fillRect(dino.x-6, dinoTopY+6, 8, 6); // tail
-  }
-  // Legs
-  if(dino.onGround && !dino.ducking) {
-    if(dino.frame===0) { DX.fillRect(dino.x+4,dino.y,6,8); DX.fillRect(dino.x+12,dino.y-4,6,4); }
-    else               { DX.fillRect(dino.x+4,dino.y-4,6,4); DX.fillRect(dino.x+12,dino.y,6,8); }
-  } else if(!dino.ducking) {
-    DX.fillRect(dino.x+4,dino.y,6,6); DX.fillRect(dino.x+12,dino.y,6,6);
+  // Draw llama sprite based on state
+  // sprite anchor: bottom of sprite = GROUND (feet touching ground)
+  if(dino.ducking) {
+    // Duck sprite: 38px wide, 24px tall
+    drawLlamaDuck(dino.x - 6, dino.y - 22);
+  } else if(!dino.onGround) {
+    // Jump sprite: 32px wide, 36px tall
+    drawLlamaJump(dino.x - 3, dino.y - 36);
+  } else if(dino.frame === 0) {
+    // Run frame 1: 32px wide, 32px tall
+    drawLlamaRun1(dino.x - 2, dino.y - 32);
+  } else {
+    // Run frame 2
+    drawLlamaRun2(dino.x - 2, dino.y - 32);
   }
 
   // Obstacles
