@@ -863,14 +863,19 @@ window.confirmarPedido = async function() {
     // Marcar cupón como usado en Firebase
     if (cuponAplicado) {
       try {
+        // Verificar que el cupón siga sin usarse antes de marcarlo
         const cuponesSnap = await getDoc(doc(db,'config','cupones'));
         if (cuponesSnap.exists()) {
-          const lista = cuponesSnap.data().lista.map(c =>
-            c.codigo === cuponAplicado.codigo
-              ? { ...c, usado: true, usadoPor: nombreCliente, usadoEn: Date.now() }
-              : c
-          );
-          await setDoc(doc(db,'config','cupones'), { lista });
+          const listaActual = cuponesSnap.data().lista || [];
+          const cuponFresh = listaActual.find(c => c.codigo === cuponAplicado.codigo);
+          if (cuponFresh && !cuponFresh.usado) {
+            const lista = listaActual.map(c =>
+              c.codigo === cuponAplicado.codigo
+                ? { ...c, usado: true, activo: false, usadoPor: nombreCliente, usadoEn: Date.now() }
+                : c
+            );
+            await setDoc(doc(db,'config','cupones'), { lista });
+          }
         }
       } catch(e) { console.error('Error marcando cupón:', e); }
       cuponAplicado = null;

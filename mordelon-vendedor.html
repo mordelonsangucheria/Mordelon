@@ -1814,7 +1814,15 @@ function renderCupones() {
 
 // Escuchar cupones en tiempo real
 onSnapshot(doc(db,'config','cupones'), (snap) => {
-  cuponesData = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
+  const nueva = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
+  // Detectar si algún cupón pasó a usado
+  nueva.forEach(c => {
+    const anterior = cuponesData.find(x => x.id === c.id || x.codigo === c.codigo);
+    if (anterior && !anterior.usado && c.usado) {
+      showNotif('🎟️ Cupón ' + c.codigo + ' canjeado por ' + (c.usadoPor || 'un cliente'));
+    }
+  });
+  cuponesData = nueva;
   renderCupones();
 });
 
