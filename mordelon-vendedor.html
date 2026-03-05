@@ -1073,12 +1073,14 @@ function renderPedidosLive() {
         </div>
         <div class="waiting-msg">Esperando pedidos... jugá mientras tanto</div>
         <div class="game-selector">
-          <button class="game-btn active" id="btnSnake" onclick="switchGame('snake')">🐍 Snake</button>
-          <button class="game-btn" id="btn2048" onclick="switchGame('2048')">🔢 2048</button>
+          <button class="game-btn active" id="btnSnake">🐍 Snake</button>
+          <button class="game-btn" id="btn2048">🔢 2048</button>
         </div>
         <div id="gameArea"></div>
       </div>`;
     startWaitingClock();
+    document.getElementById('btnSnake').addEventListener('click', () => switchGame('snake'));
+    document.getElementById('btn2048').addEventListener('click', () => switchGame('2048'));
     initGame('snake');
     return;
   }
@@ -2461,10 +2463,15 @@ function startWaitingClock() {
 let _activeGame = null;
 
 function switchGame(name) {
-  document.getElementById('btnSnake').classList.toggle('active', name==='snake');
-  document.getElementById('btn2048').classList.toggle('active', name==='2048');
+  const bs = document.getElementById('btnSnake');
+  const b2 = document.getElementById('btn2048');
+  if (bs) bs.classList.toggle('active', name==='snake');
+  if (b2) b2.classList.toggle('active', name==='2048');
   stopGame();
-  initGame(name);
+  const area = document.getElementById('gameArea');
+  if (!area) return;
+  if (name === 'snake') initSnake(area);
+  else init2048(area);
 }
 
 function stopGame() {
