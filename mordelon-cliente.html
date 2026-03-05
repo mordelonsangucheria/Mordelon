@@ -2157,7 +2157,8 @@ window.minasDificultad = function(d) {
   minasInit();
 };
 
-window.minasReset = function() { minasInit(); };
+window.minasInit      = minasInit;
+window.minasReset     = function() { minasInit(); };
 
 
 </script>
@@ -2179,7 +2180,7 @@ window.elegirJuego = function(juego) {
   if(juego==='snake' && !snakeRunning) snakeInit();
   if(juego==='2048') g2048Init();
   if(juego==='dino') dinoInit();
-  if(juego==='minas') minasInit();
+  if(juego==='minas') window.minasInit();
   // Actualizar sistema de recompensa para el juego seleccionado
   window.juegoActualRecompensa = juego;
   if (typeof window.actualizarBarraRecompensa === 'function') window.actualizarBarraRecompensa();
