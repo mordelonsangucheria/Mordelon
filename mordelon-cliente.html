@@ -530,6 +530,27 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       </div>
     </div>
 
+    <!-- BLOQUE RECOMPENSA COMPARTIDO (visible en todos los juegos cuando hay config activa) -->
+    <div id="recompensaProgressWrap" style="display:none;margin:0 4px 10px;padding:10px 14px;background:var(--gris-dark);border:1px solid rgba(61,191,184,0.2);border-radius:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#666;margin-bottom:5px;">
+        <span style="color:var(--turquesa);font-weight:800;">🔥 Progreso recompensa</span>
+        <span id="recompensaProgressLabel" style="color:#aaa;">0 / 500 pts</span>
+      </div>
+      <div style="background:#1a1a1a;border-radius:20px;height:7px;overflow:hidden;">
+        <div id="recompensaProgressBar" style="height:7px;background:linear-gradient(90deg,var(--turquesa),var(--naranja));border-radius:20px;width:0%;transition:width 0.5s;"></div>
+      </div>
+      <div style="font-size:0.6rem;color:#444;margin-top:4px;text-align:center;" id="recompensaJuegoNombre"></div>
+    </div>
+
+    <!-- BANNER RECOMPENSA GANADA (compartido) -->
+    <div id="recompensaBanner" style="display:none;margin:0 4px 12px;background:linear-gradient(135deg,rgba(61,191,184,.15),rgba(212,131,26,.1));border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:4px;">🎉</div>
+      <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:4px;">¡GANASTE UN DESCUENTO!</div>
+      <div style="font-size:0.78rem;color:#aaa;margin-bottom:10px;" id="recompensaBannerDesc">Alcanzaste el puntaje. Usá este código al pedir:</div>
+      <div id="recompensaCodigo" style="font-family:'Righteous',cursive;font-size:1.4rem;letter-spacing:4px;color:var(--naranja);background:#1a1a1a;border-radius:10px;padding:10px 18px;display:inline-block;margin-bottom:10px;cursor:pointer;" onclick="window.copiarCodigoRecompensa()">LLAMA-XXXX</div>
+      <div style="font-size:0.65rem;color:#555;">Tap para copiar · Usalo en tu próximo pedido</div>
+    </div>
+
     <!-- TETRIS -->
     <div id="juegoTetris" style="display:block;">
       <div style="text-align:center;margin-bottom:6px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
@@ -594,21 +615,12 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onpointerdown="window.g2048Move('right')" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:52px;height:52px;">▶</button>
       </div>
     </div>
+
     <!-- DINO -->
     <div id="juegoDino" style="display:none;">
       <div style="text-align:center;margin-bottom:6px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
         <span>Puntos: <strong id="dinoScore" style="color:var(--turquesa)">0</strong></span>
         <span>Récord: <strong id="dinoHi" style="color:var(--naranja)">0</strong></span>
-      </div>
-      <!-- Barra de progreso recompensa -->
-      <div id="recompensaProgressWrap" style="display:none;margin-bottom:8px;padding:0 4px;">
-        <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#555;margin-bottom:3px;">
-          <span>🔥 Progreso recompensa</span>
-          <span id="recompensaProgressLabel">0 / 500 pts</span>
-        </div>
-        <div style="background:#222;border-radius:20px;height:6px;overflow:hidden;">
-          <div id="recompensaProgressBar" style="height:6px;background:linear-gradient(90deg,var(--turquesa),var(--naranja));border-radius:20px;width:0%;transition:width 0.4s;"></div>
-        </div>
       </div>
       <canvas id="dinoCanvas" width="320" height="160" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
       <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
@@ -616,14 +628,6 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
       </div>
       <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Espacio / Tap para saltar · Agacharse: ↓</p>
-      <!-- Banner de recompensa ganada -->
-      <div id="recompensaBanner" style="display:none;margin-top:14px;background:linear-gradient(135deg,rgba(61,191,184,.15),rgba(212,131,26,.1));border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;text-align:center;">
-        <div style="font-size:1.5rem;margin-bottom:4px;">🎉</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:4px;">¡GANASTE UN DESCUENTO!</div>
-        <div style="font-size:0.78rem;color:#aaa;margin-bottom:10px;" id="recompensaBannerDesc">Alcanzaste el puntaje. Usá este código al pedir:</div>
-        <div id="recompensaCodigo" style="font-family:'Righteous',cursive;font-size:1.4rem;letter-spacing:4px;color:var(--naranja);background:#1a1a1a;border-radius:10px;padding:10px 18px;display:inline-block;margin-bottom:10px;cursor:pointer;" onclick="window.copiarCodigoRecompensa()">LLAMA-XXXX</div>
-        <div style="font-size:0.65rem;color:#555;">Tap para copiar · Usalo en tu próximo pedido</div>
-      </div>
     </div>
   </div>
 </div>
@@ -1713,6 +1717,9 @@ window.elegirJuego = function(juego) {
   if(juego==='snake' && !snakeRunning) snakeInit();
   if(juego==='2048') g2048Init();
   if(juego==='dino') dinoInit();
+  // Actualizar sistema de recompensa para el juego seleccionado
+  juegoActualRecompensa = juego;
+  if (typeof actualizarBarraRecompensa === 'function') actualizarBarraRecompensa();
 };
 
 // ===================== TETRIS =====================
@@ -1744,7 +1751,7 @@ function tRandPiece(){ const i=Math.floor(Math.random()*7); return {shape:TETROM
 function tSpawn(){ tPiece=tRandPiece(); tX=Math.floor(TW/2)-Math.floor(tPiece.shape[0].length/2); tY=0; if(tCollide())tetrisOver(); }
 function tCollide(ox=0,oy=0,sh=tPiece.shape){ return sh.some((r,y)=>r.some((v,x)=>v&&(tY+y+oy>=TH||tX+x+ox<0||tX+x+ox>=TW||(tBoard[tY+y+oy]&&tBoard[tY+y+oy][tX+x+ox])))); }
 function tLock(){ tPiece.shape.forEach((r,y)=>r.forEach((v,x)=>{if(v)tBoard[tY+y][tX+x]=tPiece.color;})); tClear(); tSpawn(); }
-function tClear(){ let lines=0; for(let y=TH-1;y>=0;){ if(tBoard[y].every(c=>c)){tBoard.splice(y,1);tBoard.unshift(Array(TW).fill(0));lines++;}else y--;} if(lines){tScore+=[0,100,300,500,800][lines]*tLevel;tLevel=Math.floor(tScore/1000)+1;document.getElementById('tetrisScore').textContent=tScore;document.getElementById('tetrisLevel').textContent=tLevel;clearInterval(tTimer);tTimer=setInterval(tTick,Math.max(100,600-tLevel*50));if(tScore>tHi){tHi=tScore;localStorage.setItem('tetrisHiC',tHi);document.getElementById('tetrisHi').textContent=tHi;}}}
+function tClear(){ let lines=0; for(let y=TH-1;y>=0;){ if(tBoard[y].every(c=>c)){tBoard.splice(y,1);tBoard.unshift(Array(TW).fill(0));lines++;}else y--;} if(lines){tScore+=[0,100,300,500,800][lines]*tLevel;tLevel=Math.floor(tScore/1000)+1;document.getElementById('tetrisScore').textContent=tScore;document.getElementById('tetrisLevel').textContent=tLevel;clearInterval(tTimer);tTimer=setInterval(tTick,Math.max(100,600-tLevel*50));if(tScore>tHi){tHi=tScore;localStorage.setItem('tetrisHiC',tHi);document.getElementById('tetrisHi').textContent=tHi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('tetris',tHi);}}}
 function tTick(){ if(tPaused)return; if(!tCollide(0,1))tY++;else tLock(); tDraw(); }
 function tDraw(){
   TX.fillStyle='#0a0a0a'; TX.fillRect(0,0,TC.width,TC.height);
@@ -1794,7 +1801,7 @@ function sStep(){
   const head={x:snake[0].x+sDir.x,y:snake[0].y+sDir.y};
   if(head.x<0||head.x>=SCELLS||head.y<0||head.y>=SCELLS||snake.some(s=>s.x===head.x&&s.y===head.y)){snakeOver();return;}
   snake.unshift(head);
-  if(head.x===sFood.x&&head.y===sFood.y){sScore+=10;document.getElementById('snakeScore').textContent=sScore;if(sScore>sHi){sHi=sScore;localStorage.setItem('snakeHiC',sHi);document.getElementById('snakeHi').textContent=sHi;}sPlaceFood();}else snake.pop();
+  if(head.x===sFood.x&&head.y===sFood.y){sScore+=10;document.getElementById('snakeScore').textContent=sScore;if(sScore>sHi){sHi=sScore;localStorage.setItem('snakeHiC',sHi);document.getElementById('snakeHi').textContent=sHi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('snake',sHi);}sPlaceFood();}else snake.pop();
   sDraw();
 }
 function sDraw(){
@@ -1838,7 +1845,7 @@ window.g2048Move=function(dir){
   if(dir==='up')b=rotate(b);
   else if(dir==='right')b=b.map(r=>[...r].reverse());
   else if(dir==='down')b=rotate(rotate(rotate(b)));
-  if(moved){g2Board=b;g2Spawn();document.getElementById('g2048Score').textContent=g2Score;if(g2Score>g2Hi){g2Hi=g2Score;localStorage.setItem('g2048HiC',g2Hi);document.getElementById('g2048Hi').textContent=g2Hi;}g2Render();}
+  if(moved){g2Board=b;g2Spawn();document.getElementById('g2048Score').textContent=g2Score;if(g2Score>g2Hi){g2Hi=g2Score;localStorage.setItem('g2048HiC',g2Hi);document.getElementById('g2048Hi').textContent=g2Hi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('2048',g2Hi);}g2Render();}
 };
 window.g2048Reset=function(){g2048Init();};
 document.addEventListener('keydown',e=>{
@@ -1912,7 +1919,7 @@ function dinoLoop() {
 
   dScore++;
   document.getElementById('dinoScore').textContent = dScore;
-  if(dScore > dHi) { dHi = dScore; localStorage.setItem('dinoHiC', dHi); document.getElementById('dinoHi').textContent = dHi; }
+  if(dScore > dHi) { dHi = dScore; localStorage.setItem('dinoHiC', dHi); document.getElementById('dinoHi').textContent = dHi; if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('dino',dHi); }
   actualizarProgresoRecompensa(dScore);
 
   dinoDraw();
@@ -2139,75 +2146,109 @@ DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
   },{passive:true});
 })();
 
-// ── SISTEMA DE RECOMPENSA POR JUEGO ──────────────────────────────────────
-let recompensaJuegoConfig = null;
-let recompensaYaGanada = false; // flag para no repetir en la misma sesión
+// ── SISTEMA DE RECOMPENSA POR JUEGO (todos los juegos) ───────────────────
+// Configuraciones por juego. Clave = id del juego: tetris, snake, 2048, dino
+let recompensasConfig = {}; // { tetris: {puntos, pct, activo}, snake: {...}, ... }
+let juegoActualRecompensa = 'tetris'; // juego visible actualmente
+let recompensaYaGanada = {}; // { tetris: bool, snake: bool, ... }
 
-// Escuchar config de recompensa desde Firebase
-onSnapshot(doc(db,'config','recompensaJuego'), (snap) => {
-  recompensaJuegoConfig = snap.exists() ? snap.data() : null;
-  // Al cargar, revisar si ya tiene el récord suficiente
-  actualizarProgresoRecompensa(dHi);
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino' };
+
+// Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
+onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
+  if (snap.exists()) {
+    recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
+  }
+  actualizarBarraRecompensa();
 });
 
-function actualizarProgresoRecompensa(puntosActuales) {
-  const cfg = recompensaJuegoConfig;
+// Fallback legacy: si existe recompensaJuego (solo dino), usarlo también para el dino
+onSnapshot(doc(db,'config','recompensaJuego'), (snap) => {
+  if (snap.exists() && !recompensasConfig.dino) {
+    recompensasConfig.dino = snap.data();
+    actualizarBarraRecompensa();
+  }
+});
+
+// Llamar esto cada vez que cambia el juego visible
+function actualizarBarraRecompensa() {
+  const juego = juegoActualRecompensa;
+  const cfg = recompensasConfig[juego];
   const wrapEl = document.getElementById('recompensaProgressWrap');
+
   if (!cfg || cfg.activo === false || !cfg.puntos || !cfg.pct) {
     if (wrapEl) wrapEl.style.display = 'none';
     return;
   }
 
-  // Mostrar barra de progreso
+  // Obtener récord del juego actual (usando las mismas keys que cada juego)
+  const records = {
+    tetris: parseInt(localStorage.getItem('tetrisHiC') || '0'),
+    snake:  parseInt(localStorage.getItem('snakeHiC') || '0'),
+    '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
+    dino:   parseInt(localStorage.getItem('dinoHiC') || '0')
+  };
+  const puntosActuales = records[juego] || 0;
+
   if (wrapEl) wrapEl.style.display = 'block';
   const pct = Math.min(100, Math.round((puntosActuales / cfg.puntos) * 100));
   const barEl = document.getElementById('recompensaProgressBar');
   const labelEl = document.getElementById('recompensaProgressLabel');
+  const nombreEl = document.getElementById('recompensaJuegoNombre');
   if (barEl) barEl.style.width = pct + '%';
   if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' / ' + cfg.puntos.toLocaleString('es-AR') + ' pts';
+  if (nombreEl) nombreEl.textContent = 'Récord en ' + (JUEGOS_NOMBRES[juego] || juego);
 
-  // ¿Superó el umbral?
+  // Verificar si ya ganó recompensa
+  const lsKey = 'mordelon-recompensa-cupon-' + juego;
+  const lsUsadoKey = 'mordelon-recompensa-usado-' + juego;
+  const cuponGuardado = localStorage.getItem(lsKey);
+  const cuponUsado = localStorage.getItem(lsUsadoKey);
+
   if (puntosActuales >= cfg.puntos) {
-    // Ver si ya tiene un cupón activo guardado localmente (no gastado)
-    const cuponGuardado = localStorage.getItem('mordelon-recompensa-cupon');
-    const cuponUsado    = localStorage.getItem('mordelon-recompensa-usado');
-
     if (cuponGuardado && !cuponUsado) {
-      // Ya tiene uno, solo mostrarlo
       mostrarBannerRecompensa(cuponGuardado, cfg.pct);
-    } else if (!recompensaYaGanada && !cuponUsado) {
-      // Generar nuevo código
-      generarCuponRecompensa(cfg);
+    } else if (!recompensaYaGanada[juego] && !cuponUsado) {
+      generarCuponRecompensa(cfg, juego);
     }
+  } else {
+    // Ocultar banner si no llegó al umbral (o ya usó el cupón)
+    const banner = document.getElementById('recompensaBanner');
+    if (banner && !cuponGuardado) banner.style.display = 'none';
   }
 }
 
-async function generarCuponRecompensa(cfg) {
-  recompensaYaGanada = true;
-  // Código: LLAMA-XXXX (4 chars alfanuméricos)
+// Llamar cuando cambia el récord en cualquier juego
+window.notificarRecordJuego = function(juego, nuevoRecord) {
+  if (juego === juegoActualRecompensa) {
+    actualizarBarraRecompensa();
+  }
+};
+
+async function generarCuponRecompensa(cfg, juego) {
+  recompensaYaGanada[juego] = true;
+  const prefijos = { tetris: 'TETRIS', snake: 'SNAKE', '2048': 'DOS4K', dino: 'LLAMA' };
+  const prefijo = prefijos[juego] || 'GAME';
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const rand = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-  const codigo = 'LLAMA-' + rand;
+  const codigo = prefijo + '-' + rand;
 
-  // Guardar en Firebase (en la lista de cupones)
   try {
     const snap = await getDoc(doc(db,'config','cupones'));
     const lista = snap.exists() ? (snap.data().lista || []) : [];
-    const nuevoCupon = {
+    lista.push({
       id: Date.now(),
       codigo,
       pct: cfg.pct,
       activo: true,
       usado: false,
-      origen: 'juego',
+      origen: 'juego-' + juego,
       creadoEn: Date.now()
-    };
-    lista.push(nuevoCupon);
+    });
     await setDoc(doc(db,'config','cupones'), { lista });
 
-    // Guardar localmente
-    localStorage.setItem('mordelon-recompensa-cupon', codigo);
-    localStorage.removeItem('mordelon-recompensa-usado');
+    localStorage.setItem('mordelon-recompensa-cupon-' + juego, codigo);
+    localStorage.removeItem('mordelon-recompensa-usado-' + juego);
 
     mostrarBannerRecompensa(codigo, cfg.pct);
   } catch(e) {
@@ -2235,18 +2276,33 @@ window.copiarCodigoRecompensa = function() {
   }).catch(() => {});
 };
 
-// Cuando el cupón de recompensa sea usado, limpiar el local
+// Cuando se usa un cupón de recompensa, limpiar el local storage
 onSnapshot(doc(db,'config','cupones'), (snap) => {
   const lista = snap.exists() ? (snap.data().lista || []) : [];
-  const codigoGuardado = localStorage.getItem('mordelon-recompensa-cupon');
-  if (!codigoGuardado) return;
-  const cupon = lista.find(c => c.codigo === codigoGuardado);
-  if (cupon && cupon.usado) {
-    localStorage.setItem('mordelon-recompensa-usado', '1');
-    localStorage.removeItem('mordelon-recompensa-cupon');
-    const banner = document.getElementById('recompensaBanner');
-    if (banner) banner.style.display = 'none';
-    recompensaYaGanada = false; // permitir ganar otro en el futuro
+  ['tetris','snake','2048','dino'].forEach(juego => {
+    const lsKey = 'mordelon-recompensa-cupon-' + juego;
+    const lsUsadoKey = 'mordelon-recompensa-usado-' + juego;
+    const codigoGuardado = localStorage.getItem(lsKey);
+    if (!codigoGuardado) return;
+    const cupon = lista.find(c => c.codigo === codigoGuardado);
+    if (cupon && cupon.usado) {
+      localStorage.setItem(lsUsadoKey, '1');
+      localStorage.removeItem(lsKey);
+      if (juego === juegoActualRecompensa) {
+        const banner = document.getElementById('recompensaBanner');
+        if (banner) banner.style.display = 'none';
+      }
+      recompensaYaGanada[juego] = false;
+    }
+  });
+  // Compatibilidad con cupones legacy (clave sin sufijo de juego)
+  const legacyCupon = localStorage.getItem('mordelon-recompensa-cupon');
+  if (legacyCupon) {
+    const cupon = lista.find(c => c.codigo === legacyCupon);
+    if (cupon && cupon.usado) {
+      localStorage.setItem('mordelon-recompensa-usado', '1');
+      localStorage.removeItem('mordelon-recompensa-cupon');
+    }
   }
 });
 </script>
