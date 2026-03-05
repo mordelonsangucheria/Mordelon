@@ -667,7 +667,20 @@ select.mac-field option { background:#222; }
     <div style="display:flex;gap:8px;margin-bottom:10px;">
       <div style="flex:1;">
         <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">EMOJI</div>
-        <input id="promoEmoji" class="campo" placeholder="🔥" maxlength="2" style="text-align:center;font-size:1.4rem;padding:8px;" />
+        <div style="position:relative;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div id="promo-emoji-preview" onclick="window.togglePromoEmojiPicker()"
+              style="font-size:1.6rem;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--gris-mid);border-radius:10px;cursor:pointer;border:2px solid var(--turquesa);"
+              title="Elegir emoji">🔥</div>
+            <input type="hidden" id="promoEmoji" value="🔥"/>
+            <span style="font-size:0.7rem;color:#555;">Tocá para<br>elegir emoji</span>
+          </div>
+          <div id="promoEmojiPicker" style="display:none;position:absolute;top:52px;left:0;z-index:999;
+            background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:14px;padding:12px;width:260px;box-shadow:0 8px 32px #0008;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="promoEmojiCategoriaBtns"></div>
+            <div id="promoEmojiGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;max-height:200px;overflow-y:auto;"></div>
+          </div>
+        </div>
       </div>
       <div style="flex:2;">
         <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">COLOR BADGE</div>
@@ -1672,7 +1685,9 @@ window.eliminarPromo = async function(id) {
 function limpiarFormPromo() {
   document.getElementById('promoTitulo').value = '';
   document.getElementById('promoDescripcion').value = '';
-  document.getElementById('promoEmoji').value = '';
+  document.getElementById('promoEmoji').value = '🔥';
+  const prev = document.getElementById('promo-emoji-preview');
+  if (prev) prev.textContent = '🔥';
   document.getElementById('promoProducto').value = '';
   document.getElementById('promoDescuento').value = '';
   document.getElementById('promoPrecioCombo').value = '';
@@ -1899,6 +1914,51 @@ function renderEmojiPicker() {
   });
 }
 
+
+// ===== EMOJI PICKER PROMOS =====
+let promoEmojiCatActual = 'Comidas';
+
+function renderPromoEmojiPicker() {
+  const catCont = document.getElementById('promoEmojiCategoriaBtns');
+  catCont.innerHTML = '';
+  Object.keys(EMOJIS).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.textContent = cat;
+    btn.style.cssText = 'background:' + (cat===promoEmojiCatActual?'var(--turquesa)':'var(--gris-mid)') + ';color:' + (cat===promoEmojiCatActual?'var(--negro)':'#aaa') + ';border:none;border-radius:8px;padding:4px 8px;font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;';
+    btn.addEventListener('click', () => { promoEmojiCatActual = cat; renderPromoEmojiPicker(); });
+    catCont.appendChild(btn);
+  });
+  const grid = document.getElementById('promoEmojiGrid');
+  grid.innerHTML = '';
+  EMOJIS[promoEmojiCatActual].forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.style.cssText = 'background:transparent;border:1.5px solid transparent;border-radius:8px;padding:4px;font-size:1.3rem;cursor:pointer;transition:all .15s;';
+    btn.addEventListener('mouseenter', () => btn.style.borderColor='var(--turquesa)');
+    btn.addEventListener('mouseleave', () => btn.style.borderColor='transparent');
+    btn.addEventListener('click', () => {
+      document.getElementById('promoEmoji').value = emoji;
+      document.getElementById('promo-emoji-preview').textContent = emoji;
+      document.getElementById('promoEmojiPicker').style.display = 'none';
+    });
+    grid.appendChild(btn);
+  });
+}
+
+window.togglePromoEmojiPicker = function() {
+  const picker = document.getElementById('promoEmojiPicker');
+  const showing = picker.style.display === 'block';
+  picker.style.display = showing ? 'none' : 'block';
+  if (!showing) renderPromoEmojiPicker();
+};
+
+document.addEventListener('click', (e) => {
+  const picker = document.getElementById('promoEmojiPicker');
+  const preview = document.getElementById('promo-emoji-preview');
+  if (picker && !picker.contains(e.target) && preview && !preview.contains(e.target)) {
+    picker.style.display = 'none';
+  }
+});
 
 window.toggleEmojiPicker = function() {
   const picker = document.getElementById('emojiPicker');
