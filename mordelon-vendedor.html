@@ -2594,26 +2594,27 @@ function initSnake(area) {
 
 // ──── 2048 ────
 function init2048(area) {
+  const hiVal = localStorage.getItem('mordelon-2048-hi')||0;
   area.innerHTML = `
-    <div class="g2048-wrapper">
+    <div class="g2048-wrapper" id="g2048wrapper">
       <div class="g2048-header">
         <div style="font-size:.8rem;color:#00e5cc;font-weight:900;">2048</div>
         <div class="g2048-score-box"><div class="label">puntos</div><div class="val" id="g2048score">0</div></div>
-        <div class="g2048-score-box"><div class="label">récord</div><div class="val" id="g2048hi">${localStorage.getItem('mordelon-2048-hi')||0}</div></div>
+        <div class="g2048-score-box"><div class="label">récord</div><div class="val" id="g2048hi">${hiVal}</div></div>
       </div>
       <div class="g2048-grid" id="g2048grid"></div>
       <div class="dpad" style="margin-top:8px;">
-        <div class="dpad-row"><button class="dpad-btn" data-dir="up">▲</button></div>
+        <div class="dpad-row"><button class="dpad-btn" id="d2up">▲</button></div>
         <div class="dpad-row">
-          <button class="dpad-btn" data-dir="left">◀</button>
-          <button class="dpad-btn dpad-center" data-dir="restart">↺</button>
-          <button class="dpad-btn" data-dir="right">▶</button>
+          <button class="dpad-btn" id="d2left">◀</button>
+          <button class="dpad-btn dpad-center" id="d2restart">↺</button>
+          <button class="dpad-btn" id="d2right">▶</button>
         </div>
-        <div class="dpad-row"><button class="dpad-btn" data-dir="down">▼</button></div>
+        <div class="dpad-row"><button class="dpad-btn" id="d2down">▼</button></div>
       </div>
     </div>`;
 
-  let board, score2048;
+  let board = [], score2048 = 0;
 
   function newBoard() {
     board = Array(4).fill(null).map(()=>Array(4).fill(0));
@@ -2644,13 +2645,18 @@ function init2048(area) {
       cell.className = 'g2048-cell';
       cell.style.background = colors[v]||'#333';
       cell.style.color = textColors[v]||'#fff';
-      cell.style.fontSize = v>=1024?'.7rem':v>=128?'.8rem':'.9rem';
+      cell.style.fontSize = v>=1024?'.65rem':v>=128?'.78rem':'.9rem';
       cell.textContent = v||'';
       grid.appendChild(cell);
     }
-    document.getElementById('g2048score').textContent = score2048;
+    const sc = document.getElementById('g2048score');
+    if (sc) sc.textContent = score2048;
     const hi = parseInt(localStorage.getItem('mordelon-2048-hi')||0);
-    if(score2048>hi) { localStorage.setItem('mordelon-2048-hi',score2048); document.getElementById('g2048hi').textContent=score2048; }
+    if(score2048>hi) {
+      localStorage.setItem('mordelon-2048-hi', score2048);
+      const hiel = document.getElementById('g2048hi');
+      if (hiel) hiel.textContent = score2048;
+    }
   }
 
   function slide(row) {
@@ -2663,6 +2669,8 @@ function init2048(area) {
     return arr;
   }
 
+  function transpose(b) { return b[0].map((_,c)=>b.map(r=>r[c])); }
+
   function move(d) {
     const prev = JSON.stringify(board);
     if(d==='left')  board = board.map(r=>slide(r));
@@ -2672,22 +2680,27 @@ function init2048(area) {
     if(JSON.stringify(board)!==prev) { addTile(); render2048(); }
   }
 
-  function transpose(b) { return b[0].map((_,c)=>b.map(r=>r[c])); }
-
   function onKey(e) {
     const map = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};
     if(map[e.key]) { move(map[e.key]); e.preventDefault(); }
   }
 
-  // D-pad táctil
-  area.querySelectorAll('.dpad-btn').forEach(btn => {
-    btn.addEventListener('touchstart', e => { e.preventDefault(); const d=btn.dataset.dir; if(d==='restart') newBoard(); else move(d); }, {passive:false});
-    btn.addEventListener('mousedown', () => { const d=btn.dataset.dir; if(d==='restart') newBoard(); else move(d); });
-  });
+  // Botones por ID para evitar conflictos
+  function bindBtn(id, action) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', e => { e.preventDefault(); action(); }, {passive:false});
+    el.addEventListener('mousedown', () => action());
+  }
+  bindBtn('d2up',      () => move('up'));
+  bindBtn('d2down',    () => move('down'));
+  bindBtn('d2left',    () => move('left'));
+  bindBtn('d2right',   () => move('right'));
+  bindBtn('d2restart', () => newBoard());
 
   // Swipe en grilla
   let tx=0, ty=0;
-  const grid2 = area.querySelector('.g2048-grid');
+  const grid2 = document.getElementById('g2048grid');
   grid2.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; e.preventDefault(); },{passive:false});
   grid2.addEventListener('touchend', e=>{
     const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
@@ -2702,6 +2715,7 @@ function init2048(area) {
   _activeGame = { stop: ()=>{}, onKey };
   document.addEventListener('keydown', _gameKeyHandler);
 }
+
 
 // CERRAR SESIÓN
 window.cerrarSesion = function() {
