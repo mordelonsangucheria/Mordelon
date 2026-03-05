@@ -2387,7 +2387,7 @@ function dinoLoop() {
   dScore++;
   document.getElementById('dinoScore').textContent = dScore;
   if(dScore > dHi) { dHi = dScore; localStorage.setItem('dinoHiC', dHi); document.getElementById('dinoHi').textContent = dHi; if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('dino',dHi); }
-  actualizarProgresoRecompensa(dScore);
+  if(typeof window.actualizarBarraRecompensa==="function") window.actualizarBarraRecompensa();
 
   dinoDraw();
   dAnimFrame = requestAnimationFrame(dinoLoop);
