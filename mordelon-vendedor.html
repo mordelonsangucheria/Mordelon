@@ -2462,7 +2462,7 @@ function startWaitingClock() {
 // ===== JUEGOS PANTALLA DE ESPERA =====
 let _activeGame = null;
 
-function switchGame(name) {
+window.switchGame = function(name) {
   const bs = document.getElementById('btnSnake');
   const b2 = document.getElementById('btn2048');
   if (bs) bs.classList.toggle('active', name==='snake');
