@@ -172,8 +172,49 @@ header {
 }
 
 
-.empty-state { text-align:center; padding:50px 20px; color:#444; }
+.empty-state { text-align:center; padding:30px 20px; color:#444; }
 .empty-state p { font-size:3rem; margin-bottom:8px; }
+
+/* Widget de espera vivo */
+.waiting-widget {
+  display:flex; flex-direction:column; align-items:center;
+  gap:14px; padding:32px 20px;
+}
+.waiting-flame {
+  font-size:3.2rem;
+  animation: flamePulse 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px #00e5cc88);
+}
+@keyframes flamePulse {
+  0%,100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 10px #00e5cc66); }
+  50%      { transform: scale(1.18) rotate(2deg); filter: drop-shadow(0 0 22px #00e5cccc); }
+}
+.waiting-status {
+  display:flex; align-items:center; gap:8px;
+  background:#1a2a2a; border:1.5px solid #00e5cc44;
+  border-radius:20px; padding:6px 16px;
+}
+.waiting-dot {
+  width:9px; height:9px; border-radius:50%;
+  background:#00e5cc;
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+  0%,100% { opacity:1; box-shadow:0 0 6px #00e5cc; }
+  50%      { opacity:0.25; box-shadow:none; }
+}
+.waiting-status span { font-size:.8rem; color:#00e5cc; font-weight:700; letter-spacing:.5px; }
+.waiting-clock {
+  font-size:2.6rem; font-weight:900; color:#fff;
+  letter-spacing:2px; font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px #00e5cc55;
+}
+.waiting-uptime {
+  font-size:.75rem; color:#666; letter-spacing:.3px;
+}
+.waiting-msg {
+  font-size:.82rem; color:#555; font-style:italic;
+}
 
 .cierre-box { background:var(--gris-dark); border:1.5px solid var(--gris-light); border-radius:14px; padding:16px; margin-top:14px; }
 .btn { padding:11px 16px; border:none; border-radius:11px; font-family:inherit; font-weight:900; font-size:0.82rem; cursor:pointer; transition:all .18s; text-transform:uppercase; letter-spacing:.5px; width:100%; margin-bottom:8px; }
@@ -959,7 +1000,18 @@ onSnapshot(q, (snap) => {
 function renderPedidosLive() {
   const cont = document.getElementById('pedidosLive');
   if (!pedidosActivos.length) {
-    cont.innerHTML = '<div class="empty-state"><p>🟢</p><span style="font-size:.9rem;">Esperando pedidos...</span></div>';
+    cont.innerHTML = `
+      <div class="waiting-widget">
+        <div class="waiting-flame">🔥</div>
+        <div class="waiting-status">
+          <div class="waiting-dot"></div>
+          <span>EN LÍNEA</span>
+        </div>
+        <div class="waiting-clock" id="waitingClock">--:--:--</div>
+        <div class="waiting-uptime" id="waitingUptime">Activo hace 0 min</div>
+        <div class="waiting-msg">Esperando pedidos...</div>
+      </div>`;
+    startWaitingClock();
     return;
   }
   cont.innerHTML = pedidosActivos.map(p => {
@@ -2315,6 +2367,27 @@ function updateReloj() {
   if (el && usuarioActual) el.textContent = '👤 ' + usuarioActual;
 }
 updateReloj(); setInterval(updateReloj,1000);
+
+// ===== RELOJ EN VIVO PANTALLA DE ESPERA =====
+const _sesionInicio = Date.now();
+let _waitingClockInterval = null;
+
+function startWaitingClock() {
+  if (_waitingClockInterval) clearInterval(_waitingClockInterval);
+  function tick() {
+    const clockEl = document.getElementById('waitingClock');
+    const uptimeEl = document.getElementById('waitingUptime');
+    if (!clockEl) { clearInterval(_waitingClockInterval); _waitingClockInterval = null; return; }
+    clockEl.textContent = new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const mins = Math.floor((Date.now() - _sesionInicio) / 60000);
+    const hrs  = Math.floor(mins / 60);
+    uptimeEl.textContent = hrs > 0
+      ? `Activo hace ${hrs}h ${mins % 60}min`
+      : `Activo hace ${mins} min`;
+  }
+  tick();
+  _waitingClockInterval = setInterval(tick, 1000);
+}
 
 // CERRAR SESIÓN
 window.cerrarSesion = function() {
