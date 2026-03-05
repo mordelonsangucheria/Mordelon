@@ -1249,7 +1249,7 @@ window.guardarHorarios = async function() {
 };
 
 // ===== USUARIOS =====
-async window.editarNombreUsuario = async function(idx, nombreActual) {
+window.editarNombreUsuario = async function(idx, nombreActual) {
   const nuevoNombre = prompt('Nuevo nombre para "' + nombreActual + '":', nombreActual);
   if (!nuevoNombre || nuevoNombre.trim() === '') return;
   if (nuevoNombre.trim() === nombreActual) return;
