@@ -164,16 +164,11 @@ header {
 
 /* NOTIF */
 .notif-banner {
-  position:fixed; top:70px; left:50%; transform:translateX(-50%) translateY(-80px);
+  position:fixed; top:80px; left:50%; transform:translateX(-50%);
   background:var(--amarillo); color:var(--negro);
   padding:12px 24px; border-radius:30px; font-weight:900; font-size:0.9rem;
-  z-index:9999; transition:transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
-  white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.4);
-  opacity:0; pointer-events:none;
-}
-.notif-banner.show {
-  transform:translateX(-50%) translateY(0px);
-  opacity:1; pointer-events:auto;
+  z-index:9999; white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.4);
+  display:none;
 }
 
 
@@ -1073,15 +1068,22 @@ function playBeep() {
 function showNotif(msg, conSonido = false) {
   const b = document.getElementById('notifBanner');
   b.textContent = msg;
-  b.classList.add('show');
+  b.style.display = 'block';
   b.style.opacity = '1';
-  b.style.pointerEvents = 'auto';
   clearTimeout(b._t);
+  clearTimeout(b._fade);
   b._t = setTimeout(() => {
-    b.classList.remove('show');
-    b.style.opacity = '0';
-    b.style.pointerEvents = 'none';
-  }, 3500);
+    let op = 1;
+    b._fade = setInterval(() => {
+      op -= 0.1;
+      b.style.opacity = String(Math.max(op, 0));
+      if (op <= 0) {
+        clearInterval(b._fade);
+        b.style.display = 'none';
+        b.style.opacity = '1';
+      }
+    }, 40);
+  }, 3000);
   if (conSonido) playBeep();
 }
 
