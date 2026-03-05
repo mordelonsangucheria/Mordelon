@@ -257,7 +257,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
 /* ESTADO PEDIDO */
 .estado-box { text-align:center; padding:30px 16px; }
-.estado-icon { font-size:4rem; margin-bottom:12px; }
+.estado-icon { font-size:4rem; margin-bottom:12px; filter: hue-rotate(170deg) saturate(3) brightness(1.1); }
 .estado-titulo { font-family:'Righteous',cursive; font-size:1.8rem; color:var(--turquesa); margin-bottom:8px; letter-spacing:1px; }
 .estado-sub { font-size:0.9rem; color:#888; line-height:1.5; }
 .num-pedido { font-family:'Righteous',cursive; font-size:3rem; color:var(--verde); margin:16px 0; }
@@ -376,6 +376,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   font-size:3rem; margin-top:-10px;
   animation: fuegoAparece .5s ease .6s forwards;
   opacity:0;
+  filter: hue-rotate(170deg) saturate(3) brightness(1.1);
 }
 @keyframes fuegoAparece {
   from { transform:scale(.3); opacity:0; }
@@ -403,6 +404,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   position:absolute; bottom:0;
   animation: llamaSubir 1.2s ease-in-out infinite alternate;
   font-size:2.5rem; opacity:.7;
+  filter: hue-rotate(170deg) saturate(3) brightness(1.1);
 }
 .llama:nth-child(1)  { left:2%;  animation-delay:0s;    font-size:2rem; }
 .llama:nth-child(2)  { left:10%; animation-delay:.15s;  font-size:3rem; }
