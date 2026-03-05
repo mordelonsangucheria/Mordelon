@@ -1077,19 +1077,6 @@ onSnapshot(doc(db,'config','cupones'), (snap) => {
   cuponesDisponibles = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
 });
 
-function estaAbiertoAhora() {
-  const ahora = new Date();
-  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-  const diaActual = dias[ahora.getDay()];
-  const horario = horariosData.find(h => h.dia === diaActual);
-  if (!horario || !horario.abierto) return false;
-  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
-  const now = ahora.getHours()*60 + ahora.getMinutes();
-  if (now >= toMin(horario.desde) && now <= toMin(horario.hasta)) return true;
-  if (horario.turno2 && now >= toMin(horario.desde2) && now <= toMin(horario.hasta2)) return true;
-  return false;
-}
-
 window.aplicarCupon = function() {
   const input = document.getElementById('cuponInput');
   const codigo = input.value.trim().toUpperCase();
@@ -1155,6 +1142,19 @@ onSnapshot(doc(db,'config','horarios'), (snap) => {
   horariosData = (snap.exists() && snap.data().dias) ? snap.data().dias : horariosDefault;
   mostrarHorarios(horariosData);
 });
+
+function estaAbiertoAhora() {
+  const ahora = new Date();
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const diaActual = dias[ahora.getDay()];
+  const horario = horariosData.find(h => h.dia === diaActual);
+  if (!horario || !horario.abierto) return false;
+  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const now = ahora.getHours()*60 + ahora.getMinutes();
+  if (now >= toMin(horario.desde) && now <= toMin(horario.hasta)) return true;
+  if (horario.turno2 && now >= toMin(horario.desde2) && now <= toMin(horario.hasta2)) return true;
+  return false;
+}
 
 // Cargar menú desde Firebase en tiempo real
 let stockActual = {};
