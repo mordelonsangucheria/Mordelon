@@ -823,6 +823,36 @@ select.mac-field option { background:#222; }
 <div id="panel-descuentos" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Creá códigos de descuento de un solo uso. El cliente lo ingresa antes de confirmar el pedido.</p>
 
+  <!-- 🎮 RECOMPENSA POR JUEGO -->
+  <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="recompensaEstadoBadge" style="font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(61,191,184,.15);color:var(--turquesa);border:1px solid var(--turquesa);">ACTIVO</span>
+        <button onclick="window.toggleRecompensa()" id="btnToggleRecompensa" style="background:transparent;border:1.5px solid #444;color:#aaa;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:0.75rem;">⏸ Pausar</button>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Cuando un cliente alcanza el puntaje en el juego de la llama, recibe automáticamente un código de descuento de uso único.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div>
+        <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">PUNTOS NECESARIOS</div>
+        <input id="recompensaPuntos" type="number" min="100" max="99999" step="100" class="campo" placeholder="Ej: 500" style="font-family:'Righteous',cursive;font-size:1.1rem;text-align:center;" />
+      </div>
+      <div>
+        <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">% DESCUENTO</div>
+        <input id="recompensaPct" type="number" min="1" max="100" step="1" class="campo" placeholder="Ej: 10" style="font-family:'Righteous',cursive;font-size:1.1rem;text-align:center;" />
+      </div>
+    </div>
+
+    <div style="background:#0a0a0a;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:0.78rem;color:#aaa;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:1.2rem;">🔥</span>
+      <span id="recompensaPreview">Configurá los valores y guardá para activar la recompensa.</span>
+    </div>
+
+    <button class="btn btn-turquesa" onclick="window.guardarRecompensaJuego()" style="width:100%;">💾 Guardar configuración</button>
+  </div>
+
   <!-- CUPONES ACTIVOS -->
   <div id="cuponesLista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
 
@@ -2761,6 +2791,74 @@ onSnapshot(doc(db,'config','stats'), (snap) => {
   const visitas = snap.exists() ? (snap.data().visitas || 0) : 0;
   const el = document.getElementById('cajaVisitas');
   if (el) el.textContent = visitas.toLocaleString('es-AR');
+});
+
+// ── RECOMPENSA POR JUEGO ──────────────────────────────────────────────────
+let recompensaConfig = { puntos: 500, pct: 10, activo: true };
+
+function actualizarUIRecompensa() {
+  const puntosEl = document.getElementById('recompensaPuntos');
+  const pctEl    = document.getElementById('recompensaPct');
+  const preview  = document.getElementById('recompensaPreview');
+  const badge    = document.getElementById('recompensaEstadoBadge');
+  const btnToggle= document.getElementById('btnToggleRecompensa');
+  if (!puntosEl) return;
+
+  puntosEl.value = recompensaConfig.puntos || '';
+  pctEl.value    = recompensaConfig.pct || '';
+
+  const pts = recompensaConfig.puntos;
+  const pct = recompensaConfig.pct;
+  if (pts && pct) {
+    preview.textContent = `Al llegar a ${pts.toLocaleString('es-AR')} puntos, el cliente gana un cupón de ${pct}% de descuento, de uso único.`;
+  }
+
+  const activo = recompensaConfig.activo !== false;
+  badge.textContent = activo ? 'ACTIVO' : 'PAUSADO';
+  badge.style.background = activo ? 'rgba(61,191,184,.15)' : '#33333388';
+  badge.style.color = activo ? 'var(--turquesa)' : '#666';
+  badge.style.border = activo ? '1px solid var(--turquesa)' : '1px solid #444';
+  btnToggle.textContent = activo ? '⏸ Pausar' : '▶ Activar';
+}
+
+// Listen to preview changes
+document.addEventListener('input', e => {
+  if (e.target.id === 'recompensaPuntos' || e.target.id === 'recompensaPct') {
+    const pts = parseInt(document.getElementById('recompensaPuntos').value);
+    const pct = parseInt(document.getElementById('recompensaPct').value);
+    const preview = document.getElementById('recompensaPreview');
+    if (pts && pct) {
+      preview.textContent = `Al llegar a ${pts.toLocaleString('es-AR')} puntos, el cliente gana un cupón de ${pct}% de descuento, de uso único.`;
+    }
+  }
+});
+
+window.guardarRecompensaJuego = async function() {
+  const puntos = parseInt(document.getElementById('recompensaPuntos').value);
+  const pct    = parseInt(document.getElementById('recompensaPct').value);
+  if (!puntos || puntos < 50) { showNotif('⚠️ Ingresá un mínimo de 50 puntos'); return; }
+  if (!pct || pct < 1 || pct > 100) { showNotif('⚠️ El descuento debe ser entre 1% y 100%'); return; }
+  recompensaConfig.puntos = puntos;
+  recompensaConfig.pct    = pct;
+  await setDoc(doc(db,'config','recompensaJuego'), recompensaConfig);
+  showNotif('✅ Recompensa configurada: ' + puntos + ' pts = ' + pct + '% off');
+  registrarActividad('🎮 Recompensa juego: ' + puntos + ' pts → ' + pct + '% off');
+  actualizarUIRecompensa();
+};
+
+window.toggleRecompensa = async function() {
+  recompensaConfig.activo = !recompensaConfig.activo;
+  await setDoc(doc(db,'config','recompensaJuego'), recompensaConfig);
+  showNotif(recompensaConfig.activo ? '✅ Recompensa activada' : '⏸ Recompensa pausada');
+  actualizarUIRecompensa();
+};
+
+// Load config on startup
+onSnapshot(doc(db,'config','recompensaJuego'), (snap) => {
+  if (snap.exists()) {
+    recompensaConfig = { puntos:500, pct:10, activo:true, ...snap.data() };
+  }
+  actualizarUIRecompensa();
 });
 
 // Bind tab clicks after module loads

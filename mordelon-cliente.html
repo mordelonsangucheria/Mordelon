@@ -600,12 +600,30 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <span>Puntos: <strong id="dinoScore" style="color:var(--turquesa)">0</strong></span>
         <span>Récord: <strong id="dinoHi" style="color:var(--naranja)">0</strong></span>
       </div>
+      <!-- Barra de progreso recompensa -->
+      <div id="recompensaProgressWrap" style="display:none;margin-bottom:8px;padding:0 4px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#555;margin-bottom:3px;">
+          <span>🔥 Progreso recompensa</span>
+          <span id="recompensaProgressLabel">0 / 500 pts</span>
+        </div>
+        <div style="background:#222;border-radius:20px;height:6px;overflow:hidden;">
+          <div id="recompensaProgressBar" style="height:6px;background:linear-gradient(90deg,var(--turquesa),var(--naranja));border-radius:20px;width:0%;transition:width 0.4s;"></div>
+        </div>
+      </div>
       <canvas id="dinoCanvas" width="320" height="160" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
       <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
         <button onpointerdown="window.dinoJump()" style="background:var(--turquesa);border:none;color:#111;border-radius:14px;padding:12px 40px;font-family:'Righteous',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;">▲ SALTAR</button>
         <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
       </div>
       <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Espacio / Tap para saltar · Agacharse: ↓</p>
+      <!-- Banner de recompensa ganada -->
+      <div id="recompensaBanner" style="display:none;margin-top:14px;background:linear-gradient(135deg,rgba(61,191,184,.15),rgba(212,131,26,.1));border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;text-align:center;">
+        <div style="font-size:1.5rem;margin-bottom:4px;">🎉</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:4px;">¡GANASTE UN DESCUENTO!</div>
+        <div style="font-size:0.78rem;color:#aaa;margin-bottom:10px;" id="recompensaBannerDesc">Alcanzaste el puntaje. Usá este código al pedir:</div>
+        <div id="recompensaCodigo" style="font-family:'Righteous',cursive;font-size:1.4rem;letter-spacing:4px;color:var(--naranja);background:#1a1a1a;border-radius:10px;padding:10px 18px;display:inline-block;margin-bottom:10px;cursor:pointer;" onclick="window.copiarCodigoRecompensa()">LLAMA-XXXX</div>
+        <div style="font-size:0.65rem;color:#555;">Tap para copiar · Usalo en tu próximo pedido</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1895,6 +1913,7 @@ function dinoLoop() {
   dScore++;
   document.getElementById('dinoScore').textContent = dScore;
   if(dScore > dHi) { dHi = dScore; localStorage.setItem('dinoHiC', dHi); document.getElementById('dinoHi').textContent = dHi; }
+  actualizarProgresoRecompensa(dScore);
 
   dinoDraw();
   dAnimFrame = requestAnimationFrame(dinoLoop);
@@ -2119,6 +2138,117 @@ DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
     else window.dinoJump();
   },{passive:true});
 })();
+
+// ── SISTEMA DE RECOMPENSA POR JUEGO ──────────────────────────────────────
+let recompensaJuegoConfig = null;
+let recompensaYaGanada = false; // flag para no repetir en la misma sesión
+
+// Escuchar config de recompensa desde Firebase
+onSnapshot(doc(db,'config','recompensaJuego'), (snap) => {
+  recompensaJuegoConfig = snap.exists() ? snap.data() : null;
+  // Al cargar, revisar si ya tiene el récord suficiente
+  actualizarProgresoRecompensa(dHi);
+});
+
+function actualizarProgresoRecompensa(puntosActuales) {
+  const cfg = recompensaJuegoConfig;
+  const wrapEl = document.getElementById('recompensaProgressWrap');
+  if (!cfg || cfg.activo === false || !cfg.puntos || !cfg.pct) {
+    if (wrapEl) wrapEl.style.display = 'none';
+    return;
+  }
+
+  // Mostrar barra de progreso
+  if (wrapEl) wrapEl.style.display = 'block';
+  const pct = Math.min(100, Math.round((puntosActuales / cfg.puntos) * 100));
+  const barEl = document.getElementById('recompensaProgressBar');
+  const labelEl = document.getElementById('recompensaProgressLabel');
+  if (barEl) barEl.style.width = pct + '%';
+  if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' / ' + cfg.puntos.toLocaleString('es-AR') + ' pts';
+
+  // ¿Superó el umbral?
+  if (puntosActuales >= cfg.puntos) {
+    // Ver si ya tiene un cupón activo guardado localmente (no gastado)
+    const cuponGuardado = localStorage.getItem('mordelon-recompensa-cupon');
+    const cuponUsado    = localStorage.getItem('mordelon-recompensa-usado');
+
+    if (cuponGuardado && !cuponUsado) {
+      // Ya tiene uno, solo mostrarlo
+      mostrarBannerRecompensa(cuponGuardado, cfg.pct);
+    } else if (!recompensaYaGanada && !cuponUsado) {
+      // Generar nuevo código
+      generarCuponRecompensa(cfg);
+    }
+  }
+}
+
+async function generarCuponRecompensa(cfg) {
+  recompensaYaGanada = true;
+  // Código: LLAMA-XXXX (4 chars alfanuméricos)
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const rand = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  const codigo = 'LLAMA-' + rand;
+
+  // Guardar en Firebase (en la lista de cupones)
+  try {
+    const snap = await getDoc(doc(db,'config','cupones'));
+    const lista = snap.exists() ? (snap.data().lista || []) : [];
+    const nuevoCupon = {
+      id: Date.now(),
+      codigo,
+      pct: cfg.pct,
+      activo: true,
+      usado: false,
+      origen: 'juego',
+      creadoEn: Date.now()
+    };
+    lista.push(nuevoCupon);
+    await setDoc(doc(db,'config','cupones'), { lista });
+
+    // Guardar localmente
+    localStorage.setItem('mordelon-recompensa-cupon', codigo);
+    localStorage.removeItem('mordelon-recompensa-usado');
+
+    mostrarBannerRecompensa(codigo, cfg.pct);
+  } catch(e) {
+    console.error('Error generando cupón recompensa:', e);
+  }
+}
+
+function mostrarBannerRecompensa(codigo, pct) {
+  const banner = document.getElementById('recompensaBanner');
+  const codigoEl = document.getElementById('recompensaCodigo');
+  const descEl = document.getElementById('recompensaBannerDesc');
+  if (!banner) return;
+  if (codigoEl) codigoEl.textContent = codigo;
+  if (descEl) descEl.textContent = `¡Superaste el puntaje! Usá este código y obtenés ${pct}% de descuento:`;
+  banner.style.display = 'block';
+}
+
+window.copiarCodigoRecompensa = function() {
+  const codigo = document.getElementById('recompensaCodigo').textContent;
+  navigator.clipboard.writeText(codigo).then(() => {
+    const el = document.getElementById('recompensaCodigo');
+    const orig = el.textContent;
+    el.textContent = '✅ Copiado!';
+    setTimeout(() => { el.textContent = orig; }, 1500);
+  }).catch(() => {});
+};
+
+// Cuando el cupón de recompensa sea usado, limpiar el local
+onSnapshot(doc(db,'config','cupones'), (snap) => {
+  const lista = snap.exists() ? (snap.data().lista || []) : [];
+  const codigoGuardado = localStorage.getItem('mordelon-recompensa-cupon');
+  if (!codigoGuardado) return;
+  const cupon = lista.find(c => c.codigo === codigoGuardado);
+  if (cupon && cupon.usado) {
+    localStorage.setItem('mordelon-recompensa-usado', '1');
+    localStorage.removeItem('mordelon-recompensa-cupon');
+    const banner = document.getElementById('recompensaBanner');
+    if (banner) banner.style.display = 'none';
+    recompensaYaGanada = false; // permitir ganar otro en el futuro
+  }
+});
 </script>
 </body>
 </html>
