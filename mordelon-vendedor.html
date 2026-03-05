@@ -3017,8 +3017,9 @@ function renderJuegosToggles() {
           <div style="font-size:0.62rem;color:${activo ? 'var(--turquesa)' : '#555'};">${activo ? 'Visible' : 'Oculto'}</div>
         </div>
       </div>
-      <button onclick="window.toggleJuegoIndividual('${j.id}')"
-        style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${activo ? 'var(--turquesa)' : '#333'};">
+      <button data-jid="${j.id}"
+        style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${activo ? 'var(--turquesa)' : '#333'};"
+        onclick="window.toggleJuegoIndividual(this.dataset.jid)">
         <span style="position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;transition:left .2s;left:${activo ? '23px' : '3px'};display:block;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
       </button>
     </div>`;
@@ -3058,9 +3059,20 @@ onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   renderJuegosToggles();
 });
 
+// Llamar renders iniciales con defaults (sin esperar Firebase)
+renderJuegosToggles();
+actualizarUIRecompensa();
+
 // Bind tab clicks after module loads
 document.querySelectorAll('.tab[data-tab]').forEach(t => {
-  t.addEventListener('click', () => window.cambiarTab(t.getAttribute('data-tab')));
+  t.addEventListener('click', () => {
+    window.cambiarTab(t.getAttribute('data-tab'));
+    // Re-render al entrar en tab de cupones
+    if (t.getAttribute('data-tab') === 'descuentos') {
+      renderJuegosToggles();
+      actualizarUIRecompensa();
+    }
+  });
 });
 </script>
 <script>
