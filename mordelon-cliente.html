@@ -1077,10 +1077,29 @@ onSnapshot(doc(db,'config','cupones'), (snap) => {
   cuponesDisponibles = (snap.exists() && snap.data().lista) ? snap.data().lista : [];
 });
 
+function estaAbiertoAhora() {
+  const ahora = new Date();
+  const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const diaActual = dias[ahora.getDay()];
+  const horario = horariosData.find(h => h.dia === diaActual);
+  if (!horario || !horario.abierto) return false;
+  const toMin = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const now = ahora.getHours()*60 + ahora.getMinutes();
+  if (now >= toMin(horario.desde) && now <= toMin(horario.hasta)) return true;
+  if (horario.turno2 && now >= toMin(horario.desde2) && now <= toMin(horario.hasta2)) return true;
+  return false;
+}
+
 window.aplicarCupon = function() {
   const input = document.getElementById('cuponInput');
   const codigo = input.value.trim().toUpperCase();
   if (!codigo) return;
+  // Verificar horario
+  if (!estaAbiertoAhora()) {
+    document.getElementById('cuponMsg').textContent = '🕐 ¡El local aún está cerrado! ¡Canjealo cuando abramos!';
+    document.getElementById('cuponMsg').style.color = 'var(--naranja)';
+    return;
+  }
   const cuponExiste = cuponesDisponibles.find(c => c.codigo === codigo);
   const cupon = cuponExiste && cuponExiste.activo && !cuponExiste.usado ? cuponExiste : null;
   if (!cupon) {
@@ -1131,9 +1150,10 @@ onSnapshot(doc(db,'config','promos'), (snap) => {
 document.addEventListener('DOMContentLoaded', () => mostrarHorarios(horariosDefault));
 if (document.readyState !== 'loading') mostrarHorarios(horariosDefault);
 
+let horariosData = horariosDefault;
 onSnapshot(doc(db,'config','horarios'), (snap) => {
-  const dias = (snap.exists() && snap.data().dias) ? snap.data().dias : horariosDefault;
-  mostrarHorarios(dias);
+  horariosData = (snap.exists() && snap.data().dias) ? snap.data().dias : horariosDefault;
+  mostrarHorarios(horariosData);
 });
 
 // Cargar menú desde Firebase en tiempo real
