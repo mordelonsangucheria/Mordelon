@@ -931,6 +931,7 @@ window.selMetodo = function(m) {
 window.confirmarPedido = async function() {
   if (!tipoEntrega) { showToast('⚠️ Elegí si retirás o querés delivery'); return; }
   if (!metodoPago) { showToast('⚠️ Elegí un método de pago'); return; }
+  pedirPermisoNotif(); // Pedir permiso con interacción del usuario
   const waCliente = document.getElementById('whatsappCliente').value.trim();
   const nombreCliente = document.getElementById('nombreCliente').value.trim();
   const direccionCliente = document.getElementById('direccionCliente').value.trim();
@@ -1213,6 +1214,9 @@ function escucharEstadoPedido(firestoreId) {
     }
     const estado = snap.data().estado;
     actualizarBarraEstado(estado);
+    if (estado === 'listo') {
+      notificarClienteListo();
+    }
     // Limpiar localStorage si el pedido ya fue cobrado
     if (estado === 'cobrado') {
       localStorage.removeItem('mordelon-pedido-activo');
@@ -1300,6 +1304,67 @@ window.cerrarRating = function() {
   document.getElementById('modalRating').style.display = 'none';
   nuevoPedido();
 };
+
+// ===== NOTIFICACIONES CLIENTE =====
+let clienteAudioCtx = null;
+let notifPermiso = false;
+
+async function pedirPermisoNotif() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    notifPermiso = perm === 'granted';
+  } else if (Notification.permission === 'granted') {
+    notifPermiso = true;
+  }
+  try {
+    clienteAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = clienteAudioCtx.createOscillator();
+    const gain = clienteAudioCtx.createGain();
+    osc.connect(gain); gain.connect(clienteAudioCtx.destination);
+    gain.gain.setValueAtTime(0.001, clienteAudioCtx.currentTime);
+    osc.start(); osc.stop(clienteAudioCtx.currentTime + 0.01);
+  } catch(e) {}
+}
+
+function playClienteBeep() {
+  try { navigator.vibrate && navigator.vibrate([300, 100, 300, 100, 600]); } catch(e) {}
+  if (!clienteAudioCtx) return;
+  try {
+    const notas = [
+      { freq: 784,  t: 0,    dur: 0.15 },
+      { freq: 988,  t: 0.17, dur: 0.15 },
+      { freq: 1175, t: 0.34, dur: 0.25 },
+      { freq: 1568, t: 0.55, dur: 0.4  },
+    ];
+    notas.forEach(({ freq, t, dur }) => {
+      const osc = clienteAudioCtx.createOscillator();
+      const gain = clienteAudioCtx.createGain();
+      osc.connect(gain); gain.connect(clienteAudioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const now = clienteAudioCtx.currentTime;
+      gain.gain.setValueAtTime(0, now + t);
+      gain.gain.linearRampToValueAtTime(0.45, now + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + t + dur);
+      osc.start(now + t);
+      osc.stop(now + t + dur + 0.05);
+    });
+  } catch(e) {}
+}
+
+function notificarClienteListo() {
+  playClienteBeep();
+  if (notifPermiso && 'Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('🔥 ¡Tu pedido está listo!', {
+        body: 'Pasá a retirar tu pedido en Mordelón 🎉',
+        icon: 'https://mordelonsangucheria.github.io/Mordelon/logo.png',
+        tag: 'mordelon-pedido-listo',
+        renotify: true,
+      });
+    } catch(e) {}
+  }
+}
 
 // Recuperar pedido activo si el cliente cerró el navegador
 (function recuperarPedido() {
