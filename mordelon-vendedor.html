@@ -385,6 +385,28 @@ select.mac-field option { background:#222; }
   <div id="historialContainer">
     <div class="empty-state"><p>📋</p><span style="font-size:.9rem;">Sin pedidos cobrados aún</span></div>
   </div>
+
+  <!-- CALIFICACIONES -->
+  <div style="margin-top:28px;">
+    <div style="font-size:0.72rem;color:#666;font-weight:800;letter-spacing:.08em;margin-bottom:12px;">⭐ CALIFICACIONES DE CLIENTES</div>
+    <div id="ratingSummary" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
+      <div style="text-align:center;min-width:60px;">
+        <div id="ratingPromedio" style="font-size:2rem;font-weight:800;color:var(--turquesa);">—</div>
+        <div id="ratingEstrellas" style="font-size:1rem;letter-spacing:2px;">☆☆☆☆☆</div>
+        <div id="ratingTotal" style="font-size:0.72rem;color:#666;margin-top:2px;">0 reseñas</div>
+      </div>
+      <div id="ratingBarras" style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div id="barra5" style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#aaa;">5⭐ <div style="flex:1;background:#222;border-radius:4px;height:7px;"><div id="fill5" style="background:var(--turquesa);height:7px;border-radius:4px;width:0%;transition:width .4s;"></div></div><span id="cnt5">0</span></div>
+        <div id="barra4" style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#aaa;">4⭐ <div style="flex:1;background:#222;border-radius:4px;height:7px;"><div id="fill4" style="background:var(--turquesa);height:7px;border-radius:4px;width:0%;transition:width .4s;"></div></div><span id="cnt4">0</span></div>
+        <div id="barra3" style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#aaa;">3⭐ <div style="flex:1;background:#222;border-radius:4px;height:7px;"><div id="fill3" style="background:#FF9500;height:7px;border-radius:4px;width:0%;transition:width .4s;"></div></div><span id="cnt3">0</span></div>
+        <div id="barra2" style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#aaa;">2⭐ <div style="flex:1;background:#222;border-radius:4px;height:7px;"><div id="fill2" style="background:#FF9500;height:7px;border-radius:4px;width:0%;transition:width .4s;"></div></div><span id="cnt2">0</span></div>
+        <div id="barra1" style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#aaa;">1⭐ <div style="flex:1;background:#222;border-radius:4px;height:7px;"><div id="fill1" style="background:#FF4D4D;height:7px;border-radius:4px;width:0%;transition:width .4s;"></div></div><span id="cnt1">0</span></div>
+      </div>
+    </div>
+    <div id="ratingsLista" style="display:flex;flex-direction:column;gap:8px;">
+      <div class="empty-state" style="padding:16px;"><span style="font-size:.85rem;">Sin calificaciones aún</span></div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-caja" class="panel">
@@ -853,6 +875,48 @@ let pedidosActivos = [];
 let pedidosCobrados = [];
 let caja = { total:0, transferencia:0, tarjeta:0, pedidos:0 };
 let primeraCarga = true;
+
+// ESCUCHAR CALIFICACIONES EN TIEMPO REAL
+onSnapshot(query(collection(db,'ratings'), orderBy('fecha','desc')), (snap) => {
+  const ratings = snap.docs.map(d => d.data());
+  const total = ratings.length;
+  const conteo = {1:0,2:0,3:0,4:0,5:0};
+  ratings.forEach(r => { if(r.estrellas) conteo[r.estrellas]++; });
+  const suma = ratings.reduce((a,r) => a + (r.estrellas||0), 0);
+  const promedio = total ? (suma/total).toFixed(1) : null;
+
+  document.getElementById('ratingPromedio').textContent = promedio || '—';
+  document.getElementById('ratingTotal').textContent = total + (total===1?' reseña':' reseñas');
+
+  // Estrellas llenas/vacías
+  const prom = promedio ? Math.round(parseFloat(promedio)) : 0;
+  document.getElementById('ratingEstrellas').textContent = '⭐'.repeat(prom) + '☆'.repeat(5-prom);
+
+  // Barras
+  [1,2,3,4,5].forEach(n => {
+    const pct = total ? Math.round((conteo[n]/total)*100) : 0;
+    document.getElementById('fill'+n).style.width = pct+'%';
+    document.getElementById('cnt'+n).textContent = conteo[n];
+  });
+
+  // Lista de reseñas
+  const lista = document.getElementById('ratingsLista');
+  if (!total) {
+    lista.innerHTML = '<div class="empty-state" style="padding:16px;"><span style="font-size:.85rem;">Sin calificaciones aún</span></div>';
+    return;
+  }
+  lista.innerHTML = ratings.slice(0,20).map(r => {
+    const fecha = r.fecha?.toDate ? r.fecha.toDate().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    const color = r.estrellas >= 4 ? 'var(--turquesa)' : r.estrellas === 3 ? '#FF9500' : '#FF4D4D';
+    return `<div style="background:var(--gris-dark);border:1px solid #333;border-radius:12px;padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="color:${color};font-size:1rem;">${'⭐'.repeat(r.estrellas||0)}</span>
+        <span style="font-size:0.7rem;color:#555;">${r.numeroPedido ? '#'+r.numeroPedido : ''} · ${fecha}</span>
+      </div>
+      ${r.comentario ? `<div style="font-size:0.82rem;color:#ccc;">${r.comentario}</div>` : ''}
+    </div>`;
+  }).join('');
+});
 
 // ESCUCHAR PEDIDOS EN TIEMPO REAL
 const q = query(collection(db,'pedidos'), orderBy('timestamp','desc'));
