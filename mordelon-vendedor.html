@@ -764,6 +764,12 @@ select.mac-field option { background:#222; }
 
 <div class="notif-banner" id="notifBanner">🔔 ¡Nuevo pedido!</div>
 
+<!-- ACTIVAR SONIDO -->
+<div id="audioActivar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9990;background:#1a1a1a;border:1.5px solid var(--turquesa);border-radius:14px;padding:10px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(61,191,184,.3);">
+  <span style="font-size:0.85rem;color:#aaa;">🔔 Activá el sonido de pedidos</span>
+  <button onclick="window.activarSonido()" style="background:var(--turquesa);color:#111;border:none;border-radius:8px;padding:7px 14px;font-weight:800;font-size:0.85rem;cursor:pointer;font-family:inherit;">Activar</button>
+</div>
+
 <script>
 
 // PIN LOCK
@@ -1169,23 +1175,47 @@ window.rechazarPedido = async function(id, num) {
   }
 };
 
-function playBeep() {
-  // Vibración
-  try { navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 400]); } catch(e) {}
-  // Sonido
+let audioCtx = null;
+let sonidoActivado = false;
+
+window.activarSonido = function() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 150, 300].forEach(delay => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Toca un beep silencioso para desbloquear el contexto
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.01);
+    sonidoActivado = true;
+    document.getElementById('audioActivar').style.display = 'none';
+    showNotif('🔔 Sonido activado');
+  } catch(e) { console.error(e); }
+};
+
+function playBeep() {
+  try { navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 400]); } catch(e) {}
+  if (!sonidoActivado || !audioCtx) return;
+  try {
+    // Melodía de 4 notas tipo "din-don-din-don"
+    const notas = [
+      { freq: 1047, t: 0,    dur: 0.18 },  // Do5
+      { freq: 784,  t: 0.2,  dur: 0.18 },  // Sol4
+      { freq: 1047, t: 0.4,  dur: 0.18 },  // Do5
+      { freq: 784,  t: 0.6,  dur: 0.28 },  // Sol4 (más largo)
+    ];
+    notas.forEach(({ freq, t, dur }) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
       osc.type = 'sine';
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.4, ctx.currentTime + delay/1000);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.25);
-      osc.start(ctx.currentTime + delay/1000);
-      osc.stop(ctx.currentTime + delay/1000 + 0.25);
+      osc.frequency.value = freq;
+      const now = audioCtx.currentTime;
+      gain.gain.setValueAtTime(0, now + t);
+      gain.gain.linearRampToValueAtTime(0.5, now + t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + t + dur);
+      osc.start(now + t);
+      osc.stop(now + t + dur + 0.05);
     });
   } catch(e) {}
 }
