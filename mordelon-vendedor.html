@@ -178,10 +178,10 @@ header {
 /* Widget de espera vivo */
 .waiting-widget {
   display:flex; flex-direction:column; align-items:center;
-  gap:14px; padding:32px 20px;
+  gap:10px; padding:20px 10px;
 }
 .waiting-flame {
-  font-size:3.2rem;
+  font-size:2.4rem;
   animation: flamePulse 1.4s ease-in-out infinite;
   filter: drop-shadow(0 0 12px #00e5cc88);
 }
@@ -192,10 +192,10 @@ header {
 .waiting-status {
   display:flex; align-items:center; gap:8px;
   background:#1a2a2a; border:1.5px solid #00e5cc44;
-  border-radius:20px; padding:6px 16px;
+  border-radius:20px; padding:5px 14px;
 }
 .waiting-dot {
-  width:9px; height:9px; border-radius:50%;
+  width:8px; height:8px; border-radius:50%;
   background:#00e5cc;
   animation: blink 1.2s ease-in-out infinite;
 }
@@ -203,18 +203,76 @@ header {
   0%,100% { opacity:1; box-shadow:0 0 6px #00e5cc; }
   50%      { opacity:0.25; box-shadow:none; }
 }
-.waiting-status span { font-size:.8rem; color:#00e5cc; font-weight:700; letter-spacing:.5px; }
+.waiting-status span { font-size:.78rem; color:#00e5cc; font-weight:700; letter-spacing:.5px; }
 .waiting-clock {
-  font-size:2.6rem; font-weight:900; color:#fff;
+  font-size:2rem; font-weight:900; color:#fff;
   letter-spacing:2px; font-variant-numeric: tabular-nums;
   text-shadow: 0 0 18px #00e5cc55;
 }
-.waiting-uptime {
-  font-size:.75rem; color:#666; letter-spacing:.3px;
+.waiting-uptime { font-size:.72rem; color:#555; }
+.waiting-msg { font-size:.78rem; color:#444; font-style:italic; margin-bottom:4px; }
+
+/* Selector de juego */
+.game-selector { display:flex; gap:10px; margin-bottom:4px; }
+.game-btn {
+  background:#1a2a2a; border:1.5px solid #00e5cc33;
+  border-radius:12px; padding:8px 16px;
+  color:#888; font-size:.8rem; font-weight:700;
+  cursor:pointer; transition:all .2s; font-family:inherit;
 }
-.waiting-msg {
-  font-size:.82rem; color:#555; font-style:italic;
+.game-btn.active { border-color:#00e5cc; color:#00e5cc; background:#0d1f1f; }
+.game-btn:hover { border-color:#00e5cc88; color:#00e5ccaa; }
+
+/* Snake */
+#snakeCanvas {
+  border:2px solid #00e5cc33; border-radius:8px;
+  background:#0a1a1a; display:block;
+  image-rendering: pixelated;
 }
+.game-score {
+  font-size:.75rem; color:#555; margin-top:2px;
+}
+.game-score span { color:#00e5cc; font-weight:900; }
+
+/* 2048 */
+.g2048-wrapper { width:260px; }
+.g2048-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.g2048-score-box { background:#1a2a2a; border-radius:8px; padding:4px 12px; text-align:center; }
+.g2048-score-box .label { font-size:.6rem; color:#555; text-transform:uppercase; }
+.g2048-score-box .val { font-size:1rem; font-weight:900; color:#00e5cc; }
+.g2048-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:6px; background:#0d1a1a; border-radius:10px; padding:8px;
+  border:1.5px solid #00e5cc22;
+}
+.g2048-cell {
+  aspect-ratio:1; border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; font-size:.9rem; transition:all .1s;
+}
+.g2048-restart {
+  margin-top:8px; width:100%; background:transparent;
+  border:1.5px solid #00e5cc44; border-radius:8px;
+  color:#00e5cc; font-size:.75rem; font-weight:700;
+  padding:6px; cursor:pointer; font-family:inherit;
+  transition:all .2s;
+}
+.g2048-restart:hover { background:#00e5cc22; }
+
+/* D-pad táctil */
+.dpad { display:flex; flex-direction:column; align-items:center; gap:3px; margin-top:6px; }
+.dpad-row { display:flex; gap:3px; }
+.dpad-btn {
+  width:42px; height:42px; border-radius:10px;
+  background:#1a2a2a; border:1.5px solid #00e5cc33;
+  color:#00e5cc; font-size:1rem; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .1s; font-family:inherit;
+  -webkit-tap-highlight-color: transparent;
+  user-select:none;
+}
+.dpad-btn:active { background:#00e5cc22; border-color:#00e5cc; transform:scale(.92); }
+.dpad-center { color:#555; font-size:.85rem; }
 
 .cierre-box { background:var(--gris-dark); border:1.5px solid var(--gris-light); border-radius:14px; padding:16px; margin-top:14px; }
 .btn { padding:11px 16px; border:none; border-radius:11px; font-family:inherit; font-weight:900; font-size:0.82rem; cursor:pointer; transition:all .18s; text-transform:uppercase; letter-spacing:.5px; width:100%; margin-bottom:8px; }
@@ -1002,16 +1060,26 @@ function renderPedidosLive() {
   if (!pedidosActivos.length) {
     cont.innerHTML = `
       <div class="waiting-widget">
-        <div class="waiting-flame">🔥</div>
-        <div class="waiting-status">
-          <div class="waiting-dot"></div>
-          <span>EN LÍNEA</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="waiting-flame">🔥</div>
+          <div>
+            <div class="waiting-status">
+              <div class="waiting-dot"></div>
+              <span>EN LÍNEA</span>
+            </div>
+            <div class="waiting-clock" id="waitingClock">--:--:--</div>
+            <div class="waiting-uptime" id="waitingUptime">Activo hace 0 min</div>
+          </div>
         </div>
-        <div class="waiting-clock" id="waitingClock">--:--:--</div>
-        <div class="waiting-uptime" id="waitingUptime">Activo hace 0 min</div>
-        <div class="waiting-msg">Esperando pedidos...</div>
+        <div class="waiting-msg">Esperando pedidos... jugá mientras tanto</div>
+        <div class="game-selector">
+          <button class="game-btn active" id="btnSnake" onclick="switchGame('snake')">🐍 Snake</button>
+          <button class="game-btn" id="btn2048" onclick="switchGame('2048')">🔢 2048</button>
+        </div>
+        <div id="gameArea"></div>
       </div>`;
     startWaitingClock();
+    initGame('snake');
     return;
   }
   cont.innerHTML = pedidosActivos.map(p => {
@@ -2387,6 +2455,252 @@ function startWaitingClock() {
   }
   tick();
   _waitingClockInterval = setInterval(tick, 1000);
+}
+
+// ===== JUEGOS PANTALLA DE ESPERA =====
+let _activeGame = null;
+
+function switchGame(name) {
+  document.getElementById('btnSnake').classList.toggle('active', name==='snake');
+  document.getElementById('btn2048').classList.toggle('active', name==='2048');
+  stopGame();
+  initGame(name);
+}
+
+function stopGame() {
+  if (_activeGame && _activeGame.stop) _activeGame.stop();
+  _activeGame = null;
+  document.removeEventListener('keydown', _gameKeyHandler);
+}
+
+function _gameKeyHandler(e) {
+  if (_activeGame && _activeGame.onKey) _activeGame.onKey(e);
+}
+
+function initGame(name) {
+  const area = document.getElementById('gameArea');
+  if (!area) return;
+  if (name === 'snake') initSnake(area);
+  else init2048(area);
+}
+
+// ──── SNAKE ────
+function initSnake(area) {
+  const SZ = 17, COLS = 15, ROWS = 15;
+  const W = SZ * COLS;
+  area.innerHTML = `
+    <canvas id="snakeCanvas" width="${W}" height="${W}"></canvas>
+    <div class="game-score">Puntos: <span id="snakeScore">0</span> &nbsp;|&nbsp; Récord: <span id="snakeHi">${localStorage.getItem('mordelon-snake-hi')||0}</span></div>
+    <div class="dpad">
+      <div class="dpad-row"><button class="dpad-btn" data-dir="up">▲</button></div>
+      <div class="dpad-row">
+        <button class="dpad-btn" data-dir="left">◀</button>
+        <button class="dpad-btn dpad-center" data-dir="restart">↺</button>
+        <button class="dpad-btn" data-dir="right">▶</button>
+      </div>
+      <div class="dpad-row"><button class="dpad-btn" data-dir="down">▼</button></div>
+    </div>`;
+
+  const canvas = document.getElementById('snakeCanvas');
+  const ctx = canvas.getContext('2d');
+  let snake, dir, nextDir, food, score, alive, interval;
+
+  function reset() {
+    snake = [{x:7,y:7},{x:6,y:7},{x:5,y:7}];
+    dir = {x:1,y:0}; nextDir = {x:1,y:0};
+    food = placeFood(); score = 0; alive = true;
+    document.getElementById('snakeScore').textContent = 0;
+    if (interval) clearInterval(interval);
+    interval = setInterval(step, 150);
+    draw();
+  }
+
+  function placeFood() {
+    let f;
+    do { f = {x:Math.floor(Math.random()*COLS), y:Math.floor(Math.random()*ROWS)}; }
+    while (snake.some(s=>s.x===f.x&&s.y===f.y));
+    return f;
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0a1a1a'; ctx.fillRect(0,0,W,W);
+    ctx.fillStyle = '#ff4d6d';
+    ctx.beginPath();
+    ctx.arc(food.x*SZ+SZ/2, food.y*SZ+SZ/2, SZ/2-2, 0, Math.PI*2);
+    ctx.fill();
+    snake.forEach((s,i) => {
+      ctx.fillStyle = i===0 ? '#00e5cc' : `hsl(${170+i*2},75%,${38-i*0.5}%)`;
+      ctx.beginPath();
+      ctx.roundRect(s.x*SZ+1, s.y*SZ+1, SZ-2, SZ-2, 3);
+      ctx.fill();
+    });
+    if (!alive) {
+      ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0,0,W,W);
+      ctx.fillStyle='#00e5cc'; ctx.font='bold 15px monospace'; ctx.textAlign='center';
+      ctx.fillText('GAME OVER', W/2, W/2-10);
+      ctx.fillStyle='#888'; ctx.font='11px monospace';
+      ctx.fillText('↺ para reiniciar', W/2, W/2+10);
+    }
+  }
+
+  function step() {
+    dir = nextDir;
+    const head = {x:(snake[0].x+dir.x+COLS)%COLS, y:(snake[0].y+dir.y+ROWS)%ROWS};
+    if (snake.some(s=>s.x===head.x&&s.y===head.y)) { alive=false; draw(); clearInterval(interval); return; }
+    snake.unshift(head);
+    if (head.x===food.x && head.y===food.y) {
+      score++; food = placeFood();
+      document.getElementById('snakeScore').textContent = score;
+      const hi = parseInt(localStorage.getItem('mordelon-snake-hi')||0);
+      if (score>hi) { localStorage.setItem('mordelon-snake-hi',score); document.getElementById('snakeHi').textContent=score; }
+    } else { snake.pop(); }
+    draw();
+  }
+
+  function applyDir(d) {
+    const map = {up:{x:0,y:-1},down:{x:0,y:1},left:{x:-1,y:0},right:{x:1,y:0}};
+    const nd = map[d];
+    if (nd && !(nd.x===-dir.x && nd.y===-dir.y)) nextDir = nd;
+  }
+
+  function onKey(e) {
+    if (!alive) { if (e.key==='Enter') reset(); return; }
+    const map = {ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
+    if (map[e.key]) { applyDir(map[e.key]); e.preventDefault(); }
+  }
+
+  // D-pad táctil
+  area.querySelectorAll('.dpad-btn').forEach(btn => {
+    btn.addEventListener('touchstart', e => { e.preventDefault(); const d=btn.dataset.dir; if(d==='restart') reset(); else applyDir(d); }, {passive:false});
+    btn.addEventListener('mousedown', e => { const d=btn.dataset.dir; if(d==='restart') reset(); else applyDir(d); });
+  });
+
+  // Swipe en canvas
+  let tx=0, ty=0;
+  canvas.addEventListener('touchstart', e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; e.preventDefault(); }, {passive:false});
+  canvas.addEventListener('touchend', e => {
+    if (!alive) { reset(); return; }
+    const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if (Math.abs(dx)<10 && Math.abs(dy)<10) return;
+    if (Math.abs(dx)>Math.abs(dy)) applyDir(dx>0?'right':'left');
+    else applyDir(dy>0?'down':'up');
+    e.preventDefault();
+  }, {passive:false});
+
+  reset();
+  _activeGame = { stop: ()=>clearInterval(interval), onKey };
+  document.addEventListener('keydown', _gameKeyHandler);
+}
+
+// ──── 2048 ────
+function init2048(area) {
+  area.innerHTML = `
+    <div class="g2048-wrapper">
+      <div class="g2048-header">
+        <div style="font-size:.8rem;color:#00e5cc;font-weight:900;">2048</div>
+        <div class="g2048-score-box"><div class="label">puntos</div><div class="val" id="g2048score">0</div></div>
+        <div class="g2048-score-box"><div class="label">récord</div><div class="val" id="g2048hi">${localStorage.getItem('mordelon-2048-hi')||0}</div></div>
+      </div>
+      <div class="g2048-grid" id="g2048grid"></div>
+      <div class="dpad" style="margin-top:8px;">
+        <div class="dpad-row"><button class="dpad-btn" data-dir="up">▲</button></div>
+        <div class="dpad-row">
+          <button class="dpad-btn" data-dir="left">◀</button>
+          <button class="dpad-btn dpad-center" data-dir="restart">↺</button>
+          <button class="dpad-btn" data-dir="right">▶</button>
+        </div>
+        <div class="dpad-row"><button class="dpad-btn" data-dir="down">▼</button></div>
+      </div>
+    </div>`;
+
+  let board, score2048;
+
+  function newBoard() {
+    board = Array(4).fill(null).map(()=>Array(4).fill(0));
+    score2048 = 0;
+    addTile(); addTile(); render2048();
+  }
+
+  function addTile() {
+    const empty = [];
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(!board[r][c]) empty.push([r,c]);
+    if(!empty.length) return;
+    const [r,c] = empty[Math.floor(Math.random()*empty.length)];
+    board[r][c] = Math.random()<0.9?2:4;
+  }
+
+  const colors = {0:'#111',2:'#1a2e2e',4:'#1e3535',8:'#00e5cc',16:'#00ccb3',32:'#ff7043',64:'#ff4500',
+    128:'#ffc107',256:'#ffb300',512:'#ff9800',1024:'#ff6f00',2048:'#e65100'};
+  const textColors = {0:'transparent',2:'#555',4:'#666',8:'#0a1a1a',16:'#0a1a1a',32:'#fff',64:'#fff',
+    128:'#1a1a0a',256:'#1a1a0a',512:'#fff',1024:'#fff',2048:'#fff'};
+
+  function render2048() {
+    const grid = document.getElementById('g2048grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++) {
+      const v = board[r][c];
+      const cell = document.createElement('div');
+      cell.className = 'g2048-cell';
+      cell.style.background = colors[v]||'#333';
+      cell.style.color = textColors[v]||'#fff';
+      cell.style.fontSize = v>=1024?'.7rem':v>=128?'.8rem':'.9rem';
+      cell.textContent = v||'';
+      grid.appendChild(cell);
+    }
+    document.getElementById('g2048score').textContent = score2048;
+    const hi = parseInt(localStorage.getItem('mordelon-2048-hi')||0);
+    if(score2048>hi) { localStorage.setItem('mordelon-2048-hi',score2048); document.getElementById('g2048hi').textContent=score2048; }
+  }
+
+  function slide(row) {
+    let arr = row.filter(v=>v), gained = 0;
+    for(let i=0;i<arr.length-1;i++) {
+      if(arr[i]===arr[i+1]) { arr[i]*=2; gained+=arr[i]; arr.splice(i+1,1); }
+    }
+    score2048 += gained;
+    while(arr.length<4) arr.push(0);
+    return arr;
+  }
+
+  function move(d) {
+    const prev = JSON.stringify(board);
+    if(d==='left')  board = board.map(r=>slide(r));
+    if(d==='right') board = board.map(r=>slide([...r].reverse()).reverse());
+    if(d==='up')    { board = transpose(board).map(r=>slide(r)); board=transpose(board); }
+    if(d==='down')  { board = transpose(board).map(r=>slide([...r].reverse()).reverse()); board=transpose(board); }
+    if(JSON.stringify(board)!==prev) { addTile(); render2048(); }
+  }
+
+  function transpose(b) { return b[0].map((_,c)=>b.map(r=>r[c])); }
+
+  function onKey(e) {
+    const map = {ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};
+    if(map[e.key]) { move(map[e.key]); e.preventDefault(); }
+  }
+
+  // D-pad táctil
+  area.querySelectorAll('.dpad-btn').forEach(btn => {
+    btn.addEventListener('touchstart', e => { e.preventDefault(); const d=btn.dataset.dir; if(d==='restart') newBoard(); else move(d); }, {passive:false});
+    btn.addEventListener('mousedown', () => { const d=btn.dataset.dir; if(d==='restart') newBoard(); else move(d); });
+  });
+
+  // Swipe en grilla
+  let tx=0, ty=0;
+  const grid2 = area.querySelector('.g2048-grid');
+  grid2.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; e.preventDefault(); },{passive:false});
+  grid2.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)<10&&Math.abs(dy)<10) return;
+    if(Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left');
+    else move(dy>0?'down':'up');
+    e.preventDefault();
+  },{passive:false});
+
+  window.g2048Restart = () => newBoard();
+  newBoard();
+  _activeGame = { stop: ()=>{}, onKey };
+  document.addEventListener('keydown', _gameKeyHandler);
 }
 
 // CERRAR SESIÓN
