@@ -1049,7 +1049,7 @@ window.cerrarPopupPedidoAnt = function() {
 };
 
 // Al hacer nuevo pedido: mover pedido activo a "anterior"
-nuevoPedido = function() {
+window.nuevoPedido = function() {
   // Guardar pedido actual como anterior antes de limpiar
   const rawActivo = localStorage.getItem('mordelon-pedido-activo');
   if (rawActivo) {
