@@ -506,7 +506,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     </div>
     <div class="metodos">
       <button class="metodo-btn" onclick="selMetodo('Transferencia')" id="mbtn-Transferencia"><span>📲</span>Transferencia / Lemon</button>
-      <button class="metodo-btn" onclick="selMetodo('Tarjeta')" id="mbtn-Tarjeta"><span>💳</span>Tarjeta (+10%)</button>
+      <button class="metodo-btn" onclick="selMetodo('Tarjeta')" id="mbtn-Tarjeta"><span>💳</span>Tarjeta (+10%)<small style="display:block;font-size:0.6rem;opacity:0.7;font-weight:600;">Solo en local</small></button>
       <button class="metodo-btn" onclick="selMetodo('Efectivo')" id="mbtn-Efectivo" style="grid-column:span 2;"><span>💵</span>Efectivo en el local</button>
     </div>
     <div class="recargo-box" id="recargoBox">⚠️ Se aplica un recargo del 10% por pago con tarjeta.</div>
@@ -789,7 +789,9 @@ window.selMetodo = function(m) {
   metodoPago = m;
   document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('sel'));
   document.getElementById('mbtn-'+m).classList.add('sel');
-  const total = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const subtotal = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
+  const descuento = cuponAplicado ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
+  const total = subtotal - descuento;
   document.getElementById('pagoTransferencia').style.display = 'none';
   document.getElementById('pagoTarjeta').style.display = 'none';
   document.getElementById('pagoEfectivo').style.display = 'none';
