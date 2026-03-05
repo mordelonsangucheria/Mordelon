@@ -975,7 +975,7 @@ function renderPedidosLive() {
         ${p.items.map(i=>`<div class="pc-item"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
         ${p.entrega ? `<div class="pc-nota" style="color:${p.entrega==='delivery'?'var(--naranja)':'var(--turquesa)'};">${p.entrega==='delivery'?'🛵 Delivery':'🏠 Retiro en local'}</div>` : ''}
         ${p.nombre ? `<div class="pc-nota" style="color:var(--blanco);">👤 ${p.nombre}</div>` : ''}
-        ${p.direccion ? `<div class="pc-nota" style="color:#aaa;">📍 ${p.direccion}</div>` : ''}
+        ${p.direccion ? `<div class="pc-nota" style="color:#aaa;">📍 ${p.direccion} <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.direccion + ', San Miguel del Monte, Buenos Aires, Argentina')}" target="_blank" style="display:inline-block;margin-left:8px;background:var(--turquesa);color:#111;font-size:0.7rem;font-weight:800;padding:3px 8px;border-radius:6px;text-decoration:none;">📍 Ver en Maps</a></div>` : ''}
         ${p.nota ? `<div class="pc-nota">📝 ${p.nota}</div>` : ''}
         ${p.whatsapp ? `<div class="pc-nota" style="color:#2DC653;">📱 <a href="https://wa.me/549${p.whatsapp.replace(/\D/g,'')}" target="_blank" style="color:#2DC653;text-decoration:none;font-weight:800;">${p.whatsapp} — Escribir</a></div>` : ''}
       </div>
