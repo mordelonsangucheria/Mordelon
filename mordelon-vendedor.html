@@ -167,10 +167,15 @@ header {
   position:fixed; top:70px; left:50%; transform:translateX(-50%) translateY(-80px);
   background:var(--amarillo); color:var(--negro);
   padding:12px 24px; border-radius:30px; font-weight:900; font-size:0.9rem;
-  z-index:999; transition:transform .4s cubic-bezier(.34,1.56,.64,1);
+  z-index:9999; transition:transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
   white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,.4);
+  opacity:0; pointer-events:none;
 }
-.notif-banner.show { transform:translateX(-50%) translateY(0); }
+.notif-banner.show {
+  transform:translateX(-50%) translateY(0px);
+  opacity:1; pointer-events:auto;
+}
+
 
 .empty-state { text-align:center; padding:50px 20px; color:#444; }
 .empty-state p { font-size:3rem; margin-bottom:8px; }
@@ -1032,11 +1037,12 @@ window.ejecutarCierre = async function() {
 };
 
 window.rechazarPedido = async function(id, num) {
-  if (!confirm('¿Rechazar el pedido #' + num + '? Se eliminará del sistema.')) return;
+  const numLabel = num || id.slice(-4).toUpperCase();
+  if (!confirm('¿Rechazar el pedido #' + numLabel + '? Se eliminará del sistema.')) return;
   try {
     await deleteDoc(doc(db,'pedidos',id));
-    registrarActividad('❌ Rechazó pedido #' + num);
-    showNotif('🗑 Pedido #' + num + ' rechazado');
+    registrarActividad('❌ Rechazó pedido #' + numLabel);
+    showNotif('🗑 Pedido #' + numLabel + ' rechazado');
   } catch(e) {
     showNotif('❌ Error al rechazar');
     console.error(e);
@@ -1066,9 +1072,16 @@ function playBeep() {
 
 function showNotif(msg, conSonido = false) {
   const b = document.getElementById('notifBanner');
-  b.textContent = msg; b.classList.add('show');
+  b.textContent = msg;
+  b.classList.add('show');
+  b.style.opacity = '1';
+  b.style.pointerEvents = 'auto';
   clearTimeout(b._t);
-  b._t = setTimeout(() => b.classList.remove('show'), 4000);
+  b._t = setTimeout(() => {
+    b.classList.remove('show');
+    b.style.opacity = '0';
+    b.style.pointerEvents = 'none';
+  }, 3500);
   if (conSonido) playBeep();
 }
 
