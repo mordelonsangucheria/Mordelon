@@ -1197,7 +1197,7 @@ const _notifAudioVendedor = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAWlRJVDI
 function playBeep() {
   try { navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 400]); } catch(e) {}
   if (!sonidoActivado) return;
-  try { _notifAudioVendedor.currentTime = 0; _notifAudioVendedor.play(); } catch(e) {}
+  try { _notifAudioVendedor.currentTime = 0; _notifAudioVendedor.volume = 1.0; _notifAudioVendedor.play(); } catch(e) {}
 }
 
 function showNotif(msg, conSonido = false) {
