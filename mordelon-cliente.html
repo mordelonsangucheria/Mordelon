@@ -527,6 +527,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
         <button onclick="window.elegirJuego('2048')" id="btnJuego2048" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🔢 2048</button>
         <button onclick="window.elegirJuego('dino')" id="btnJuegoDino" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🦕 Dino</button>
+        <button onclick="window.elegirJuego('minas')" id="btnJuegoMinas" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">💣 Minas</button>
       </div>
     </div>
 
@@ -628,6 +629,26 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
       </div>
       <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Espacio / Tap para saltar · Agacharse: ↓</p>
+    </div>
+
+    <!-- BUSCAMINAS -->
+    <div id="juegoMinas" style="display:none;">
+      <div style="text-align:center;margin-bottom:8px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
+        <span>Tiempo: <strong id="minasTimer" style="color:var(--turquesa)">0s</strong></span>
+        <span>Récord: <strong id="minasHi" style="color:var(--naranja)">—</strong></span>
+        <span>💣 <strong id="minasRestantes" style="color:var(--rojo)">0</strong></span>
+      </div>
+      <!-- Selector de dificultad -->
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;">
+        <button onclick="window.minasDificultad('facil')" id="minasBtnFacil" style="background:rgba(45,198,83,.15);border:1.5px solid var(--verde);color:var(--verde);border-radius:10px;padding:5px 12px;font-family:'Righteous',cursive;font-size:0.68rem;cursor:pointer;transition:all .2s;">Fácil 8×8</button>
+        <button onclick="window.minasDificultad('medio')" id="minasBtnMedio" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:#888;border-radius:10px;padding:5px 12px;font-family:'Righteous',cursive;font-size:0.68rem;cursor:pointer;transition:all .2s;">Medio 10×10</button>
+        <button onclick="window.minasDificultad('dificil')" id="minasBtnDificil" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:#888;border-radius:10px;padding:5px 12px;font-family:'Righteous',cursive;font-size:0.68rem;cursor:pointer;transition:all .2s;">Difícil 12×12</button>
+      </div>
+      <div id="minasTablero" style="display:flex;flex-direction:column;align-items:center;gap:2px;margin:0 auto;user-select:none;touch-action:none;"></div>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:12px;">
+        <button onclick="window.minasReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 20px;font-family:'Righteous',cursive;font-size:0.85rem;cursor:pointer;">↺ Nueva partida</button>
+      </div>
+      <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Tap para descubrir · Mantené presionado para marcar 🚩</p>
     </div>
   </div>
 </div>
@@ -1702,7 +1723,7 @@ onSnapshot(doc(db, 'config', 'menu'), (snap) => {
 <script>
 // ===================== SELECTOR DE JUEGO =====================
 window.elegirJuego = function(juego) {
-  const juegos = ['tetris','snake','2048','dino'];
+  const juegos = ['tetris','snake','2048','dino','minas'];
   juegos.forEach(j => {
     const el = document.getElementById('juego' + j.charAt(0).toUpperCase() + j.slice(1));
     if(el) el.style.display = 'none';
@@ -1717,6 +1738,7 @@ window.elegirJuego = function(juego) {
   if(juego==='snake' && !snakeRunning) snakeInit();
   if(juego==='2048') g2048Init();
   if(juego==='dino') dinoInit();
+  if(juego==='minas') minasInit();
   // Actualizar sistema de recompensa para el juego seleccionado
   juegoActualRecompensa = juego;
   if (typeof actualizarBarraRecompensa === 'function') actualizarBarraRecompensa();
@@ -2155,6 +2177,29 @@ let recompensaYaGanada = {}; // { tetris: bool, snake: bool, ... }
 const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
+// ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas'];
+onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
+  const estado = snap.exists() ? snap.data() : {};
+  let algunoVisible = false;
+  JUEGOS_IDS.forEach(id => {
+    const activo = estado[id] !== false; // default: activo
+    // Ocultar/mostrar botón selector
+    const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (btn) btn.style.display = activo ? '' : 'none';
+    if (activo) algunoVisible = true;
+  });
+  // Si el juego actualmente seleccionado fue desactivado, saltar al primero activo
+  const btnActual = document.getElementById('btnJuego' + juegoActualRecompensa.charAt(0).toUpperCase() + juegoActualRecompensa.slice(1));
+  if (btnActual && btnActual.style.display === 'none') {
+    const primerActivo = JUEGOS_IDS.find(id => estado[id] !== false);
+    if (primerActivo) window.elegirJuego(primerActivo);
+  }
+  // Ocultar la zona entera si no hay ningún juego activo
+  const zona = document.getElementById('zonaJuegos');
+  if (zona) zona.style.display = algunoVisible ? 'block' : 'none';
+});
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
@@ -2186,7 +2231,8 @@ function actualizarBarraRecompensa() {
     tetris: parseInt(localStorage.getItem('tetrisHiC') || '0'),
     snake:  parseInt(localStorage.getItem('snakeHiC') || '0'),
     '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
-    dino:   parseInt(localStorage.getItem('dinoHiC') || '0')
+    dino:   parseInt(localStorage.getItem('dinoHiC') || '0'),
+    minas:  parseInt(localStorage.getItem('minasHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
 
@@ -2305,6 +2351,253 @@ onSnapshot(doc(db,'config','cupones'), (snap) => {
     }
   }
 });
+
+// ===================== BUSCAMINAS =====================
+const MINAS_DIFS = {
+  facil:   { cols: 8,  rows: 8,  minas: 10 },
+  medio:   { cols: 10, rows: 10, minas: 20 },
+  dificil: { cols: 12, rows: 12, minas: 35 }
+};
+let mDif = 'facil';
+let mBoard = [], mRevealed = [], mFlagged = [], mMinas = [];
+let mCols, mRows, mTotalMinas;
+let mGameOver = false, mWon = false, mStarted = false;
+let mTimerVal = 0, mTimerInterval = null;
+let mHiC = {};
+try { mHiC = JSON.parse(localStorage.getItem('minasHiC') || '{}'); } catch(e) { mHiC = {}; }
+
+function minasInit() {
+  const cfg = MINAS_DIFS[mDif];
+  mCols = cfg.cols; mRows = cfg.rows; mTotalMinas = cfg.minas;
+  mBoard    = Array.from({length: mRows}, () => Array(mCols).fill(0));
+  mRevealed = Array.from({length: mRows}, () => Array(mCols).fill(false));
+  mFlagged  = Array.from({length: mRows}, () => Array(mCols).fill(false));
+  mMinas    = [];
+  mGameOver = false; mWon = false; mStarted = false;
+  clearInterval(mTimerInterval); mTimerVal = 0;
+  document.getElementById('minasTimer').textContent = '0s';
+  document.getElementById('minasRestantes').textContent = mTotalMinas;
+  actualizarHiMinas();
+  minasRender();
+}
+
+function minasColocarMinas(firstR, firstC) {
+  // Coloca minas evitando la primera celda y sus vecinas
+  const safe = new Set();
+  for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+    const r = firstR+dr, c = firstC+dc;
+    if (r>=0&&r<mRows&&c>=0&&c<mCols) safe.add(r*mCols+c);
+  }
+  let placed = 0;
+  while (placed < mTotalMinas) {
+    const idx = Math.floor(Math.random() * mRows * mCols);
+    const r = Math.floor(idx/mCols), c = idx%mCols;
+    if (!safe.has(idx) && mBoard[r][c] !== -1) {
+      mBoard[r][c] = -1; mMinas.push([r,c]); placed++;
+    }
+  }
+  // Calcular números
+  for (let r = 0; r < mRows; r++) for (let c = 0; c < mCols; c++) {
+    if (mBoard[r][c] === -1) continue;
+    let cnt = 0;
+    for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+      const nr=r+dr, nc=c+dc;
+      if (nr>=0&&nr<mRows&&nc>=0&&nc<mCols&&mBoard[nr][nc]===-1) cnt++;
+    }
+    mBoard[r][c] = cnt;
+  }
+}
+
+function minasDescubrir(r, c) {
+  if (mGameOver || mWon) return;
+  if (mFlagged[r][c] || mRevealed[r][c]) return;
+
+  // Primer click: colocar minas y arrancar timer
+  if (!mStarted) {
+    mStarted = true;
+    minasColocarMinas(r, c);
+    mTimerInterval = setInterval(() => {
+      mTimerVal++;
+      const el = document.getElementById('minasTimer');
+      if (el) el.textContent = mTimerVal + 's';
+    }, 1000);
+  }
+
+  if (mBoard[r][c] === -1) {
+    // BOOM
+    mGameOver = true;
+    clearInterval(mTimerInterval);
+    mRevealed[r][c] = true;
+    minasRender(r, c);
+    // Revelar todas las minas con animación
+    setTimeout(() => {
+      mMinas.forEach(([mr, mc]) => { mRevealed[mr][mc] = true; });
+      minasRender(r, c);
+    }, 100);
+    return;
+  }
+
+  // BFS flood fill para celdas vacías
+  const queue = [[r, c]];
+  while (queue.length) {
+    const [cr, cc] = queue.shift();
+    if (cr<0||cr>=mRows||cc<0||cc>=mCols) continue;
+    if (mRevealed[cr][cc] || mFlagged[cr][cc]) continue;
+    mRevealed[cr][cc] = true;
+    if (mBoard[cr][cc] === 0) {
+      for (let dr=-1;dr<=1;dr++) for (let dc=-1;dc<=1;dc++) {
+        if (dr===0&&dc===0) continue;
+        queue.push([cr+dr, cc+dc]);
+      }
+    }
+  }
+
+  // Verificar victoria
+  let sin_revelar = 0;
+  for (let rr=0;rr<mRows;rr++) for (let cc=0;cc<mCols;cc++)
+    if (!mRevealed[rr][cc] && mBoard[rr][cc]!==-1) sin_revelar++;
+
+  if (sin_revelar === 0) {
+    mWon = true;
+    clearInterval(mTimerInterval);
+    // Guardar récord (menor tiempo = mejor)
+    const prev = mHiC[mDif];
+    if (!prev || mTimerVal < prev) {
+      mHiC[mDif] = mTimerVal;
+      localStorage.setItem('minasHiC', JSON.stringify(mHiC));
+      // Guardar también en clave simple para el sistema de recompensa
+      // Recompensa basada en dificultad × tiempo inverso (puntaje = 10000 / tiempo * factor)
+      const factor = {facil:1, medio:3, dificil:6}[mDif] || 1;
+      const puntuacion = Math.round(factor * 10000 / Math.max(1, mTimerVal));
+      const hiActual = parseInt(localStorage.getItem('minasHiC_score') || '0');
+      if (puntuacion > hiActual) {
+        localStorage.setItem('minasHiC_score', puntuacion);
+        if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('minas', puntuacion);
+      }
+      actualizarHiMinas();
+    }
+  }
+  minasRender(null, null);
+}
+
+function actualizarHiMinas() {
+  const el = document.getElementById('minasHi');
+  if (!el) return;
+  const rec = mHiC[mDif];
+  el.textContent = rec ? rec + 's' : '—';
+}
+
+function minasToggleFlag(r, c) {
+  if (mGameOver || mWon || mRevealed[r][c]) return;
+  mFlagged[r][c] = !mFlagged[r][c];
+  const flagCount = mFlagged.flat().filter(Boolean).length;
+  const el = document.getElementById('minasRestantes');
+  if (el) el.textContent = mTotalMinas - flagCount;
+  minasRender(null, null);
+}
+
+const MINAS_COLORES = ['','#3DBFB8','#2DC653','#FF4D4D','#7C3AED','#D4831A','#06B6D4','#111','#888'];
+
+function minasRender(boomR, boomC) {
+  const tablero = document.getElementById('minasTablero');
+  if (!tablero) return;
+
+  // Tamaño de celda según dificultad
+  const cellSize = mCols <= 8 ? 34 : mCols <= 10 ? 28 : 24;
+  const fontSize = cellSize <= 24 ? '0.7rem' : cellSize <= 28 ? '0.8rem' : '0.9rem';
+
+  tablero.innerHTML = '';
+  for (let r = 0; r < mRows; r++) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:2px;';
+    for (let c = 0; c < mCols; c++) {
+      const cell = document.createElement('div');
+      cell.style.cssText = `width:${cellSize}px;height:${cellSize}px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:${fontSize};cursor:pointer;transition:all .1s;flex-shrink:0;`;
+
+      const isBoom = (r===boomR && c===boomC);
+      const isRevealed = mRevealed[r][c];
+      const isFlagged = mFlagged[r][c];
+      const val = mBoard[r][c];
+
+      if (!isRevealed) {
+        // Celda oculta
+        cell.style.background = isFlagged ? 'rgba(212,131,26,.3)' : 'var(--gris-light)';
+        cell.style.border = isFlagged ? '1.5px solid var(--naranja)' : '1.5px solid #444';
+        cell.textContent = isFlagged ? '🚩' : '';
+        // Touch: tap = descubrir, longpress = bandera
+        let pressTimer = null;
+        cell.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          pressTimer = setTimeout(() => {
+            pressTimer = null;
+            minasToggleFlag(r, c);
+          }, 400);
+        }, {passive:false});
+        cell.addEventListener('pointerup', (e) => {
+          if (pressTimer !== null) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+            minasDescubrir(r, c);
+          }
+        });
+        cell.addEventListener('pointercancel', () => { if(pressTimer) clearTimeout(pressTimer); });
+        cell.addEventListener('contextmenu', (e) => { e.preventDefault(); minasToggleFlag(r, c); });
+      } else if (val === -1) {
+        // Mina
+        cell.style.background = isBoom ? 'rgba(255,77,77,.4)' : 'rgba(255,77,77,.15)';
+        cell.style.border = '1.5px solid var(--rojo)';
+        cell.textContent = isBoom ? '💥' : '💣';
+      } else {
+        // Número o vacío
+        cell.style.background = 'var(--gris-mid)';
+        cell.style.border = '1.5px solid #222';
+        if (val > 0) {
+          cell.textContent = val;
+          cell.style.color = MINAS_COLORES[val] || '#fff';
+        }
+      }
+      row.appendChild(cell);
+    }
+    tablero.appendChild(row);
+  }
+
+  // Mensaje de estado
+  let msgEl = document.getElementById('minasMsg');
+  if (!msgEl) {
+    msgEl = document.createElement('div');
+    msgEl.id = 'minasMsg';
+    msgEl.style.cssText = 'text-align:center;margin-top:10px;font-family:Righteous,cursive;font-size:0.9rem;letter-spacing:1px;min-height:24px;';
+    tablero.parentElement.insertBefore(msgEl, tablero.nextSibling);
+  }
+  if (mWon) {
+    msgEl.innerHTML = `<span style="color:var(--turquesa)">🎉 ¡GANASTE en ${mTimerVal}s!</span>`;
+  } else if (mGameOver) {
+    msgEl.innerHTML = `<span style="color:var(--rojo)">💥 ¡BOOM! Tap ↺ para reintentar</span>`;
+  } else {
+    msgEl.textContent = '';
+  }
+}
+
+window.minasDificultad = function(d) {
+  mDif = d;
+  ['facil','medio','dificil'].forEach(k => {
+    const btn = document.getElementById('minasBtnFacil'.replace('facil', '') + 'Btn' + k.charAt(0).toUpperCase() + k.slice(1));
+    // Fallback naming
+  });
+  document.getElementById('minasBtnFacil').style.background = d==='facil' ? 'rgba(45,198,83,.2)' : 'var(--gris-mid)';
+  document.getElementById('minasBtnFacil').style.borderColor = d==='facil' ? 'var(--verde)' : 'var(--gris-light)';
+  document.getElementById('minasBtnFacil').style.color = d==='facil' ? 'var(--verde)' : '#888';
+  document.getElementById('minasBtnMedio').style.background = d==='medio' ? 'rgba(212,131,26,.2)' : 'var(--gris-mid)';
+  document.getElementById('minasBtnMedio').style.borderColor = d==='medio' ? 'var(--naranja)' : 'var(--gris-light)';
+  document.getElementById('minasBtnMedio').style.color = d==='medio' ? 'var(--naranja)' : '#888';
+  document.getElementById('minasBtnDificil').style.background = d==='dificil' ? 'rgba(255,77,77,.2)' : 'var(--gris-mid)';
+  document.getElementById('minasBtnDificil').style.borderColor = d==='dificil' ? 'var(--rojo)' : 'var(--gris-light)';
+  document.getElementById('minasBtnDificil').style.color = d==='dificil' ? 'var(--rojo)' : '#888';
+  minasInit();
+};
+
+window.minasReset = function() { minasInit(); };
+
 </script>
 </body>
 </html>

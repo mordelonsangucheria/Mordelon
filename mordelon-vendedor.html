@@ -823,6 +823,21 @@ select.mac-field option { background:#222; }
 <div id="panel-descuentos" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Creá códigos de descuento de un solo uso. El cliente lo ingresa antes de confirmar el pedido.</p>
 
+  <!-- 🕹️ ACTIVAR / DESACTIVAR JUEGOS INDIVIDUALES -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ</div>
+        <div style="font-size:0.72rem;color:#666;">Activá o desactivá cada juego individualmente.</div>
+      </div>
+      <button onclick="window.toggleTodosJuegos()" id="btnToggleTodosJuegos"
+        style="padding:6px 14px;border-radius:20px;border:1.5px solid #444;background:transparent;color:#888;cursor:pointer;font-family:'Righteous',cursive;font-size:0.7rem;letter-spacing:1px;transition:all .2s;">
+        APAGAR TODOS
+      </button>
+    </div>
+    <div id="juegosToggleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+  </div>
+
   <!-- 🎮 RECOMPENSA POR JUEGO -->
   <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
@@ -840,6 +855,7 @@ select.mac-field option { background:#222; }
       <button onclick="window.selJuegoRecompensa('snake')" id="rtab-snake" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🐍 Snake</button>
       <button onclick="window.selJuegoRecompensa('2048')" id="rtab-2048" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🔢 2048</button>
       <button onclick="window.selJuegoRecompensa('dino')" id="rtab-dino" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🦕 Dino</button>
+      <button onclick="window.selJuegoRecompensa('minas')" id="rtab-minas" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">💣 Minas</button>
     </div>
 
     <!-- CONFIG DEL JUEGO SELECCIONADO -->
@@ -2814,12 +2830,13 @@ onSnapshot(doc(db,'config','stats'), (snap) => {
 });
 
 // ── RECOMPENSA POR JUEGO (multi-juego) ───────────────────────────────────
-const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino'];
+const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas'];
 const JUEGOS_INFO = {
   tetris: { label: '🧱 Tetris', prefijo: 'TETRIS' },
   snake:  { label: '🐍 Snake',  prefijo: 'SNAKE'  },
   '2048': { label: '🔢 2048',   prefijo: 'DOS4K'  },
-  dino:   { label: '🦕 Dino',   prefijo: 'LLAMA'  }
+  dino:   { label: '🦕 Dino',   prefijo: 'LLAMA'  },
+  minas:  { label: '💣 Minas',  prefijo: 'MINAS'  }
 };
 
 // Estado global: objeto { tetris:{puntos,pct,activo}, snake:{...}, ... }
@@ -2975,6 +2992,71 @@ onSnapshot(doc(db,'config','recompensaJuego'), (snap) => {
 
 // Compat: mantener recompensaConfig para que no rompa código viejo
 let recompensaConfig = { puntos: 500, pct: 10, activo: true };
+
+// ── TOGGLE JUEGOS INDIVIDUALES ───────────────────────────────────────────
+const JUEGOS_TOGGLE_INFO = [
+  { id: 'tetris', label: 'Tetris',  emoji: '🧱' },
+  { id: 'snake',  label: 'Snake',   emoji: '🐍' },
+  { id: '2048',   label: '2048',    emoji: '🔢' },
+  { id: 'dino',   label: 'Dino',    emoji: '🦕' },
+  { id: 'minas',  label: 'Minas',   emoji: '💣' },
+];
+let juegosEstado = {}; // { tetris: true, snake: false, ... }
+
+function renderJuegosToggles() {
+  const grid = document.getElementById('juegosToggleGrid');
+  if (!grid) return;
+  grid.innerHTML = JUEGOS_TOGGLE_INFO.map(j => {
+    const activo = juegosEstado[j.id] !== false;
+    return `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--gris-mid);border:1.5px solid ${activo ? 'rgba(61,191,184,.3)' : 'var(--gris-light)'};border-radius:12px;padding:10px 14px;transition:all .2s;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1.2rem;">${j.emoji}</span>
+        <div>
+          <div style="font-weight:800;font-size:0.8rem;">${j.label}</div>
+          <div style="font-size:0.62rem;color:${activo ? 'var(--turquesa)' : '#555'};">${activo ? 'Visible' : 'Oculto'}</div>
+        </div>
+      </div>
+      <button onclick="window.toggleJuegoIndividual('${j.id}')"
+        style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${activo ? 'var(--turquesa)' : '#333'};">
+        <span style="position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;transition:left .2s;left:${activo ? '23px' : '3px'};display:block;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
+      </button>
+    </div>`;
+  }).join('');
+
+  // Actualizar botón "apagar todos"
+  const btnTodos = document.getElementById('btnToggleTodosJuegos');
+  if (!btnTodos) return;
+  const algunoActivo = JUEGOS_TOGGLE_INFO.some(j => juegosEstado[j.id] !== false);
+  btnTodos.textContent = algunoActivo ? 'APAGAR TODOS' : 'ACTIVAR TODOS';
+  btnTodos.style.borderColor = algunoActivo ? 'var(--rojo)' : 'var(--verde)';
+  btnTodos.style.color = algunoActivo ? 'var(--rojo)' : 'var(--verde)';
+}
+
+window.toggleJuegoIndividual = async function(id) {
+  juegosEstado[id] = juegosEstado[id] === false ? true : false;
+  await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
+  const info = JUEGOS_TOGGLE_INFO.find(j => j.id === id);
+  const activo = juegosEstado[id] !== false;
+  showNotif(`${info.emoji} ${info.label} ${activo ? 'activado' : 'desactivado'}`);
+  registrarActividad(`🕹️ ${info.label} ${activo ? 'activado' : 'desactivado'}`);
+  renderJuegosToggles();
+};
+
+window.toggleTodosJuegos = async function() {
+  const algunoActivo = JUEGOS_TOGGLE_INFO.some(j => juegosEstado[j.id] !== false);
+  JUEGOS_TOGGLE_INFO.forEach(j => { juegosEstado[j.id] = algunoActivo ? false : true; });
+  await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
+  showNotif(algunoActivo ? '🔴 Todos los juegos desactivados' : '🟢 Todos los juegos activados');
+  registrarActividad(`🕹️ Todos los juegos ${algunoActivo ? 'desactivados' : 'activados'}`);
+  renderJuegosToggles();
+};
+
+// Escuchar estado en tiempo real
+onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
+  juegosEstado = snap.exists() ? snap.data() : {};
+  renderJuegosToggles();
+});
 
 // Bind tab clicks after module loads
 document.querySelectorAll('.tab[data-tab]').forEach(t => {
