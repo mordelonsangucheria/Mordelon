@@ -3118,20 +3118,17 @@ window.buscarUsuarioSlots = async function() {
   const infoEl = document.getElementById('fichasUsuarioInfo');
 
   if (!nombre || nombre.length < 2) {
-    msgEl.style.color = 'var(--rojo)';
-    msgEl.textContent = '⚠️ Ingresá un nombre';
-    return;
+    msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '⚠️ Ingresá un nombre'; return;
   }
-
-  msgEl.style.color = 'var(--turquesa)';
-  msgEl.textContent = 'Buscando...';
+  msgEl.style.color = 'var(--turquesa)'; msgEl.textContent = 'Buscando...';
   infoEl.style.display = 'none';
 
   try {
-    const snap = await getDoc(doc(db, 'slotsUsuarios', nombre));
+    // Usar colección 'clientes' (nuevo sistema unificado)
+    const snap = await getDoc(doc(db, 'clientes', nombre));
     if (!snap.exists()) {
       msgEl.style.color = 'var(--rojo)';
-      msgEl.textContent = `❌ No existe el usuario "${nombre}"`;
+      msgEl.textContent = '❌ No existe el usuario "' + nombre + '"';
       _fichasUsuarioActual = null;
       return;
     }
@@ -3139,13 +3136,12 @@ window.buscarUsuarioSlots = async function() {
     _fichasUsuarioActual = { nombre, ...data };
 
     document.getElementById('fichasNombreConfirm').textContent   = nombre;
-    document.getElementById('fichasActualesConfirm').textContent = data.fichas ?? 0;
-    document.getElementById('fichasRecordConfirm').textContent   = (data.record ?? 0) + ' pts';
+    document.getElementById('fichasActualesConfirm').textContent = data.fichasSlots ?? 0;
+    document.getElementById('fichasRecordConfirm').textContent   = (data.recordSlots ?? 0) + ' pts';
     infoEl.style.display = 'block';
     msgEl.textContent = '';
   } catch(e) {
-    msgEl.style.color = 'var(--rojo)';
-    msgEl.textContent = '❌ Error al buscar';
+    msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error al buscar';
   }
 };
 
@@ -3158,22 +3154,20 @@ window.cargarFichas = async function() {
 
   try {
     const nombre = _fichasUsuarioActual.nombre;
-    const actual = _fichasUsuarioActual.fichas ?? 0;
+    const actual = _fichasUsuarioActual.fichasSlots ?? 0;
     const nuevas = actual + cant;
-    await updateDoc(doc(db, 'slotsUsuarios', nombre), { fichas: nuevas });
+    await updateDoc(doc(db, 'clientes', nombre), { fichasSlots: nuevas });
 
-    // Actualizar UI
     document.getElementById('fichasActualesConfirm').textContent = nuevas;
-    _fichasUsuarioActual.fichas = nuevas;
+    _fichasUsuarioActual.fichasSlots = nuevas;
 
     msgEl.style.color = 'var(--verde)';
-    msgEl.textContent = `✅ ${cant} ficha${cant>1?'s':''} cargada${cant>1?'s':''} a ${nombre} (total: ${nuevas})`;
-    registrarActividad(`🎰 ${cant} fichas cargadas a ${nombre}`);
+    msgEl.textContent = '✅ ' + cant + ' ficha' + (cant>1?'s':'') + ' cargada' + (cant>1?'s':'') + ' a ' + nombre + ' (total: ' + nuevas + ')';
+    registrarActividad('🎰 ' + cant + ' fichas cargadas a ' + nombre);
     document.getElementById('fichasCantidad').value = '3';
     setTimeout(() => { msgEl.textContent = ''; }, 4000);
   } catch(e) {
-    msgEl.style.color = 'var(--rojo)';
-    msgEl.textContent = '❌ Error al cargar fichas';
+    msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error al cargar fichas';
   }
 };
 
@@ -3186,22 +3180,22 @@ window.verTodosUsuariosSlots = async function() {
   gridEl.innerHTML = '<div style="color:#555;font-size:0.7rem;">Cargando...</div>';
 
   try {
-    const snap = await getDocs(collection(db, 'slotsUsuarios'));
+    const snap = await getDocs(collection(db, 'clientes'));
     if (snap.empty) { gridEl.innerHTML = '<div style="color:#555;font-size:0.7rem;">No hay usuarios aún</div>'; return; }
 
     const usuarios = [];
     snap.forEach(d => usuarios.push({ nombre: d.id, ...d.data() }));
-    usuarios.sort((a,b) => (b.record||0) - (a.record||0));
+    usuarios.sort((a,b) => (b.recordSlots||0) - (a.recordSlots||0));
 
-    gridEl.innerHTML = usuarios.map(u => `
-      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--gris-dark);border-radius:8px;padding:8px 12px;cursor:pointer;"
-           onclick="document.getElementById('fichasNombreCliente').value='${u.nombre}';window.buscarUsuarioSlots();">
-        <div>
-          <span style="font-family:'Righteous',cursive;font-size:0.82rem;color:var(--blanco);">${u.nombre}</span>
-          <span style="font-size:0.65rem;color:#555;margin-left:8px;">🎰 ${u.fichas??0} fichas</span>
-        </div>
-        <span style="font-size:0.65rem;color:var(--verde);">🏆 ${u.record??0} pts</span>
-      </div>`).join('');
+    gridEl.innerHTML = usuarios.map(u =>
+      '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--gris-dark);border-radius:8px;padding:8px 12px;cursor:pointer;" onclick="document.getElementById('fichasNombreCliente').value='' + u.nombre + '';window.buscarUsuarioSlots();">' +
+        '<div>' +
+          '<span style="font-family:'Righteous',cursive;font-size:0.82rem;color:var(--blanco);">' + u.nombre + '</span>' +
+          '<span style="font-size:0.65rem;color:#555;margin-left:8px;">🎰 ' + (u.fichasSlots??0) + ' fichas</span>' +
+        '</div>' +
+        '<span style="font-size:0.65rem;color:var(--verde);">🏆 ' + (u.recordSlots??0) + ' pts</span>' +
+      '</div>'
+    ).join('');
   } catch(e) {
     gridEl.innerHTML = '<div style="color:var(--rojo);font-size:0.7rem;">Error al cargar</div>';
   }

@@ -159,6 +159,19 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   margin-top: 4px;
 }
 
+.tecla-num {
+  background: var(--gris-mid);
+  border: 1.5px solid var(--gris-light);
+  color: var(--blanco);
+  border-radius: 12px;
+  padding: 14px 8px;
+  font-family: 'Righteous', cursive;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tecla-num:active { background: #333; transform: scale(.95); }
 .carrito-fab {
   position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
   z-index:97;
@@ -505,7 +518,123 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 </div>
 
 <!-- PANTALLA: MENÚ -->
-<div class="screen active" id="screen-menu">
+<!-- PANTALLA: LOGIN -->
+<div class="screen active" id="screen-login" style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:24px;">
+  <div style="width:100%;max-width:340px;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:3rem;margin-bottom:8px;">🔥</div>
+      <div style="font-family:'Righteous',cursive;font-size:2rem;color:var(--turquesa);letter-spacing:3px;">MORDELÓN</div>
+      <div style="font-size:0.72rem;color:#555;letter-spacing:2px;margin-top:4px;">TU CUENTA</div>
+    </div>
+
+    <!-- Tabs: Login / Registro -->
+    <div style="display:flex;background:var(--gris-mid);border-radius:12px;padding:4px;margin-bottom:20px;">
+      <button id="loginTabBtn" onclick="window.loginMostrarTab('login')"
+        style="flex:1;padding:9px;border:none;border-radius:10px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;background:var(--turquesa);color:#111;transition:all .2s;">
+        INGRESAR
+      </button>
+      <button id="registroTabBtn" onclick="window.loginMostrarTab('registro')"
+        style="flex:1;padding:9px;border:none;border-radius:10px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;background:transparent;color:#666;transition:all .2s;">
+        REGISTRARSE
+      </button>
+    </div>
+
+    <!-- Formulario Login -->
+    <div id="loginForm">
+      <div style="margin-bottom:12px;">
+        <input id="loginNombre" type="text" maxlength="20" placeholder="Tu nombre de usuario"
+          style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:13px 16px;font-size:0.95rem;font-family:'Righteous',cursive;letter-spacing:1px;outline:none;text-transform:uppercase;"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')document.getElementById('loginClave').focus()"/>
+      </div>
+      <div style="margin-bottom:16px;position:relative;">
+        <input id="loginClave" type="password" maxlength="4" inputmode="numeric" placeholder="Clave de 4 dígitos"
+          style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:13px 16px;font-size:1.1rem;font-family:'Righteous',cursive;letter-spacing:6px;outline:none;text-align:center;"
+          onkeydown="if(event.key==='Enter')window.loginEntrar()"/>
+      </div>
+      <!-- Teclado numérico visual -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;" id="loginTeclado">
+        <button onclick="window.loginTecla('1')" class="tecla-num">1</button>
+        <button onclick="window.loginTecla('2')" class="tecla-num">2</button>
+        <button onclick="window.loginTecla('3')" class="tecla-num">3</button>
+        <button onclick="window.loginTecla('4')" class="tecla-num">4</button>
+        <button onclick="window.loginTecla('5')" class="tecla-num">5</button>
+        <button onclick="window.loginTecla('6')" class="tecla-num">6</button>
+        <button onclick="window.loginTecla('7')" class="tecla-num">7</button>
+        <button onclick="window.loginTecla('8')" class="tecla-num">8</button>
+        <button onclick="window.loginTecla('9')" class="tecla-num">9</button>
+        <button onclick="window.loginTecla('borrar')" class="tecla-num" style="color:var(--rojo);">⌫</button>
+        <button onclick="window.loginTecla('0')" class="tecla-num">0</button>
+        <button onclick="window.loginEntrar()" class="tecla-num" style="background:var(--turquesa);color:#111;">✓</button>
+      </div>
+      <div id="loginMsg" style="font-size:0.75rem;min-height:18px;text-align:center;margin-bottom:12px;color:var(--rojo);"></div>
+      <button onclick="window.loginEntrar()"
+        style="width:100%;background:var(--turquesa);border:none;color:#111;border-radius:12px;padding:14px;font-family:'Righteous',cursive;font-size:0.95rem;letter-spacing:2px;cursor:pointer;">
+        ▶ INGRESAR
+      </button>
+    </div>
+
+    <!-- Formulario Registro -->
+    <div id="registroForm" style="display:none;">
+      <div style="margin-bottom:12px;">
+        <input id="regNombre" type="text" maxlength="20" placeholder="Elegí tu nombre de usuario"
+          style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:13px 16px;font-size:0.95rem;font-family:'Righteous',cursive;letter-spacing:1px;outline:none;text-transform:uppercase;"
+          oninput="this.value=this.value.toUpperCase()"/>
+        <div style="font-size:0.62rem;color:#555;margin-top:4px;padding-left:4px;">Solo letras y números, sin espacios al inicio</div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <input id="regClave" type="password" maxlength="4" inputmode="numeric" placeholder="Clave de 4 dígitos"
+          style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:13px 16px;font-size:1.1rem;font-family:'Righteous',cursive;letter-spacing:6px;outline:none;text-align:center;"/>
+      </div>
+      <div style="margin-bottom:12px;">
+        <input id="regDireccion" type="text" maxlength="60" placeholder="📍 Tu dirección (opcional)"
+          style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:13px 16px;font-size:0.85rem;font-family:inherit;outline:none;"/>
+      </div>
+      <!-- Teclado numérico para clave -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        <button onclick="window.regTecla('1')" class="tecla-num">1</button>
+        <button onclick="window.regTecla('2')" class="tecla-num">2</button>
+        <button onclick="window.regTecla('3')" class="tecla-num">3</button>
+        <button onclick="window.regTecla('4')" class="tecla-num">4</button>
+        <button onclick="window.regTecla('5')" class="tecla-num">5</button>
+        <button onclick="window.regTecla('6')" class="tecla-num">6</button>
+        <button onclick="window.regTecla('7')" class="tecla-num">7</button>
+        <button onclick="window.regTecla('8')" class="tecla-num">8</button>
+        <button onclick="window.regTecla('9')" class="tecla-num">9</button>
+        <button onclick="window.regTecla('borrar')" class="tecla-num" style="color:var(--rojo);">⌫</button>
+        <button onclick="window.regTecla('0')" class="tecla-num">0</button>
+        <button onclick="window.registrarse()" class="tecla-num" style="background:var(--verde);color:#111;">✓</button>
+      </div>
+      <div id="regMsg" style="font-size:0.75rem;min-height:18px;text-align:center;margin-bottom:12px;color:var(--rojo);"></div>
+      <button onclick="window.registrarse()"
+        style="width:100%;background:var(--verde);border:none;color:#111;border-radius:12px;padding:14px;font-family:'Righteous',cursive;font-size:0.95rem;letter-spacing:2px;cursor:pointer;">
+        ✅ CREAR CUENTA
+      </button>
+    </div>
+
+    <!-- Separador -->
+    <div style="display:flex;align-items:center;gap:10px;margin:18px 0;">
+      <div style="flex:1;height:1px;background:#333;"></div>
+      <span style="font-size:0.65rem;color:#444;">O</span>
+      <div style="flex:1;height:1px;background:#333;"></div>
+    </div>
+
+    <!-- Continuar sin cuenta -->
+    <button onclick="window.continuarSinCuenta()"
+      style="width:100%;background:transparent;border:1.5px solid #333;color:#555;border-radius:12px;padding:12px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;">
+      CONTINUAR SIN CUENTA
+    </button>
+  </div>
+</div>
+
+<div class="screen" id="screen-menu">
+  <!-- Badge usuario -->
+  <div style="display:flex;justify-content:flex-end;padding:8px 16px 0;gap:8px;align-items:center;">
+    <span id="usuarioBadge" style="display:none;background:var(--gris-mid);border:1px solid var(--turquesa);color:var(--turquesa);border-radius:20px;padding:4px 12px;font-size:0.65rem;font-family:'Righteous',cursive;letter-spacing:1px;"></span>
+    <button id="btnCerrarSesion" onclick="window.cerrarSesionCliente()" style="display:none;background:transparent;border:1px solid #333;color:#555;border-radius:20px;padding:4px 10px;font-size:0.62rem;cursor:pointer;">Salir</button>
+  </div>
   <div id="promosBanner" style="display:none;"></div>
   <div id="horariosBanner" style="display:none;" class="horarios-banner">
     <div class="horarios-header" onclick="window.toggleHorarios()">
@@ -1187,6 +1316,7 @@ window.confirmarPedido = async function() {
     document.getElementById('numPedidoConfirmado').textContent = '#' + numeroPedidoLocal;
     actualizarBarraEstado('pendiente');
     escucharEstadoPedido(docRef.id);
+    guardarPedidoEnUsuario(docRef.id, totalFinal, carrito);
 
     // Enviar WhatsApp al local
     const resumenWA = carrito.map(i => `• ${i.emoji} ${i.nombre} x${i.qty} — $${fN(i.precio*i.qty)}`).join('\n');
@@ -1921,7 +2051,232 @@ function actualizarBarraRecompensa() {
 }
 window.actualizarBarraRecompensa = actualizarBarraRecompensa;
 
-// ===================== TRAGAMONEDAS =====================
+// ===================== SISTEMA DE USUARIOS =====================
+let usuarioActual = null; // { nombre, direccion, fichasSlots, record, ... }
+
+// ── Tabs login/registro ──
+window.loginMostrarTab = function(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('loginForm').style.display    = isLogin ? 'block' : 'none';
+  document.getElementById('registroForm').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('loginTabBtn').style.background    = isLogin ? 'var(--turquesa)' : 'transparent';
+  document.getElementById('loginTabBtn').style.color         = isLogin ? '#111' : '#666';
+  document.getElementById('registroTabBtn').style.background = isLogin ? 'transparent' : 'var(--verde)';
+  document.getElementById('registroTabBtn').style.color      = isLogin ? '#666' : '#111';
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('regMsg').textContent = '';
+};
+
+// ── Teclado numérico login ──
+window.loginTecla = function(val) {
+  const inp = document.getElementById('loginClave');
+  if (val === 'borrar') { inp.value = inp.value.slice(0,-1); return; }
+  if (inp.value.length < 4) inp.value += val;
+  if (inp.value.length === 4) window.loginEntrar();
+};
+window.regTecla = function(val) {
+  const inp = document.getElementById('regClave');
+  if (val === 'borrar') { inp.value = inp.value.slice(0,-1); return; }
+  if (inp.value.length < 4) inp.value += val;
+  if (inp.value.length === 4) window.registrarse();
+};
+
+// ── Ingresar ──
+window.loginEntrar = async function() {
+  const nombre = (document.getElementById('loginNombre').value||'').trim().toUpperCase();
+  const clave  = (document.getElementById('loginClave').value||'').trim();
+  const msgEl  = document.getElementById('loginMsg');
+
+  if (!nombre) { msgEl.textContent = '⚠️ Ingresá tu nombre'; return; }
+  if (clave.length !== 4) { msgEl.textContent = '⚠️ La clave debe tener 4 dígitos'; return; }
+
+  msgEl.style.color = 'var(--turquesa)';
+  msgEl.textContent = 'Verificando...';
+
+  try {
+    const snap = await getDoc(doc(db, 'clientes', nombre));
+    if (!snap.exists()) {
+      msgEl.style.color = 'var(--rojo)';
+      msgEl.textContent = '❌ Usuario no encontrado';
+      return;
+    }
+    const data = snap.data();
+    if (data.clave !== clave) {
+      msgEl.style.color = 'var(--rojo)';
+      msgEl.textContent = '❌ Clave incorrecta';
+      document.getElementById('loginClave').value = '';
+      return;
+    }
+    usuarioActual = { nombre, ...data };
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
+    msgEl.textContent = '';
+    loginExitoso();
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error de conexión';
+    console.error(e);
+  }
+};
+
+// ── Registrarse ──
+window.registrarse = async function() {
+  const nombre   = (document.getElementById('regNombre').value||'').trim().toUpperCase();
+  const clave    = (document.getElementById('regClave').value||'').trim();
+  const dir      = (document.getElementById('regDireccion').value||'').trim();
+  const msgEl    = document.getElementById('regMsg');
+
+  if (!nombre || nombre.length < 2) { msgEl.style.color='var(--rojo)'; msgEl.textContent = '⚠️ Nombre de al menos 2 caracteres'; return; }
+  if (!/^[A-Z0-9 ]+$/.test(nombre)) { msgEl.style.color='var(--rojo)'; msgEl.textContent = '⚠️ Solo letras y números'; return; }
+  if (clave.length !== 4 || !/^\d{4}$/.test(clave)) { msgEl.style.color='var(--rojo)'; msgEl.textContent = '⚠️ La clave debe ser 4 dígitos numéricos'; return; }
+
+  msgEl.style.color = 'var(--turquesa)';
+  msgEl.textContent = 'Creando cuenta...';
+
+  try {
+    const ref = doc(db, 'clientes', nombre);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      msgEl.style.color = 'var(--rojo)';
+      msgEl.textContent = '❌ Ese nombre ya está en uso, elegí otro';
+      return;
+    }
+    const nuevoUsuario = {
+      nombre, clave, direccion: dir,
+      fichasSlots: 3, recordSlots: 0,
+      historialPedidos: [], puntosJuegos: {},
+      creadoEn: Date.now()
+    };
+    await setDoc(ref, nuevoUsuario);
+    usuarioActual = { ...nuevoUsuario };
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
+    msgEl.textContent = '';
+    loginExitoso();
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al crear cuenta';
+    console.error(e);
+  }
+};
+
+// ── Continuar sin cuenta ──
+window.continuarSinCuenta = function() {
+  usuarioActual = null;
+  localStorage.removeItem('mordelon-usuario');
+  entrarAMenu();
+};
+
+// ── Post-login: cargar datos del usuario ──
+function loginExitoso() {
+  // Pre-llenar campos del carrito con datos del usuario
+  const nombreInput = document.getElementById('nombreCliente');
+  const dirInput    = document.getElementById('direccionCliente');
+  if (nombreInput && usuarioActual?.nombre) nombreInput.value = usuarioActual.nombre;
+  if (dirInput && usuarioActual?.direccion) dirInput.value = usuarioActual.direccion;
+
+  // Sincronizar fichas de slots con Firebase
+  if (usuarioActual) {
+    // Migrar fichas del sistema viejo si existían
+    const fichasViejas = parseInt(localStorage.getItem('slotsFichasC') || '0');
+    if (fichasViejas > 0 && !usuarioActual.fichasSlots) {
+      updateDoc(doc(db, 'clientes', usuarioActual.nombre), { fichasSlots: fichasViejas });
+      localStorage.removeItem('slotsFichasC');
+    }
+  }
+
+  // Escuchar cambios del usuario en tiempo real (fichas, etc.)
+  if (usuarioActual) {
+    onSnapshot(doc(db, 'clientes', usuarioActual.nombre), (s) => {
+      if (!s.exists()) return;
+      const d = s.data();
+      // Fichas cargadas por vendedor
+      if ((d.fichasSlots ?? 0) > (usuarioActual.fichasSlots ?? 0)) {
+        const extra = (d.fichasSlots ?? 0) - (usuarioActual.fichasSlots ?? 0);
+        const msgEl = document.getElementById('slotsMensaje');
+        if (msgEl) { msgEl.textContent = '🎉 ¡Recibiste ' + extra + ' ficha' + (extra>1?'s':'') + '!'; msgEl.style.color = 'var(--turquesa)'; }
+      }
+      usuarioActual = { ...usuarioActual, ...d };
+      // Actualizar UI slots si está activo
+      if (typeof slotsActualizarUI === 'function') slotsActualizarUI();
+    });
+  }
+
+  entrarAMenu();
+}
+
+function entrarAMenu() {
+  // Cambiar screen-login → screen-menu (sin usar showScreen para no perder .active del login)
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-menu').classList.add('active');
+
+  // Mostrar nombre en header si está logueado
+  actualizarHeaderUsuario();
+}
+
+function actualizarHeaderUsuario() {
+  let badge = document.getElementById('usuarioBadge');
+  if (!badge) return;
+  if (usuarioActual) {
+    badge.textContent = '👤 ' + usuarioActual.nombre;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Auto-login si tiene sesión guardada ──
+async function intentarAutoLogin() {
+  const sesionGuardada = localStorage.getItem('mordelon-usuario');
+  if (!sesionGuardada) {
+    // Sin sesión → mostrar login
+    return;
+  }
+  try {
+    const { nombre, clave } = JSON.parse(sesionGuardada);
+    const snap = await getDoc(doc(db, 'clientes', nombre));
+    if (snap.exists() && snap.data().clave === clave) {
+      usuarioActual = { nombre, ...snap.data() };
+      loginExitoso();
+    } else {
+      localStorage.removeItem('mordelon-usuario');
+    }
+  } catch(e) {
+    // Sin conexión → mostrar login igual
+    console.warn('Auto-login falló:', e);
+  }
+}
+
+intentarAutoLogin();
+
+// ── Cerrar sesión del cliente ──
+window.cerrarSesionCliente = function() {
+  usuarioActual = null;
+  localStorage.removeItem('mordelon-usuario');
+  // Volver al login
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+  const loginScr = document.getElementById('screen-login');
+  loginScr.classList.add('active');
+  loginScr.style.display = 'flex';
+  // Limpiar campos
+  const li = document.getElementById('loginNombre'); if(li) li.value='';
+  const lc = document.getElementById('loginClave');  if(lc) lc.value='';
+  document.getElementById('loginMsg').textContent = '';
+};
+
+// ── Guardar pedido en historial del usuario ──
+async function guardarPedidoEnUsuario(pedidoId, total, items) {
+  if (!usuarioActual) return;
+  try {
+    const entrada = { pedidoId, total, items: items.length, timestamp: Date.now() };
+    const hist = usuarioActual.historialPedidos || [];
+    hist.unshift(entrada);
+    if (hist.length > 20) hist.length = 20; // máx 20
+    await updateDoc(doc(db, 'clientes', usuarioActual.nombre), { historialPedidos: hist });
+    usuarioActual.historialPedidos = hist;
+  } catch(e) { console.error('Error guardando historial:', e); }
+}
+
+
 const SLOTS_SIMBOLOS   = ['🍔','🍕','🌮','🍟','🔥'];
 const SLOTS_FICHAS_INIT = 3;
 
@@ -1970,7 +2325,7 @@ function slotsActualizarUI() {
   }
 }
 
-// ── Entrar / registrarse ──
+// ── Login de slots (para usuarios sin cuenta de app) ──
 window.slotsEntrar = async function() {
   const input = document.getElementById('slotsNombreInput');
   const msgEl = document.getElementById('slotsLoginMsg');
@@ -2075,10 +2430,14 @@ window.slotsGirar = function() {
   if (slotsSpinning || slotsFichas <= 0 || !slotsUsuario) return;
   slotsSpinning = true;
   slotsFichas--;
-
-  // Guardar fichas en Firebase
-  const ref = doc(db, 'slotsUsuarios', slotsUsuario.nombre);
-  updateDoc(ref, { fichas: slotsFichas });
+  // Guardar fichas en Firebase (cuenta) o localStorage (sin cuenta)
+  if (usuarioActual) {
+    usuarioActual.fichasSlots = slotsFichas;
+    updateDoc(doc(db, 'clientes', usuarioActual.nombre), { fichasSlots: slotsFichas });
+  } else {
+    localStorage.setItem('slotsFichasC', slotsFichas);
+  }
+  const ref = usuarioActual ? doc(db, 'clientes', usuarioActual.nombre) : null;
 
   slotsActualizarUI();
 
@@ -2130,7 +2489,11 @@ window.slotsGirar = function() {
         slotsScore += puntos;
         if (slotsScore > slotsHiScore) {
           slotsHiScore = slotsScore;
-          try { updateDoc(ref, { record: slotsHiScore }); } catch(_e) {}
+          if (usuarioActual && ref) {
+            try { updateDoc(ref, { recordSlots: slotsHiScore }); usuarioActual.recordSlots = slotsHiScore; } catch(_e) {}
+          } else {
+            localStorage.setItem('slotsHiC', slotsHiScore);
+          }
           if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('slots', slotsScore);
         }
       }
