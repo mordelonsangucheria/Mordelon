@@ -2660,6 +2660,14 @@ function minasDescubrir(r, c) {
   const scoreEl = document.getElementById('minasScore');
   if (scoreEl) scoreEl.textContent = mScore;
 
+  // Guardar récord en cada jugada (no solo al ganar)
+  const hiActualParcial = parseInt(localStorage.getItem('minasHiC_score') || '0');
+  if (mScore > hiActualParcial) {
+    localStorage.setItem('minasHiC_score', mScore);
+    if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('minas', mScore);
+    actualizarHiMinas();
+  }
+
   if (sin_revelar === 0) {
     mWon = true;
     clearInterval(mTimerInterval);
@@ -2668,7 +2676,7 @@ function minasDescubrir(r, c) {
     const puntajeFinal = mScore + Math.round(tiempoBonus);
     mScore = puntajeFinal;
     if (scoreEl) scoreEl.textContent = mScore;
-    // Guardar récord de puntaje
+    // Actualizar récord con puntaje final (con bonus de tiempo)
     const hiActual = parseInt(localStorage.getItem('minasHiC_score') || '0');
     if (puntajeFinal > hiActual) {
       localStorage.setItem('minasHiC_score', puntajeFinal);
