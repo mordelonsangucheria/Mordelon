@@ -1005,7 +1005,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 </div>
 
 <!-- MODAL CALIFICACIÓN -->
-<div id="modalRating" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;">
+<div id="modalRating" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px;">
   <div style="background:var(--gris-dark,#1a1a1a);border:1.5px solid var(--turquesa,#3dbfb8);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(61,191,184,.2);">
     <div style="font-size:2.4rem;margin-bottom:8px;">🙌</div>
     <div style="font-size:1.1rem;font-weight:800;color:var(--turquesa,#3dbfb8);margin-bottom:4px;">¡Gracias por tu pedido!</div>
@@ -1431,8 +1431,6 @@ window.nuevoPedido = function() {
   document.querySelectorAll('#entregaSelector .metodo-btn').forEach(b => b.classList.remove('entrega-sel'));
   document.getElementById('infoRetiro').style.display = 'none';
   document.getElementById('infoDelivery').style.display = 'none';
-  if (unsubEstado) { unsubEstado(); unsubEstado = null; }
-  pedidoActivoId = null;
   document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
   document.getElementById('waCheck').style.display = 'none';
   document.getElementById('waError').style.display = 'none';
@@ -1681,9 +1679,8 @@ function notificarClienteListo() {
   }
 }
 
-// Recuperar pedido activo si el cliente cerró el navegador
-(function recuperarPedido() {
-  // Recuperar pedido anterior (FAB)
+// Recuperar pedido anterior (FAB) si el cliente cerró el navegador
+(function recuperarPedidoAnterior() {
   try {
     const rawAnt = localStorage.getItem('mordelon-pedido-ant');
     if (rawAnt) {
@@ -1863,8 +1860,11 @@ function proximaApertura() {
     return horario.desde;
   }
   // Buscar el próximo día abierto
+  // horariosData está ordenado [Lunes..Domingo]; getDay() devuelve 0=Dom..6=Sáb
+  // Convertir al índice de horariosData: Lunes=0 ... Domingo=6
+  const diaIdx = (ahora.getDay() + 6) % 7;
   for (let i = 1; i <= 7; i++) {
-    const sig = horariosData[(ahora.getDay() + i) % 7];
+    const sig = horariosData[(diaIdx + i) % 7];
     if (sig && sig.abierto) return sig.dia + ' a las ' + sig.desde;
   }
   return null;
@@ -2093,7 +2093,7 @@ window.loginEntrar = async function() {
       return;
     }
     usuarioActual = { nombre, ...data };
-    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave: btoa(clave) }));
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -2133,7 +2133,7 @@ window.registrarse = async function() {
     };
     await setDoc(ref, nuevoUsuario);
     usuarioActual = { ...nuevoUsuario };
-    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave: btoa(clave) }));
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -2234,7 +2234,8 @@ async function intentarAutoLogin() {
     return;
   }
   try {
-    const { nombre, clave } = JSON.parse(sesionGuardada);
+    const { nombre, clave: claveGuardada } = JSON.parse(sesionGuardada);
+    const clave = (() => { try { return atob(claveGuardada); } catch(e) { return claveGuardada; } })();
     const snap = await getDoc(doc(db, 'clientes', nombre));
     if (snap.exists() && snap.data().clave === clave) {
       usuarioActual = { nombre, ...snap.data() };
