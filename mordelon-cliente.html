@@ -2014,7 +2014,7 @@ window.slotsEntrar = async function() {
         const extra = nuevasFichas - slotsFichas;
         slotsFichas = nuevasFichas;
         const msgEl2 = document.getElementById('slotsMensaje');
-        if (msgEl2) { msgEl2.textContent = \`🎉 ¡Recibiste \${extra} ficha\${extra>1?'s':''}!\`; msgEl2.style.color = 'var(--turquesa)'; }
+        if (msgEl2) { msgEl2.textContent = `🎉 ¡Recibiste ${extra} ficha${extra>1?'s':''}!`; msgEl2.style.color = 'var(--turquesa)'; }
         slotsActualizarUI();
       }
       if ((d.record ?? 0) > slotsHiScore) {
