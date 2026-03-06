@@ -2330,23 +2330,25 @@ function slotsActualizarUI() {
 
 // ── Init (cuando se selecciona el juego) ──
 window.slotsInit = function() {
-  // Si tiene nombre guardado, pre-llenarlo
-  const guardado = localStorage.getItem('slotsNombreC');
-  const input = document.getElementById('slotsNombreInput');
-  if (guardado && input) input.value = guardado;
-
-  // Si ya está logueado esta sesión, ir directo al juego
-  if (slotsUsuario) {
-    slotsShowJuego();
-    slotsActualizarUI();
-    return;
+  slotsCargarEstado();
+  ['slotReel0','slotReel1','slotReel2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
+  });
+  const msgEl = document.getElementById('slotsMensaje');
+  if (usuarioActual) {
+    if (msgEl) { msgEl.textContent = 'Gira para ganar puntos!'; msgEl.style.color = '#555'; }
+  } else {
+    if (msgEl) { msgEl.textContent = 'Inicia sesion para jugar'; msgEl.style.color = 'var(--naranja)'; }
+    const btn = document.getElementById('btnGirarSlots');
+    if (btn) btn.style.display = 'none';
   }
-  slotsShowLogin();
+  slotsActualizarUI();
 };
 
 // ── Girar ──
 window.slotsGirar = function() {
-  if (slotsSpinning || slotsFichas <= 0 || !slotsUsuario) return;
+  if (slotsSpinning || slotsFichas <= 0 || !usuarioActual) return;
   slotsSpinning = true;
   slotsFichas--;
   // Guardar fichas en Firebase

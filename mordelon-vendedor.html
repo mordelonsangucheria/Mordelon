@@ -1093,7 +1093,7 @@ function verificarPin() {
     usuarioActual = user.nombre;
     localStorage.setItem('mordelon-sesion', JSON.stringify({ nombre: user.nombre, timestamp: Date.now() }));
     document.getElementById('pinOverlay').classList.add('hidden');
-    registrarActividad('🔑 Ingresó al panel');
+    if(typeof window.registrarActividad==='function') window.registrarActividad('🔑 Ingresó al panel');
   } else {
     for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.add('error');
     document.getElementById('pinError').textContent = 'PIN incorrecto, intentá de nuevo';
@@ -1123,13 +1123,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // CARGAR USUARIOS desde Firebase
-async function cargarUsuarios() {
+async function cargarUsuariosVendedor() {
   try {
     const snap = await getDoc(doc(db, 'config', 'usuarios'));
     if (snap.exists() && snap.data().lista) usuariosData = snap.data().lista;
   } catch(e) {}
 }
-cargarUsuarios();
+cargarUsuariosVendedor();
 
 // PANTALLA SIEMPRE ENCENDIDA
 let wakeLock = null;
@@ -2922,6 +2922,7 @@ async function registrarActividad(accion) {
     });
   } catch(e) {}
 }
+window.registrarActividad = registrarActividad;
 
 
 
