@@ -842,6 +842,63 @@ select.mac-field option { background:#222; }
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
 
+  <!-- 🎰 CONFIGURACIÓN SLOTS v2 -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);margin-bottom:14px;">🎰 CONFIGURACIÓN SLOTS</div>
+
+    <!-- Estadísticas -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#555;">TOTAL GIROS</div>
+        <div id="statSlotsSpins" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--naranja);">—</div>
+      </div>
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#555;">GANARON</div>
+        <div id="statSlotsGanados" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--verde);">—</div>
+      </div>
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#555;">% VICTORIA</div>
+        <div id="statSlotsPct" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--turquesa);">—</div>
+      </div>
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#555;">FICHAS DADAS</div>
+        <div id="statSlotsFichas" style="font-family:'Righteous',cursive;font-size:1.3rem;color:#888;">—</div>
+      </div>
+    </div>
+
+    <!-- Dificultad: bias hacia símbolos comunes -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:0.7rem;color:#aaa;font-family:'Righteous',cursive;">DIFICULTAD</div>
+        <div id="slotsDificultadLabel" style="font-size:0.7rem;color:var(--naranja);">Normal</div>
+      </div>
+      <input type="range" id="slotsDificultadSlider" min="0" max="80" value="0"
+        oninput="window.slotsUpdateDificultad(this.value)"
+        style="width:100%;accent-color:var(--naranja);">
+      <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:#444;margin-top:2px;">
+        <span>Más fácil</span><span>Normal</span><span>Muy difícil</span>
+      </div>
+    </div>
+
+    <!-- Tabla de premios editable -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:0.7rem;color:#aaa;font-family:'Righteous',cursive;margin-bottom:8px;">TABLA DE PREMIOS</div>
+      <div id="slotsTablaEditor" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button onclick="window.guardarConfigSlots()"
+        style="flex:1;background:var(--naranja);border:none;color:#111;border-radius:10px;padding:9px;font-family:'Righteous',cursive;font-size:0.78rem;cursor:pointer;">
+        💾 Guardar cambios
+      </button>
+      <button onclick="window.resetConfigSlots()"
+        style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:9px 14px;font-size:0.75rem;cursor:pointer;">
+        ↺ Resetear
+      </button>
+    </div>
+    <div id="slotsConfigMsg" style="font-size:0.7rem;min-height:14px;margin-top:6px;text-align:center;"></div>
+  </div>
+
   <!-- 🎰 FICHAS DE SLOTS -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
@@ -4013,6 +4070,123 @@ window.exportarParticipantes = function() {
 };
 
 window.renderSorteoPanel = function() { _actualizarUIVendedor(); };
+
+// ═══════════════════════════════════════════════════════
+//  SLOTS CONFIG & STATS — VENDEDOR
+// ═══════════════════════════════════════════════════════
+
+const SLOTS_COMBOS_DEFAULT_V = [
+  { id:'mega',     pts:1500, fichas:5,  label:'💎 MEGA JACKPOT',       color:'#FF4D4D' },
+  { id:'jackpot',  pts:800,  fichas:3,  label:'⭐ JACKPOT',            color:'#FFD700' },
+  { id:'burger3',  pts:400,  fichas:2,  label:'🍔🍔🍔 TRIPLE BURGER',  color:'#FF8C00' },
+  { id:'pizza3',   pts:300,  fichas:1,  label:'🍕🍕🍕 TRIPLE PIZZA',   color:'#FF8C00' },
+  { id:'taco3',    pts:200,  fichas:1,  label:'🌮🌮🌮 TRIPLE TACO',    color:'#FF8C00' },
+  { id:'papas3',   pts:150,  fichas:0,  label:'🍟🍟🍟 TRIPLE PAPAS',   color:'#aaa'    },
+  { id:'par_raro', pts:120,  fichas:0,  label:'PAR ESPECIAL',          color:'#aaa'    },
+  { id:'par',      pts:50,   fichas:0,  label:'PAR',                   color:'#555'    },
+];
+
+let _slotsConfigLocal = { biasComun: 0, combos: SLOTS_COMBOS_DEFAULT_V };
+
+// ── Listener stats en tiempo real ────────────────────
+onSnapshot(doc(db,'config','slotsStats'), snap => {
+  const d = snap.exists() ? snap.data() : {};
+  const spins   = d.totalSpins    || 0;
+  const ganados = d.totalGanados  || 0;
+  const pct     = spins > 0 ? Math.round(ganados/spins*100) : 0;
+  const el = (id) => document.getElementById(id);
+  if(el('statSlotsSpins'))   el('statSlotsSpins').textContent   = spins;
+  if(el('statSlotsGanados')) el('statSlotsGanados').textContent = ganados;
+  if(el('statSlotsPct'))     el('statSlotsPct').textContent     = pct + '%';
+  if(el('statSlotsFichas'))  el('statSlotsFichas').textContent  = d.fichasOtorgadas || 0;
+});
+
+// ── Cargar config guardada ────────────────────────────
+onSnapshot(doc(db,'config','slotsConfig'), snap => {
+  if (snap.exists()) {
+    _slotsConfigLocal = snap.data();
+    // Si no tiene combos, usar defaults
+    if (!_slotsConfigLocal.combos) _slotsConfigLocal.combos = [...SLOTS_COMBOS_DEFAULT_V];
+  } else {
+    _slotsConfigLocal = { biasComun: 0, combos: [...SLOTS_COMBOS_DEFAULT_V] };
+  }
+  _slotsRenderEditor();
+});
+
+function _slotsRenderEditor() {
+  const slider = document.getElementById('slotsDificultadSlider');
+  const label  = document.getElementById('slotsDificultadLabel');
+  if (slider) slider.value = _slotsConfigLocal.biasComun || 0;
+  _slotsActualizarLabelDificultad(_slotsConfigLocal.biasComun || 0);
+
+  const combos = _slotsConfigLocal.combos || SLOTS_COMBOS_DEFAULT_V;
+  const editor = document.getElementById('slotsTablaEditor');
+  if (!editor) return;
+
+  editor.innerHTML = combos.map((c,i) => `
+    <div style="display:grid;grid-template-columns:1fr 60px 60px;gap:6px;align-items:center;background:#111;border-radius:8px;padding:7px 10px;">
+      <div style="font-size:0.7rem;color:${c.color};">${c.label}</div>
+      <div>
+        <div style="font-size:0.55rem;color:#555;margin-bottom:2px;">PTS</div>
+        <input type="number" value="${c.pts}" min="0" max="9999" data-idx="${i}" data-field="pts"
+          oninput="window.slotsEditCombo(this)"
+          style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:var(--naranja);font-size:0.75rem;padding:4px 6px;box-sizing:border-box;">
+      </div>
+      <div>
+        <div style="font-size:0.55rem;color:#555;margin-bottom:2px;">🎟️</div>
+        <input type="number" value="${c.fichas}" min="0" max="20" data-idx="${i}" data-field="fichas"
+          oninput="window.slotsEditCombo(this)"
+          style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:var(--turquesa);font-size:0.75rem;padding:4px 6px;box-sizing:border-box;">
+      </div>
+    </div>`).join('');
+}
+
+function _slotsActualizarLabelDificultad(val) {
+  const label = document.getElementById('slotsDificultadLabel');
+  if (!label) return;
+  const v = parseInt(val);
+  if (v === 0) label.textContent = 'Normal';
+  else if (v <= 20) label.textContent = 'Un poco más difícil';
+  else if (v <= 40) label.textContent = 'Difícil';
+  else if (v <= 60) label.textContent = 'Muy difícil';
+  else label.textContent = '🔥 Casi imposible';
+  label.style.color = v === 0 ? 'var(--verde)' : v <= 30 ? 'var(--naranja)' : 'var(--rojo)';
+}
+
+window.slotsUpdateDificultad = function(val) {
+  _slotsConfigLocal.biasComun = parseInt(val);
+  _slotsActualizarLabelDificultad(val);
+};
+
+window.slotsEditCombo = function(input) {
+  const idx   = parseInt(input.dataset.idx);
+  const field = input.dataset.field;
+  const val   = parseInt(input.value) || 0;
+  if (_slotsConfigLocal.combos && _slotsConfigLocal.combos[idx]) {
+    _slotsConfigLocal.combos[idx][field] = val;
+  }
+};
+
+window.guardarConfigSlots = async function() {
+  const msgEl = document.getElementById('slotsConfigMsg');
+  try {
+    await setDoc(doc(db,'config','slotsConfig'), _slotsConfigLocal);
+    if (msgEl) { msgEl.style.color='var(--verde)'; msgEl.textContent='✅ Configuración guardada'; }
+    registrarActividad('🎰 Config slots actualizada');
+    setTimeout(()=>{ if(msgEl) msgEl.textContent=''; }, 3000);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color='var(--rojo)'; msgEl.textContent='❌ Error al guardar'; }
+  }
+};
+
+window.resetConfigSlots = async function() {
+  if (!confirm('¿Resetear la configuración de slots a los valores por defecto?')) return;
+  _slotsConfigLocal = { biasComun: 0, combos: [...SLOTS_COMBOS_DEFAULT_V] };
+  await setDoc(doc(db,'config','slotsConfig'), _slotsConfigLocal);
+  _slotsRenderEditor();
+  showNotif('✅ Config slots reseteada');
+};
+
 
 // Toggle mensaje "sin sorteo activo" en cliente
 let _sinSorteoOculto = false;

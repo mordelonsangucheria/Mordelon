@@ -465,6 +465,20 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 }
 .banner-bienvenida.show { display:flex; }
 .banner-texto { font-size:0.82rem; font-weight:700; color:var(--naranja); line-height:1.4; }
+
+/* ── SLOTS v2 ── */
+.slot-cell {
+  width:72px;height:52px;background:var(--gris-dark);border:1.5px solid #333;
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;transition:border-color .2s,box-shadow .2s,transform .1s;
+  position:relative;z-index:0;
+}
+.slot-cell.slot-center { background:#111; }
+.slot-cell.win-line { border-color:var(--naranja);box-shadow:0 0 10px rgba(255,140,0,.5); }
+.slot-cell.win-jackpot { border-color:#FFD700;box-shadow:0 0 18px rgba(255,215,0,.7);animation:jackpotPulse .4s ease-in-out infinite alternate; }
+.slot-cell.win-mega { border-color:#FF4D4D;box-shadow:0 0 22px rgba(255,77,77,.8);animation:jackpotPulse .3s ease-in-out infinite alternate; }
+@keyframes jackpotPulse { from{transform:scale(1)} to{transform:scale(1.08)} }
+
 </style>
 </head>
 <body>
@@ -826,67 +840,70 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Tap para descubrir · Mantené presionado para marcar 🚩</p>
     </div>
 
-    <!-- TRAGAMONEDAS -->
+    <!-- TRAGAMONEDAS v2 -->
     <div id="juegoSlots" style="display:none;text-align:center;">
-
-      <!-- PANTALLA JUEGO (directo, usa usuario del login principal) -->
       <div id="slotsJuego" style="display:block;">
 
-        <!-- Usuario activo -->
-        <div style="text-align:center;margin-bottom:10px;">
-          <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:1px;" id="slotsNombreDisplay">JUGADOR</div>
+        <!-- Header: usuario + stats -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-family:'Righteous',cursive;font-size:0.75rem;color:var(--turquesa);" id="slotsNombreDisplay">JUGADOR</div>
+          <div style="font-size:0.6rem;color:#444;" id="slotsSessionStats"></div>
         </div>
 
         <!-- Fichas y puntaje -->
-        <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:12px;">
-          <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:12px;padding:7px 14px;">
-            <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">FICHAS</div>
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:12px;">
+          <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:12px;padding:6px 12px;min-width:60px;">
+            <div style="font-size:0.55rem;color:#888;margin-bottom:1px;">FICHAS</div>
             <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--naranja);" id="slotsFichas">3</div>
           </div>
-          <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:12px;padding:7px 14px;">
-            <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">PUNTOS</div>
+          <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:12px;padding:6px 12px;min-width:60px;">
+            <div style="font-size:0.55rem;color:#888;margin-bottom:1px;">PUNTOS</div>
             <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--turquesa);" id="slotsScore">0</div>
           </div>
-          <div style="background:var(--gris-dark);border:1.5px solid var(--verde);border-radius:12px;padding:7px 14px;">
-            <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">RÉCORD</div>
+          <div style="background:var(--gris-dark);border:1.5px solid var(--verde);border-radius:12px;padding:6px 12px;min-width:60px;">
+            <div style="font-size:0.55rem;color:#888;margin-bottom:1px;">RÉCORD</div>
             <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--verde);" id="slotsHi">0</div>
           </div>
         </div>
 
-        <!-- Tambores -->
-        <div style="display:flex;justify-content:center;gap:8px;margin:0 auto 10px;">
-          <div id="slotReel0" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🍔</div>
-          <div id="slotReel1" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🍕</div>
-          <div id="slotReel2" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🌮</div>
+        <!-- Multiplicador activo -->
+        <div id="slotsMultiWrap" style="display:none;margin-bottom:8px;">
+          <div id="slotsMultiLabel" style="font-size:0.7rem;color:var(--naranja);font-family:'Righteous',cursive;"></div>
+        </div>
+
+        <!-- Tambores 3x3 -->
+        <div style="position:relative;display:inline-block;margin:0 auto 8px;">
+          <!-- Línea central resaltada -->
+          <div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:52px;border:1.5px solid rgba(255,140,0,.25);border-radius:8px;pointer-events:none;z-index:1;"></div>
+          <div style="display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(3,52px);gap:4px;">
+            <div id="sr00" class="slot-cell"></div><div id="sr01" class="slot-cell"></div><div id="sr02" class="slot-cell"></div>
+            <div id="sr10" class="slot-cell slot-center"></div><div id="sr11" class="slot-cell slot-center"></div><div id="sr12" class="slot-cell slot-center"></div>
+            <div id="sr20" class="slot-cell"></div><div id="sr21" class="slot-cell"></div><div id="sr22" class="slot-cell"></div>
+          </div>
         </div>
 
         <!-- Mensaje resultado -->
-        <div id="slotsMensaje" style="font-family:'Righteous',cursive;font-size:0.95rem;letter-spacing:1px;min-height:26px;margin-bottom:10px;color:#555;">¡Girá para ganar puntos!</div>
+        <div id="slotsMensaje" style="font-family:'Righteous',cursive;font-size:0.88rem;letter-spacing:1px;min-height:24px;margin-bottom:8px;color:#555;transition:color .3s;">¡Girá para ganar!</div>
+
+        <!-- Premio ganado -->
+        <div id="slotsPremioBanner" style="display:none;background:linear-gradient(135deg,#1a2a00,#0a1a00);border:1.5px solid var(--verde);border-radius:12px;padding:10px 14px;margin-bottom:10px;text-align:center;">
+          <div id="slotsPremioBannerTexto" style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--verde);"></div>
+        </div>
 
         <!-- Botón girar -->
         <button id="btnGirarSlots" onclick="window.slotsGirar()"
-          style="background:linear-gradient(135deg,var(--turquesa),var(--verde));border:none;color:#111;border-radius:16px;padding:14px 50px;font-family:'Righteous',cursive;font-size:1.1rem;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:14px;">
+          style="background:linear-gradient(135deg,#ff8c00,#ff4500);border:none;color:#fff;border-radius:16px;padding:13px 48px;font-family:'Righteous',cursive;font-size:1rem;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:12px;box-shadow:0 4px 16px rgba(255,140,0,.3);">
           🎰 GIRAR
         </button>
 
         <!-- Sin fichas -->
         <div id="slotsSinFichas" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:14px;padding:14px;margin-bottom:12px;">
-          <div style="font-size:0.8rem;color:#888;margin-bottom:6px;">😢 Te quedaste sin fichas</div>
-          <div style="font-size:0.72rem;color:#555;">Pedile al vendedor que te cargue fichas. Tu usuario: <strong id="slotsNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+          <div style="font-size:0.8rem;color:#888;margin-bottom:4px;">😢 Sin fichas</div>
+          <div style="font-size:0.7rem;color:#555;">Comunicate con Mordelón para conseguir más. Usuario: <strong id="slotsNombreSinFichas" style="color:var(--turquesa)"></strong></div>
         </div>
 
-        <!-- Tabla de premios -->
-        <div style="background:var(--gris-dark);border:1px solid rgba(61,191,184,.2);border-radius:12px;padding:10px 14px;text-align:left;margin-top:4px;">
-          <div style="font-family:'Righteous',cursive;font-size:0.7rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:7px;">🏆 PREMIOS</div>
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:0.7rem;align-items:center;">
-            <span>🔥🔥🔥</span><span style="color:#FFD700;font-weight:800;">SUPER JACKPOT — 1000 pts</span>
-            <span>🍔🍔🍔</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
-            <span>🍕🍕🍕</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
-            <span>🌮🌮🌮</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
-            <span>🍟🍟🍟</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
-            <span style="color:#aaa;">Dos iguales</span><span style="color:#aaa;">100 pts</span>
-          </div>
-        </div>
+        <!-- Tabla de premios dinámica -->
+        <div id="slotsTablaPremiOS" style="background:var(--gris-dark);border:1px solid rgba(255,140,0,.2);border-radius:12px;padding:10px 14px;text-align:left;margin-top:4px;font-size:0.68rem;"></div>
       </div>
     </div>
   </div>
@@ -2318,31 +2335,74 @@ async function guardarPedidoEnUsuario(pedidoId, total, items) {
 }
 
 
-const SLOTS_SIMBOLOS   = ['🍔','🍕','🌮','🍟','🔥'];
-const SLOTS_FICHAS_INIT = 3;
+// ═══════════════════════════════════════════════════════
+//  TRAGAMONEDAS v2 — Sistema completo
+// ═══════════════════════════════════════════════════════
 
+// ── Tabla de símbolos con PESO (rareza) ──────────────
+// Peso más alto = aparece más seguido = más común
+const SLOTS_SIMBOLOS = [
+  { e:'🍟', nombre:'Papas',    peso:35, rareza:'común'     },
+  { e:'🌮', nombre:'Tacos',    peso:28, rareza:'común'     },
+  { e:'🍕', nombre:'Pizza',    peso:20, rareza:'poco común'},
+  { e:'🍔', nombre:'Burger',   peso:12, rareza:'raro'      },
+  { e:'⭐', nombre:'Estrella', peso:4,  rareza:'épico'     },
+  { e:'💎', nombre:'Diamante', peso:1,  rareza:'legendario'},
+];
+// Pool ponderado (pre-computado para performance)
+const SLOTS_POOL = [];
+SLOTS_SIMBOLOS.forEach(s => { for(let i=0;i<s.peso;i++) SLOTS_POOL.push(s); });
+
+// ── Tabla de combinaciones y premios ─────────────────
+// Se puede sobreescribir desde Firebase (config/slotsConfig)
+const SLOTS_COMBOS_DEFAULT = [
+  // tier, condicion fn, pts, fichas_bonus, label, color, nivel visual
+  { id:'mega',     pts:1500, fichas:5,  label:'💎 MEGA JACKPOT',       color:'#FF4D4D', nivel:'mega'    },
+  { id:'jackpot',  pts:800,  fichas:3,  label:'⭐ JACKPOT',            color:'#FFD700', nivel:'jackpot' },
+  { id:'burger3',  pts:400,  fichas:2,  label:'🍔🍔🍔 TRIPLE BURGER',  color:'#FF8C00', nivel:'alto'    },
+  { id:'pizza3',   pts:300,  fichas:1,  label:'🍕🍕🍕 TRIPLE PIZZA',   color:'#FF8C00', nivel:'alto'    },
+  { id:'taco3',    pts:200,  fichas:1,  label:'🌮🌮🌮 TRIPLE TACO',    color:'#FF8C00', nivel:'alto'    },
+  { id:'papas3',   pts:150,  fichas:0,  label:'🍟🍟🍟 TRIPLE PAPAS',   color:'#aaa',    nivel:'medio'   },
+  { id:'par_raro', pts:120,  fichas:0,  label:'PAR ESPECIAL',          color:'#aaa',    nivel:'medio'   },
+  { id:'par',      pts:50,   fichas:0,  label:'PAR',                   color:'#555',    nivel:'bajo'    },
+];
+
+// ── Config desde Firebase ─────────────────────────────
+let _slotsConfig = null;
+onSnapshot(doc(db,'config','slotsConfig'), snap => {
+  _slotsConfig = snap.exists() ? snap.data() : null;
+  _slotsRenderTabla();
+});
+
+function _slotsCombos() {
+  return _slotsConfig?.combos || SLOTS_COMBOS_DEFAULT;
+}
+
+// ── Estado del juego ──────────────────────────────────
+const SLOTS_FICHAS_INIT = 3;
 let slotsScore    = 0;
 let slotsFichas   = 0;
 let slotsSpinning = false;
-let slotsUsuario  = null; // { nombre, fichas, record }
 let slotsHiScore  = 0;
-let _slotsListener = null;
+// Stats de sesión
+let _slotsSpinsSesion  = 0;
+let _slotsGanasSesion  = 0;
+let _slotsFichasGanadas = 0;
 
-// ── Normalizar nombre: mayúsculas, sin espacios dobles ──
-function slotsNormNombre(n) {
-  return n.trim().toUpperCase().replace(/\s+/g,' ').slice(0,20);
-}
+// ── Grid 3×3: posiciones [fila][col] ─────────────────
+// Líneas ganadoras: fila central, columna central, diagonales
+const SLOTS_LINEAS = [
+  [1,0,1,1,1,2],   // fila central (principal)
+  [0,1,1,1,2,1],   // columna central
+  [0,0,1,1,2,2],   // diagonal ↘
+  [0,2,1,1,2,0],   // diagonal ↙
+  [0,0,0,1,0,2],   // fila superior
+  [2,0,2,1,2,2],   // fila inferior
+];
 
-// ── slotsLogin eliminado — solo existe slotsJuego ──
-function slotsShowLogin() {
-  // Ya no hay pantalla de login en slots — no hacer nada
-}
-function slotsShowJuego() {
-  const el = document.getElementById('slotsJuego');
-  if (el) el.style.display = 'block';
-}
+function slotsNormNombre(n) { return n.trim().toUpperCase().replace(/\s+/g,' ').slice(0,20); }
+function slotsShowJuego() { const el=document.getElementById('slotsJuego'); if(el) el.style.display='block'; }
 
-// ── Cargar estado desde usuarioActual ──
 function slotsCargarEstado() {
   if (usuarioActual) {
     slotsFichas  = usuarioActual.fichasSlots ?? SLOTS_FICHAS_INIT;
@@ -2352,9 +2412,9 @@ function slotsCargarEstado() {
     slotsHiScore = 0;
   }
   slotsScore = 0;
+  _slotsSpinsSesion = _slotsGanasSesion = _slotsFichasGanadas = 0;
 }
 
-// ── Actualizar UI ──
 function slotsActualizarUI() {
   const fEl  = document.getElementById('slotsFichas');
   const sEl  = document.getElementById('slotsScore');
@@ -2363,6 +2423,7 @@ function slotsActualizarUI() {
   const sinF = document.getElementById('slotsSinFichas');
   const nEl  = document.getElementById('slotsNombreDisplay');
   const nSF  = document.getElementById('slotsNombreSinFichas');
+  const stats = document.getElementById('slotsSessionStats');
   const nombre = usuarioActual?.nombre || '';
 
   if (fEl)  fEl.textContent  = slotsFichas;
@@ -2376,13 +2437,26 @@ function slotsActualizarUI() {
     btn.disabled = slotsSpinning;
     btn.style.opacity = slotsSpinning ? '0.5' : '1';
   }
+  if (stats && _slotsSpinsSesion > 0) {
+    const pct = Math.round(_slotsGanasSesion/_slotsSpinsSesion*100);
+    stats.textContent = _slotsSpinsSesion + ' giros · ' + _slotsGanasSesion + ' premios (' + pct + '%)';
+  }
 }
 
+// ── Renderizar tabla de premios ───────────────────────
+function _slotsRenderTabla() {
+  const el = document.getElementById('slotsTablaPremiOS');
+  if (!el) return;
+  const combos = _slotsCombos();
+  el.innerHTML = '<div style="font-family:'Righteous',cursive;font-size:0.68rem;color:var(--naranja);margin-bottom:8px;">🏆 TABLA DE PREMIOS</div>' +
+    combos.map(c => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #1a1a1a;">
+      <span style="color:${c.color};">${c.label}</span>
+      <span style="color:#888;">${c.pts} pts${c.fichas?` + ${c.fichas}🎟️`:''}</span>
+    </div>`).join('');
+}
 
-
-// ── Init (cuando se selecciona el juego) ──
+// ── Init ──────────────────────────────────────────────
 window.slotsInit = function() {
-  // Cargar estado inline (slotsCargarEstado no accesible desde window)
   if (usuarioActual) {
     slotsFichas  = usuarioActual.fichasSlots ?? SLOTS_FICHAS_INIT;
     slotsHiScore = usuarioActual.recordSlots ?? 0;
@@ -2391,107 +2465,238 @@ window.slotsInit = function() {
     slotsHiScore = 0;
   }
   slotsScore = 0;
-  ['slotReel0','slotReel1','slotReel2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
-  });
+  // Llenar grid con símbolos aleatorios
+  for(let f=0;f<3;f++) for(let c=0;c<3;c++) {
+    const el = document.getElementById('sr'+f+c);
+    if (el) el.textContent = SLOTS_POOL[Math.floor(Math.random()*SLOTS_POOL.length)].e;
+  }
   const msgEl = document.getElementById('slotsMensaje');
   if (usuarioActual) {
-    if (msgEl) { msgEl.textContent = 'Gira para ganar puntos!'; msgEl.style.color = '#555'; }
+    if (msgEl) { msgEl.textContent = '¡Girá para ganar!'; msgEl.style.color = '#555'; }
   } else {
-    if (msgEl) { msgEl.textContent = 'Inicia sesion para jugar'; msgEl.style.color = 'var(--naranja)'; }
+    if (msgEl) { msgEl.textContent = 'Iniciá sesión para jugar'; msgEl.style.color = 'var(--naranja)'; }
     const btn = document.getElementById('btnGirarSlots');
     if (btn) btn.style.display = 'none';
   }
+  document.getElementById('slotsPremioBanner').style.display = 'none';
+  _slotsRenderTabla();
   slotsActualizarUI();
 };
 
-// ── Girar ──
+// ── Girar ─────────────────────────────────────────────
 window.slotsGirar = function() {
   if (slotsSpinning || slotsFichas <= 0 || !usuarioActual) return;
   slotsSpinning = true;
   slotsFichas--;
-  // Guardar fichas en Firebase
-  const ref = usuarioActual ? doc(db, 'clientes', usuarioActual.nombre) : null;
-  if (ref) {
-    usuarioActual.fichasSlots = slotsFichas;
-    updateDoc(ref, { fichasSlots: slotsFichas }).catch(()=>{});
+  _slotsSpinsSesion++;
+
+  // Descontar ficha en Firebase
+  const ref = doc(db,'clientes',usuarioActual.nombre);
+  usuarioActual.fichasSlots = slotsFichas;
+  updateDoc(ref, { fichasSlots: slotsFichas }).catch(()=>{});
+
+  // Ocultar banner anterior
+  document.getElementById('slotsPremioBanner').style.display = 'none';
+  const msgEl = document.getElementById('slotsMensaje');
+  if (msgEl) { msgEl.textContent = '…'; msgEl.style.color = '#555'; }
+
+  // Limpiar clases win
+  for(let f=0;f<3;f++) for(let c=0;c<3;c++) {
+    const el = document.getElementById('sr'+f+c);
+    if (el) { el.classList.remove('win-line','win-jackpot','win-mega'); el.style.borderColor=''; el.style.boxShadow=''; }
   }
 
   slotsActualizarUI();
 
-  const reels = ['slotReel0','slotReel1','slotReel2'];
-  const resultado = reels.map(() => Math.floor(Math.random() * SLOTS_SIMBOLOS.length));
+  // Generar resultado según pesos
+  const grid = [];
+  for(let f=0;f<3;f++) {
+    grid[f] = [];
+    for(let c=0;c<3;c++) {
+      // Aplicar bias de la config (si existe)
+      let pool = SLOTS_POOL;
+      if (_slotsConfig?.biasComun) {
+        // Reducir peso de símbolos raros según bias (0-100, más alto = más difícil)
+        const factor = _slotsConfig.biasComun / 100;
+        const poolFiltrado = [];
+        SLOTS_SIMBOLOS.forEach(s => {
+          const pesoAjustado = s.rareza === 'común' ? Math.round(s.peso*(1+factor)) : Math.max(1,Math.round(s.peso*(1-factor)));
+          for(let i=0;i<pesoAjustado;i++) poolFiltrado.push(s);
+        });
+        pool = poolFiltrado;
+      }
+      grid[f][c] = pool[Math.floor(Math.random()*pool.length)];
+    }
+  }
 
-  // Animación girar
+  // Animación: mostrar símbolos random en loop
   let frame = 0;
   const spinInterval = setInterval(() => {
-    reels.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
-    });
-    if (++frame > 15) clearInterval(spinInterval);
-  }, 60);
+    for(let f=0;f<3;f++) for(let c=0;c<3;c++) {
+      const el = document.getElementById('sr'+f+c);
+      if (el) el.textContent = SLOTS_POOL[Math.floor(Math.random()*SLOTS_POOL.length)].e;
+    }
+    if (++frame > 18) clearInterval(spinInterval);
+  }, 55);
 
-  // Revelar escalonado
-  setTimeout(() => { const e=document.getElementById('slotReel0'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[0]]; }, 700);
-  setTimeout(() => { const e=document.getElementById('slotReel1'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[1]]; }, 950);
+  // Revelar columna a columna con escalonado
+  const revelarColumna = (col, delay) => {
+    setTimeout(() => {
+      for(let f=0;f<3;f++) {
+        const el = document.getElementById('sr'+f+col);
+        if (el) el.textContent = grid[f][col].e;
+      }
+    }, delay);
+  };
+
+  revelarColumna(0, 700);
+  revelarColumna(1, 950);
+  revelarColumna(2, 1200);
+
   setTimeout(() => {
     try {
-      const e=document.getElementById('slotReel2'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[2]];
+      // ── Evaluar líneas ganadoras ──────────────────
+      const combos = _slotsCombos();
+      let mejorCombo = null;
+      let lineasGanadoras = [];
 
-      const s = resultado.map(i => SLOTS_SIMBOLOS[i]);
-      const msgEl = document.getElementById('slotsMensaje');
-      let puntos = 0, msg = '';
+      // Verificar cada línea
+      for(const linea of SLOTS_LINEAS) {
+        const [f0,c0,f1,c1,f2,c2] = linea;
+        const s = [grid[f0][c0], grid[f1][c1], grid[f2][c2]];
 
-      if (s[0]===s[1] && s[1]===s[2]) {
-        if (s[0]==='🔥') {
-          puntos = 1000; msg = '🔥 ¡SUPER JACKPOT! +1000 pts';
-          reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FF4D4D';el.style.boxShadow='0 0 16px rgba(255,77,77,.6)';} });
-          if (msgEl) msgEl.style.color = '#FF4D4D';
-        } else {
-          puntos = 500; msg = '🎉 ¡JACKPOT! +500 pts';
-          reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FFD700';el.style.boxShadow='0 0 16px rgba(255,215,0,.5)';} });
-          if (msgEl) msgEl.style.color = '#FFD700';
+        // ¿Triple igual?
+        if (s[0].e === s[1].e && s[1].e === s[2].e) {
+          const sym = s[0];
+          let comboId;
+          if (sym.e === '💎') comboId = 'mega';
+          else if (sym.e === '⭐') comboId = 'jackpot';
+          else if (sym.e === '🍔') comboId = 'burger3';
+          else if (sym.e === '🍕') comboId = 'pizza3';
+          else if (sym.e === '🌮') comboId = 'taco3';
+          else comboId = 'papas3';
+
+          const combo = combos.find(c=>c.id===comboId);
+          if (combo) {
+            lineasGanadoras.push({ linea, combo, nivel: combo.nivel });
+            if (!mejorCombo || combo.pts > mejorCombo.pts) mejorCombo = combo;
+          }
         }
-      } else if (s[0]===s[1] || s[1]===s[2] || s[0]===s[2]) {
-        puntos = 100; msg = '✨ ¡Dos iguales! +100 pts';
-        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--turquesa)';el.style.boxShadow='';} });
-        if (msgEl) msgEl.style.color = 'var(--turquesa)';
-      } else {
-        msg = slotsFichas > 0 ? '😅 Sin suerte… ¡otra vez!' : '😢 Sin fichas';
-        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
-        if (msgEl) msgEl.style.color = '#555';
       }
 
-      if (puntos > 0) {
-        slotsScore += puntos;
+      // ¿Par en línea central? (solo si no hay triple)
+      if (!mejorCombo) {
+        const central = [grid[1][0], grid[1][1], grid[1][2]];
+        const conteo = {};
+        central.forEach(s => { conteo[s.e] = (conteo[s.e]||0)+1; });
+        const parEntry = Object.entries(conteo).find(([,v])=>v>=2);
+        if (parEntry) {
+          const sym = SLOTS_SIMBOLOS.find(s=>s.e===parEntry[0]);
+          const esRaro = sym && (sym.rareza==='raro'||sym.rareza==='épico'||sym.rareza==='legendario');
+          const combo = combos.find(c=>c.id===(esRaro?'par_raro':'par'));
+          if (combo) {
+            lineasGanadoras.push({ linea: [1,0,1,1,1,2], combo, nivel: combo.nivel });
+            mejorCombo = combo;
+          }
+        }
+      }
+
+      // ── Aplicar resultado ─────────────────────────
+      if (mejorCombo) {
+        _slotsGanasSesion++;
+        const pts = mejorCombo.pts;
+        slotsScore += pts;
+
+        // Fichas bonus
+        if (mejorCombo.fichas > 0) {
+          slotsFichas += mejorCombo.fichas;
+          _slotsFichasGanadas += mejorCombo.fichas;
+          usuarioActual.fichasSlots = slotsFichas;
+          updateDoc(ref, { fichasSlots: slotsFichas }).catch(()=>{});
+        }
+
+        // Récord
         if (slotsScore > slotsHiScore) {
           slotsHiScore = slotsScore;
-          if (usuarioActual && ref) {
-            try { updateDoc(ref, { recordSlots: slotsHiScore }); usuarioActual.recordSlots = slotsHiScore; } catch(_e) {}
-          } else {
-            localStorage.setItem('slotsHiC', slotsHiScore);
-          }
+          usuarioActual.recordSlots = slotsHiScore;
+          updateDoc(ref, { recordSlots: slotsHiScore }).catch(()=>{});
           if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('slots', slotsScore);
         }
+
+        // Registrar estadísticas en Firebase
+        const statsRef = doc(db,'config','slotsStats');
+        getDoc(statsRef).then(snap => {
+          const d = snap.exists() ? snap.data() : {};
+          updateDoc(statsRef, {
+            totalSpins:    (d.totalSpins||0) + 1,
+            totalGanados:  (d.totalGanados||0) + 1,
+            fichasOtorgadas: (d.fichasOtorgadas||0) + (mejorCombo.fichas||0),
+            ptsOtorgados:  (d.ptsOtorgados||0) + pts,
+          }).catch(()=>setDoc(statsRef,{ totalSpins:1, totalGanados:1, fichasOtorgadas:mejorCombo.fichas||0, ptsOtorgados:pts }));
+        });
+
+        // Animación líneas ganadoras
+        const nivelMax = lineasGanadoras[0]?.nivel || 'bajo';
+        lineasGanadoras.forEach(({ linea, nivel }) => {
+          const [f0,c0,f1,c1,f2,c2] = linea;
+          [[f0,c0],[f1,c1],[f2,c2]].forEach(([f,c]) => {
+            const el = document.getElementById('sr'+f+c);
+            if (el) el.classList.add(nivel==='mega'?'win-mega':nivel==='jackpot'||nivel==='alto'?'win-jackpot':'win-line');
+          });
+        });
+
+        // Mensaje y banner
+        if (msgEl) { msgEl.textContent = mejorCombo.label + ' +' + pts + ' pts'; msgEl.style.color = mejorCombo.color; }
+        const banner = document.getElementById('slotsPremioBanner');
+        const bannerTexto = document.getElementById('slotsPremioBannerTexto');
+        if (banner && bannerTexto) {
+          let txt = mejorCombo.label + ' · +' + pts + ' puntos';
+          if (mejorCombo.fichas > 0) txt += ' · +' + mejorCombo.fichas + ' ficha' + (mejorCombo.fichas>1?'s':'') + ' recuperada' + (mejorCombo.fichas>1?'s':'');
+          bannerTexto.textContent = txt;
+          banner.style.display = 'block';
+          banner.style.borderColor = mejorCombo.color;
+          bannerTexto.style.color = mejorCombo.color;
+        }
+
+        // Vibración según nivel
+        try {
+          if (nivelMax==='mega') navigator.vibrate?.([200,100,200,100,400]);
+          else if (nivelMax==='jackpot'||nivelMax==='alto') navigator.vibrate?.([100,50,200]);
+          else navigator.vibrate?.(80);
+        } catch(_){}
+
+        setTimeout(() => {
+          for(let f=0;f<3;f++) for(let c=0;c<3;c++) {
+            const el = document.getElementById('sr'+f+c);
+            if (el) el.classList.remove('win-line','win-jackpot','win-mega');
+          }
+        }, 2000);
+
+      } else {
+        // Pierde
+        if (msgEl) {
+          const frases = ['😅 ¡Suerte la próxima!','💨 Casi…','🎲 Sin suerte','😤 ¡Otra vez!'];
+          msgEl.textContent = slotsFichas > 0 ? frases[Math.floor(Math.random()*frases.length)] : '😢 Sin fichas';
+          msgEl.style.color = '#444';
+        }
+
+        // Registrar spin perdedor en stats
+        const statsRef = doc(db,'config','slotsStats');
+        getDoc(statsRef).then(snap => {
+          const d = snap.exists() ? snap.data() : {};
+          updateDoc(statsRef, { totalSpins: (d.totalSpins||0)+1 })
+            .catch(()=>setDoc(statsRef,{ totalSpins:1, totalGanados:0, fichasOtorgadas:0, ptsOtorgados:0 }));
+        });
       }
 
-      if (msgEl) msgEl.textContent = msg;
-
-      setTimeout(() => {
-        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
-      }, 1500);
     } catch(err) {
       console.error('slots error:', err);
     } finally {
-      // Siempre desbloquear, pase lo que pase
       slotsSpinning = false;
       slotsActualizarUI();
     }
-  }, 1200);
-}
-
+  }, 1400);
+};
 
 // Llamar cuando cambia el récord en cualquier juego
 window.notificarRecordJuego = function(juego, nuevoRecord) {
