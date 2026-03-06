@@ -673,7 +673,13 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
 
 
-    <div id="horariosBanner" style="display:none;" class="horarios-banner">
+    <div id="sorteosBtnWrap" style="display:none;padding:0 0 10px;">
+    <button onclick="window.toggleZonaSorteos()" id="btnSorteoToggle"
+      style="background:linear-gradient(135deg,#2a1000,#1a0800);border:1.5px solid var(--naranja);color:var(--naranja);border-radius:20px;padding:9px 22px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;transition:all .2s;width:100%;">
+      🎟️ VER SORTEO ACTIVO
+    </button>
+  </div>
+  <div id="horariosBanner" style="display:none;" class="horarios-banner">
     <div class="horarios-header" onclick="window.toggleHorarios()">
       <span class="horarios-titulo">🕐 Horarios</span>
       <span class="horarios-chevron" id="horariosChevron">▼</span>
@@ -689,13 +695,6 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   <div id="zonaJuegos" style="padding:16px 0 100px;">
     <div style="text-align:center;margin-bottom:12px;">
       <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">🎮 Mientras esperás</div>
-      <!-- Botón sorteos -->
-      <div id="sorteosBtnWrap" style="display:none;margin-bottom:10px;">
-        <button onclick="window.toggleZonaSorteos()" id="btnSorteoToggle"
-          style="background:linear-gradient(135deg,#2a1000,#1a0800);border:1.5px solid var(--naranja);color:var(--naranja);border-radius:20px;padding:9px 22px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;transition:all .2s;width:100%;max-width:280px;">
-          🎟️ VER SORTEO ACTIVO
-        </button>
-      </div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
         <button onclick="window.elegirJuego('tetris')" id="btnJuegoTetris" style="background:var(--gris-mid);border:2px solid var(--turquesa);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🧱 Tetris</button>
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
@@ -3118,7 +3117,7 @@ window.confirmarSeleccionCliente = async function() {
     msgEl.style.color = 'var(--verde)';
     msgEl.textContent = '✅ Reservaste ' + cant + ' número' + (cant!==1?'s':'') + '! Comunicate por WhatsApp para proceder al pago.';
     _seleccionActual.clear();
-    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 6000);
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 10000);
   } catch(e) {
     msgEl.style.color = 'var(--rojo)';
     msgEl.textContent = '❌ Error al reservar, intentá de nuevo';
