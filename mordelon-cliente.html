@@ -240,7 +240,9 @@
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
         <button onclick="window.elegirJuego('2048')" id="btnJuego2048" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🔢 2048</button>
         <button onclick="window.elegirJuego('dino')" id="btnJuegoDino" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🦕 Dino</button>
-        <button onclick="window.elegirJuego('slots')" id="btnJuegoSlots" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🎰 Slots</button>
+        
+<button id="btnJuegoInvaders" class="juego-selector-btn" onclick="window.elegirJuego('invaders')">👾 Invaders</button>
+<button onclick="window.elegirJuego('slots')" id="btnJuegoSlots" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🎰 Slots</button>
         <button onclick="window.elegirJuego('minas')" id="btnJuegoMinas" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">💣 Minas</button>
       </div>
     </div>
@@ -377,7 +379,33 @@
     <!-- ══════════════════════════════════════════════════════ -->
     <!-- TRAGALLAMA — Sistema Jackpot Mordelón                  -->
     <!-- ══════════════════════════════════════════════════════ -->
-    <div id="juegoSlots" style="display:none;">
+    
+<div id="juegoInvaders" style="display:none;">
+  <div style="text-align:center;margin-bottom:8px;">
+    <div style="display:flex;justify-content:center;gap:16px;margin-bottom:6px;">
+      <div>
+        <div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Puntos</div>
+        <div id="invadersScore" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--turquesa);">0</div>
+      </div>
+      <div>
+        <div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Récord</div>
+        <div id="invadersHi" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--naranja);">0</div>
+      </div>
+      <div>
+        <div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Vidas</div>
+        <div id="invadersLives" style="font-size:0.9rem;">🔥🔥🔥</div>
+      </div>
+    </div>
+  </div>
+  <canvas id="invadersCanvas" width="320" height="220" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
+    <button onclick="window.invadersReset()" style="background:rgba(61,191,184,.1);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">↺ Reiniciar</button>
+  </div>
+  <div style="text-align:center;margin-top:6px;font-size:0.6rem;color:#444;">
+    ← → Mover · Espacio Disparar · Deslizá en el canvas para mover
+  </div>
+</div>
+<div id="juegoSlots" style="display:none;">
       <div id="slotsJuego" style="display:block;">
 
         <!-- CSS inline del juego -->
@@ -692,5 +720,7 @@
 <script src="js/juego-2048.js"></script>
 <script src="js/juego-dino.js"></script>
 
+
+<script src="js/juego-invaders.js"></script>
 </body>
 </html>
