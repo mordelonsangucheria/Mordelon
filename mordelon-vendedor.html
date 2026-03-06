@@ -3991,20 +3991,14 @@ window.exportarParticipantes = function() {
     }
   });
 
-  let txt = '=== SORTEO: ' + _sorteoActual.nombre + ' ===
-';
-  txt += 'Precio: $' + _sorteoActual.precio + '/boleto
-
-';
+  let txt = '=== SORTEO: ' + _sorteoActual.nombre + ' ===\n';
+  txt += 'Precio: $' + _sorteoActual.precio + '/boleto\n\n';
   Object.entries(agrupados).sort((a,b)=>b[1].length-a[1].length).forEach(([c,nums])=>{
-    txt += c + ': N°' + nums.sort((a,b)=>a-b).join(', ') + ' (' + nums.length + ' boleto' + (nums.length!==1?'s':'') + ')
-';
+    txt += c + ': N\u00b0' + nums.sort((a,b)=>a-b).join(', ') + ' (' + nums.length + ' boleto' + (nums.length!==1?'s':'') + ')\n';
   });
   const totalConf = Object.values(numeros).filter(n=>n.estado==='confirmado').length;
-  txt += '
-Total confirmados: ' + totalConf + ' de ' + (_sorteoActual.cupo||'?');
-  txt += '
-Recaudado: $' + (totalConf * (_sorteoActual.precio||0)).toLocaleString('es-AR');
+  txt += '\nTotal confirmados: ' + totalConf + ' de ' + (_sorteoActual.cupo||'?');
+  txt += '\nRecaudado: $' + (totalConf * (_sorteoActual.precio||0)).toLocaleString('es-AR');
 
   const blob = new Blob([txt],{type:'text/plain;charset=utf-8'});
   const a = document.createElement('a');
