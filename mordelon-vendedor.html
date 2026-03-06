@@ -972,7 +972,10 @@ select.mac-field option { background:#222; }
 <div id="panel-usuarios" class="panel">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
     <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);letter-spacing:2px;">👥 USUARIOS REGISTRADOS</div>
-    <button onclick="window.cargarUsuarios()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:6px 14px;font-size:0.75rem;cursor:pointer;">🔄 Actualizar</button>
+    <div style="display:flex;gap:6px;">
+      <button onclick="window.cargarUsuarios()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:6px 12px;font-size:0.75rem;cursor:pointer;">🔄 Actualizar</button>
+      <button onclick="window.exportarUsuarios()" style="background:var(--gris-mid);border:1.5px solid var(--verde);color:var(--verde);border-radius:10px;padding:6px 12px;font-size:0.75rem;cursor:pointer;">⬇️ Exportar</button>
+    </div>
   </div>
 
   <!-- Buscador -->
@@ -1520,7 +1523,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'stock') renderStock();
   if (tab === 'menu-admin') renderMenuAdmin();
   if (tab === 'horarios') renderHorarios();
-  if (tab === 'config') { cargarConfig(); renderUsuarios(); generarQR(); }
+  if (tab === 'config') { cargarConfig(); renderUsuariosVendedor(); generarQR(); }
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
@@ -1642,7 +1645,7 @@ window.editarNombreUsuario = async function(idx, nombreActual) {
     document.getElementById('usuarioActualLabel').textContent = '👤 ' + nombre;
   }
   await guardarUsuarios();
-  renderUsuarios();
+  renderUsuariosVendedor();
   registrarActividad('✏️ Renombró usuario: ' + nombreViejo + ' → ' + nombre);
   showNotif('✅ Nombre actualizado');
 };
@@ -1651,7 +1654,7 @@ async function guardarUsuarios() {
   await setDoc(doc(db,'config','usuarios'), { lista: usuariosData });
 }
 
-function renderUsuarios() {
+function renderUsuariosVendedor() {
   const lista = document.getElementById('usuariosLista');
   if (!lista) return;
   lista.innerHTML = '';
@@ -1715,7 +1718,7 @@ window.cambiarPin = async function() {
   }
   user.pin = pinNuevo;
   await guardarUsuarios();
-  renderUsuarios();
+  renderUsuariosVendedor();
   document.getElementById('pinActual').value = '';
   document.getElementById('pinNuevo').value = '';
   registrarActividad('🔑 Cambió su PIN');
@@ -1731,7 +1734,7 @@ window.agregarUsuario = async function() {
   if (usuariosData.find(u => u.nombre.toLowerCase() === nombre.toLowerCase())) { showNotif('⚠️ Ese nombre ya existe'); return; }
   usuariosData.push({ nombre, pin });
   await guardarUsuarios();
-  renderUsuarios();
+  renderUsuariosVendedor();
   document.getElementById('nuevoNombre').value = '';
   document.getElementById('nuevoPin').value = '';
   registrarActividad('➕ Creó usuario: ' + nombre);
@@ -1743,7 +1746,7 @@ async function eliminarUsuario(i) {
   if (!confirm('¿Eliminar usuario ' + nombre + '?')) return;
   usuariosData.splice(i, 1);
   await guardarUsuarios();
-  renderUsuarios();
+  renderUsuariosVendedor();
   registrarActividad('🗑 Eliminó usuario: ' + nombre);
   showNotif('✅ Usuario eliminado');
 }
@@ -1752,7 +1755,7 @@ async function eliminarUsuario(i) {
 onSnapshot(doc(db,'config','usuarios'), (snap) => {
   if (snap.exists() && snap.data().lista) {
     usuariosData = snap.data().lista;
-    renderUsuarios();
+    renderUsuariosVendedor();
   }
 });
 
@@ -3416,6 +3419,38 @@ window.resetearClaveDesdeModal = async function() {
     msgEl.style.color = 'var(--rojo)';
     msgEl.textContent = '❌ Error al resetear clave';
   }
+};
+
+window.exportarUsuarios = function() {
+  if (!_usuariosTodos.length) {
+    alert('Primero cargá los usuarios con "Actualizar"');
+    return;
+  }
+  const fecha = new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
+  let txt = '=== USUARIOS MORDELÓN — ' + fecha + ' ===\n';
+  txt += 'Total: ' + _usuariosTodos.length + ' usuarios\n\n';
+  txt += '─'.repeat(40) + '\n';
+
+  _usuariosTodos.forEach((u, i) => {
+    txt += '\n#' + (i+1) + '  ' + u.nombre + '\n';
+    txt += '  Clave:     ' + (u.clave||'—') + '\n';
+    txt += '  Dirección: ' + (u.direccion||'—') + '\n';
+    txt += '  Fichas:    ' + (u.fichasSlots??0) + '\n';
+    txt += '  Récord:    ' + (u.recordSlots??0) + ' pts\n';
+    txt += '  Pedidos:   ' + (u.historialPedidos?.length||0) + '\n';
+    txt += '  Registro:  ' + (u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR') : '—') + '\n';
+    txt += '─'.repeat(40) + '\n';
+  });
+
+  txt += '\nExportado el ' + new Date().toLocaleString('es-AR');
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'usuarios-mordelon-' + fecha + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
 // Cargar usuarios automáticamente cuando se abre esa pestaña
