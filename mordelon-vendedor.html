@@ -1052,13 +1052,18 @@ select.mac-field option { background:#222; }
       <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--naranja);margin-bottom:10px;">➕ CREAR SORTEO</div>
       <input id="sorteoNombre" placeholder="Premio (ej: Combo familiar 🍔)" style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:0.78rem;margin-bottom:6px;box-sizing:border-box;">
       <input id="sorteoDescripcion" placeholder="Descripción del premio..." style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:0.78rem;margin-bottom:6px;box-sizing:border-box;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;">
         <div>
           <div style="font-size:0.6rem;color:#555;margin-bottom:3px;">PRECIO POR BOLETO</div>
           <div style="display:flex;align-items:center;background:#111;border:1px solid #333;border-radius:8px;padding:0 10px;">
             <span style="color:#555;font-size:0.82rem;">$</span>
             <input id="sorteoPrecio" type="number" value="500" min="1" style="flex:1;background:transparent;border:none;color:#fff;font-size:0.82rem;padding:7px 4px;outline:none;">
           </div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;color:#555;margin-bottom:3px;">BOLETOS DISPONIBLES</div>
+          <input id="sorteoCupo" type="number" value="100" min="1" placeholder="ej: 100"
+            style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:7px 10px;color:#fff;font-size:0.82rem;box-sizing:border-box;">
         </div>
         <div>
           <div style="font-size:0.6rem;color:#555;margin-bottom:3px;">FECHA DEL SORTEO</div>
@@ -1121,6 +1126,7 @@ select.mac-field option { background:#222; }
         <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
           <div style="font-size:0.6rem;color:#555;">BOLETOS VENDIDOS</div>
           <div id="statBoletosVendidos" style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--naranja);">0</div>
+          <div id="statCupoLabel" style="font-size:0.6rem;color:#555;"></div>
         </div>
         <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
           <div style="font-size:0.6rem;color:#555;">RECAUDADO</div>
@@ -1135,6 +1141,17 @@ select.mac-field option { background:#222; }
           <div id="statUltimoGanador" style="font-size:0.72rem;color:#aaa;margin-top:2px;">—</div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Barra de progreso del cupo -->
+  <div id="statCupoBarraWrap" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:12px;padding:12px 14px;margin-top:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:0.65rem;color:#aaa;font-family:'Righteous',cursive;">BOLETOS DISPONIBLES</div>
+      <div id="statCupoBarraPct" style="font-size:0.65rem;color:#888;"></div>
+    </div>
+    <div style="background:#222;border-radius:6px;height:8px;overflow:hidden;">
+      <div id="statCupoBarra" style="height:100%;width:0%;border-radius:6px;transition:width .8s,background .4s;"></div>
     </div>
   </div>
 
@@ -3695,16 +3712,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(t => {
     }
   });
 });
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw-vendedor.js')
-      .then(() => console.log('SW registrado'))
-      .catch(e => console.log('SW error:', e));
-  }
-</script>
 
-<script>
+
 // ═══════════════════════════════════════════════════════
 //  SISTEMA DE SORTEOS — MORDELÓN VENDEDOR
 // ═══════════════════════════════════════════════════════
@@ -3754,6 +3763,7 @@ function _actualizarUIVendedor() {
           <span style="background:#1a1a00;color:var(--naranja);border-radius:6px;padding:2px 8px;font-size:0.65rem;">$${(s.precio||0).toLocaleString('es-AR')}/boleto</span>
           ${s.fecha?`<span style="background:#111;color:#888;border-radius:6px;padding:2px 8px;font-size:0.65rem;">📅 ${new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>`:''}
           <span style="background:${estaActivo?'#0a1a0a':'#1a0a0a'};color:${estaActivo?'var(--verde)':'var(--rojo)'};border-radius:6px;padding:2px 8px;font-size:0.65rem;">${estaActivo?'● ACTIVO':'● PAUSADO'}</span>
+          ${s.cupo?`<span style="background:#111;color:#888;border-radius:6px;padding:2px 8px;font-size:0.65rem;">🎟️ ${totalBoletos}/${s.cupo} boletos</span>`:''}
         </div>
       </div>
     </div>`;
@@ -3767,6 +3777,20 @@ function _actualizarUIVendedor() {
   if (btnSort) btnSort.disabled = !estaActivo || Object.keys(participantes).length === 0;
 
   document.getElementById('statBoletosVendidos').textContent = totalBoletos;
+  const cupoMax = s.cupo || 0;
+  const cupoLabel = document.getElementById('statCupoLabel');
+  if (cupoLabel) cupoLabel.textContent = cupoMax ? 'de ' + cupoMax : '';
+  // Barra de progreso del cupo
+  const barraEl = document.getElementById('statCupoBarra');
+  if (barraEl && cupoMax) {
+    const pct = Math.min(100, Math.round((totalBoletos / cupoMax) * 100));
+    barraEl.style.width = pct + '%';
+    barraEl.style.background = pct >= 90 ? 'var(--rojo)' : pct >= 60 ? 'var(--naranja)' : 'var(--verde)';
+    document.getElementById('statCupoBarraWrap').style.display = 'block';
+    document.getElementById('statCupoBarraPct').textContent = pct + '% vendido · ' + (cupoMax - totalBoletos) + ' disponibles';
+  } else if (barraEl) {
+    document.getElementById('statCupoBarraWrap').style.display = 'none';
+  }
   document.getElementById('statRecaudado').textContent = '$' + recaudado.toLocaleString('es-AR');
   document.getElementById('statParticipantes').textContent = cantPart;
   if (s.ultimoGanador) document.getElementById('statUltimoGanador').textContent = s.ultimoGanador;
@@ -3805,16 +3829,18 @@ window.crearSorteo = async function() {
   const desc   = document.getElementById('sorteoDescripcion').value.trim();
   const precio = parseInt(document.getElementById('sorteoPrecio').value) || 0;
   const fecha  = document.getElementById('sorteoFecha').value;
+  const cupo   = parseInt(document.getElementById('sorteoCupo').value) || 0;
 
   if (!nombre) { showNotif('⚠️ Ingresá un nombre para el premio'); return; }
   if (!precio) { showNotif('⚠️ Ingresá el precio del boleto'); return; }
+  if (!cupo)   { showNotif('⚠️ Ingresá la cantidad máxima de boletos'); return; }
   if (_sorteoActual) { if (!confirm('¿Reemplazar el sorteo actual? Los participantes se perderán.')) return; }
 
   const emojis = ['🎟️','🍔','🏆','🎁','🎉','🍕','🌟'];
   const emoji  = emojis[Math.floor(Math.random()*emojis.length)];
 
   await setDoc(doc(db, 'sorteos', 'actual'), {
-    nombre, descripcion: desc, precio, fecha: fecha||'', emoji,
+    nombre, descripcion: desc, precio, cupo, fecha: fecha||'', emoji,
     activo: true,
     participantes: {},
     ultimoGanador: null,
@@ -3882,8 +3908,17 @@ window.cargarBoletosSorteo = async function() {
   const participantes = { ...(_sorteoActual.participantes || {}) };
   const actual = participantes[nombre] || { cantidad: 0, numeros: [] };
 
-  // Generar números correlativos únicos
+  // Verificar cupo disponible
+  const cupoMax = _sorteoActual.cupo || 0;
   const todosNumeros = Object.values(participantes).flatMap(p => p.numeros||[]);
+  const boletosUsados = todosNumeros.length;
+  if (cupoMax && (boletosUsados + _sorteoCantidad) > cupoMax) {
+    const disponibles = cupoMax - boletosUsados;
+    if (disponibles <= 0) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ ¡Sorteo lleno! No quedan boletos disponibles'; return; }
+    msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Solo quedan ' + disponibles + ' boleto' + (disponibles!==1?'s':'') + ' disponibles'; return;
+  }
+
+  // Generar números correlativos únicos
   const maxNum = todosNumeros.length ? Math.max(...todosNumeros) : 0;
   const nuevosNumeros = Array.from({length:_sorteoCantidad}, (_,i) => maxNum+i+1);
 
@@ -4030,6 +4065,14 @@ window.cerrarRuleta = function() {
   if (_ruletaAnimando) return;
   document.getElementById('ruletaModal').style.display = 'none';
 };
+
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-vendedor.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  }
 </script>
 
 </body>

@@ -2825,6 +2825,143 @@ window.minasInit      = minasInit;
 window.minasReset     = function() { minasInit(); };
 
 
+
+
+
+// ═══════════════════════════════════════════════════════
+//  SISTEMA DE SORTEOS — MORDELÓN CLIENTE
+// ═══════════════════════════════════════════════════════
+
+let _sorteoData = null;
+
+// Botón de acceso al sorteo — se inserta dinámicamente junto a los juegos
+(function insertarBotonSorteo() {
+  // Esperar a que el DOM esté listo
+  const tryInsert = () => {
+    const zona = document.getElementById('zonaSorteos');
+    const juegosZona = document.getElementById('zonaJuegos');
+    if (!zona || !juegosZona) { setTimeout(tryInsert, 200); return; }
+  };
+  tryInsert();
+})();
+
+// Listener en tiempo real del sorteo
+onSnapshot(doc(db, 'sorteos', 'actual'), (snap) => {
+  _sorteoData = snap.exists() ? snap.data() : null;
+  _renderSorteoCliente();
+});
+
+function _renderSorteoCliente() {
+  const zonaSorteos  = document.getElementById('zonaSorteos');
+  const card         = document.getElementById('sorteoClienteCard');
+  const contenido    = document.getElementById('sorteoClienteContenido');
+  const boletosCard  = document.getElementById('sorteoBoletosMiosCard');
+  const histCard     = document.getElementById('sorteoHistorialCard');
+  if (!zonaSorteos) return;
+
+  const s = _sorteoData;
+  const btnWrap = document.getElementById('sorteosBtnWrap');
+  if (btnWrap) btnWrap.style.display = (s && s.activo !== false) ? 'block' : 'none';
+
+  if (!s || s.activo === false) {
+    contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
+      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') +
+      '</div>';
+    boletosCard.style.display = 'none';
+    histCard.style.display = 'none';
+    return;
+  }
+
+  // Card principal del sorteo
+  const totalBoletos = Object.values(s.participantes||{}).reduce((a,b)=>a+(b.cantidad||0),0);
+  const cantPart     = Object.keys(s.participantes||{}).length;
+  const cupoMax      = s.cupo || 0;
+  const disponibles  = cupoMax ? cupoMax - totalBoletos : null;
+  const fechaStr     = s.fecha ? new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) : null;
+
+  contenido.innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:2.5rem;margin-bottom:6px;">${s.emoji||'🎟️'}</div>
+      <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);">${s.nombre}</div>
+      ${s.descripcion ? `<div style="font-size:0.75rem;color:#888;margin-top:4px;">${s.descripcion}</div>` : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Precio</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--naranja);">$${(s.precio||0).toLocaleString('es-AR')}</div>
+      </div>
+      <div style="background:rgba(61,191,184,.1);border:1px solid rgba(61,191,184,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">${cupoMax?'Disponibles':'Vendidos'}</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:${disponibles===0?'var(--rojo)':'var(--turquesa)'};">\n          ${cupoMax?(disponibles<=0?'¡LLENO!':disponibles):totalBoletos}</div>
+      </div>
+      <div style="background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Jugadores</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--verde);">${cantPart}</div>
+      </div>
+    </div>
+    ${fechaStr ? `<div style="text-align:center;font-size:0.75rem;color:#666;margin-bottom:12px;">📅 Sorteo: ${fechaStr}</div>` : ''}
+    ${cupoMax ? `<div style="margin-bottom:10px;">
+      <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:4px;">
+        <div style="height:100%;width:${Math.min(100,Math.round(totalBoletos/cupoMax*100))}%;background:${disponibles===0?'var(--rojo)':disponibles<10?'var(--naranja)':'var(--verde)'};border-radius:6px;transition:width 1s;"></div>
+      </div>
+      <div style="font-size:0.65rem;color:#666;text-align:center;">${disponibles<=0?'¡Sorteo completo!':disponibles+' boletos disponibles de '+cupoMax}</div>
+    </div>` : ''}
+    <div style="background:#0a0a00;border:1px dashed rgba(255,140,0,.4);border-radius:10px;padding:10px;text-align:center;font-size:0.72rem;color:#888;">
+      💳 Para participar, pedile a Mordelón que te cargue boletos en tu próximo pedido
+    </div>`;
+
+  // Mis boletos (si está logueado)
+  if (usuarioActual?.nombre) {
+    const misDatos = (s.participantes||{})[usuarioActual.nombre];
+    if (misDatos && misDatos.cantidad > 0) {
+      boletosCard.style.display = 'block';
+      const pct = totalBoletos > 0 ? Math.round((misDatos.cantidad / totalBoletos) * 100) : 0;
+      document.getElementById('sorteoBoletosMiosInfo').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Righteous',cursive;font-size:1.6rem;color:var(--naranja);">${misDatos.cantidad}</div>
+            <div style="font-size:0.68rem;color:#666;">boleto${misDatos.cantidad!==1?'s':''}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--verde);">${pct}%</div>
+            <div style="font-size:0.68rem;color:#666;">de chances</div>
+          </div>
+        </div>
+        <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px;">
+          <div style="background:linear-gradient(90deg,var(--naranja),var(--verde));height:100%;width:${pct}%;border-radius:6px;transition:width 1s;"></div>
+        </div>
+        <div style="font-size:0.65rem;color:#555;">Tus números: N°${(misDatos.numeros||[]).join(' · N°')}</div>`;
+    } else {
+      boletosCard.style.display = 'none';
+    }
+  } else {
+    boletosCard.style.display = 'none';
+  }
+
+  // Último ganador
+  if (s.ultimoGanador) {
+    histCard.style.display = 'block';
+    document.getElementById('sorteoUltimoGanadorCliente').textContent = '🏆 ' + s.ultimoGanador;
+  } else {
+    histCard.style.display = 'none';
+  }
+}
+
+// Re-render cuando el usuario se loguea
+const _origLoginCallback = window._onLoginCallback;
+window._onLoginCallback = function(u) {
+  if (_origLoginCallback) _origLoginCallback(u);
+  _renderSorteoCliente();
+};
+
+// Mostrar/ocultar zona de sorteos
+window.toggleZonaSorteos = function() {
+  const z = document.getElementById('zonaSorteos');
+  if (!z) return;
+  const visible = z.style.display !== 'none';
+  z.style.display = visible ? 'none' : 'block';
+};
+
 </script>
 <script>
 // ===================== SELECTOR DE JUEGO =====================
@@ -3279,134 +3416,6 @@ DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
   },{passive:true});
 })();
 
-</script>
-
-<script>
-// ═══════════════════════════════════════════════════════
-//  SISTEMA DE SORTEOS — MORDELÓN CLIENTE
-// ═══════════════════════════════════════════════════════
-
-let _sorteoData = null;
-
-// Botón de acceso al sorteo — se inserta dinámicamente junto a los juegos
-(function insertarBotonSorteo() {
-  // Esperar a que el DOM esté listo
-  const tryInsert = () => {
-    const zona = document.getElementById('zonaSorteos');
-    const juegosZona = document.getElementById('zonaJuegos');
-    if (!zona || !juegosZona) { setTimeout(tryInsert, 200); return; }
-  };
-  tryInsert();
-})();
-
-// Listener en tiempo real del sorteo
-onSnapshot(doc(db, 'sorteos', 'actual'), (snap) => {
-  _sorteoData = snap.exists() ? snap.data() : null;
-  _renderSorteoCliente();
-});
-
-function _renderSorteoCliente() {
-  const zonaSorteos  = document.getElementById('zonaSorteos');
-  const card         = document.getElementById('sorteoClienteCard');
-  const contenido    = document.getElementById('sorteoClienteContenido');
-  const boletosCard  = document.getElementById('sorteoBoletosMiosCard');
-  const histCard     = document.getElementById('sorteoHistorialCard');
-  if (!zonaSorteos) return;
-
-  const s = _sorteoData;
-  const btnWrap = document.getElementById('sorteosBtnWrap');
-  if (btnWrap) btnWrap.style.display = (s && s.activo !== false) ? 'block' : 'none';
-
-  if (!s || s.activo === false) {
-    contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
-      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') +
-      '</div>';
-    boletosCard.style.display = 'none';
-    histCard.style.display = 'none';
-    return;
-  }
-
-  // Card principal del sorteo
-  const totalBoletos = Object.values(s.participantes||{}).reduce((a,b)=>a+(b.cantidad||0),0);
-  const cantPart     = Object.keys(s.participantes||{}).length;
-  const fechaStr     = s.fecha ? new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) : null;
-
-  contenido.innerHTML = `
-    <div style="text-align:center;margin-bottom:16px;">
-      <div style="font-size:2.5rem;margin-bottom:6px;">${s.emoji||'🎟️'}</div>
-      <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);">${s.nombre}</div>
-      ${s.descripcion ? `<div style="font-size:0.75rem;color:#888;margin-top:4px;">${s.descripcion}</div>` : ''}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-      <div style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Precio</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--naranja);">$${(s.precio||0).toLocaleString('es-AR')}</div>
-      </div>
-      <div style="background:rgba(61,191,184,.1);border:1px solid rgba(61,191,184,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Boletos</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--turquesa);">${totalBoletos}</div>
-      </div>
-      <div style="background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Jugadores</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--verde);">${cantPart}</div>
-      </div>
-    </div>
-    ${fechaStr ? `<div style="text-align:center;font-size:0.75rem;color:#666;margin-bottom:12px;">📅 Sorteo: ${fechaStr}</div>` : ''}
-    <div style="background:#0a0a00;border:1px dashed rgba(255,140,0,.4);border-radius:10px;padding:10px;text-align:center;font-size:0.72rem;color:#888;">
-      💳 Para participar, pedile a Mordelón que te cargue boletos en tu próximo pedido
-    </div>`;
-
-  // Mis boletos (si está logueado)
-  if (usuarioActual?.nombre) {
-    const misDatos = (s.participantes||{})[usuarioActual.nombre];
-    if (misDatos && misDatos.cantidad > 0) {
-      boletosCard.style.display = 'block';
-      const pct = totalBoletos > 0 ? Math.round((misDatos.cantidad / totalBoletos) * 100) : 0;
-      document.getElementById('sorteoBoletosMiosInfo').innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div>
-            <div style="font-family:'Righteous',cursive;font-size:1.6rem;color:var(--naranja);">${misDatos.cantidad}</div>
-            <div style="font-size:0.68rem;color:#666;">boleto${misDatos.cantidad!==1?'s':''}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--verde);">${pct}%</div>
-            <div style="font-size:0.68rem;color:#666;">de chances</div>
-          </div>
-        </div>
-        <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px;">
-          <div style="background:linear-gradient(90deg,var(--naranja),var(--verde));height:100%;width:${pct}%;border-radius:6px;transition:width 1s;"></div>
-        </div>
-        <div style="font-size:0.65rem;color:#555;">Tus números: N°${(misDatos.numeros||[]).join(' · N°')}</div>`;
-    } else {
-      boletosCard.style.display = 'none';
-    }
-  } else {
-    boletosCard.style.display = 'none';
-  }
-
-  // Último ganador
-  if (s.ultimoGanador) {
-    histCard.style.display = 'block';
-    document.getElementById('sorteoUltimoGanadorCliente').textContent = '🏆 ' + s.ultimoGanador;
-  } else {
-    histCard.style.display = 'none';
-  }
-}
-
-// Re-render cuando el usuario se loguea
-const _origLoginCallback = window._onLoginCallback;
-window._onLoginCallback = function(u) {
-  if (_origLoginCallback) _origLoginCallback(u);
-  _renderSorteoCliente();
-};
-
-// Mostrar/ocultar zona de sorteos
-window.toggleZonaSorteos = function() {
-  const z = document.getElementById('zonaSorteos');
-  if (!z) return;
-  const visible = z.style.display !== 'none';
-  z.style.display = visible ? 'none' : 'block';
-};
 </script>
 
 </body>
