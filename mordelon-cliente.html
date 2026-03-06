@@ -2002,7 +2002,7 @@ function actualizarBarraRecompensa() {
     snake:  parseInt(localStorage.getItem('snakeHiC') || '0'),
     '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
     dino:   parseInt(localStorage.getItem('dinoHiC') || '0'),
-    minas:  parseInt(localStorage.getItem('minasHiC') || '0'),
+    minas:  parseInt(localStorage.getItem('minasHiC_score') || '0'),
     slots:  parseInt(localStorage.getItem('slotsHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
@@ -2784,10 +2784,6 @@ function minasRender(boomR, boomC) {
 
 window.minasDificultad = function(d) {
   mDif = d;
-  ['facil','medio','dificil'].forEach(k => {
-    const btn = document.getElementById('minasBtnFacil'.replace('facil', '') + 'Btn' + k.charAt(0).toUpperCase() + k.slice(1));
-    // Fallback naming
-  });
   document.getElementById('minasBtnFacil').style.background = d==='facil' ? 'rgba(45,198,83,.2)' : 'var(--gris-mid)';
   document.getElementById('minasBtnFacil').style.borderColor = d==='facil' ? 'var(--verde)' : 'var(--gris-light)';
   document.getElementById('minasBtnFacil').style.color = d==='facil' ? 'var(--verde)' : '#888';
