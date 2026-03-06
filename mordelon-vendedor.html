@@ -1043,7 +1043,12 @@ select.mac-field option { background:#222; }
 
     <!-- Card sorteo activo -->
     <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;">
-      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:10px;">🎟️ SORTEO ACTIVO</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);">🎟️ SORTEO ACTIVO</div>
+        <button onclick="window.toggleMensajeSinSorteo()" id="btnToggleSinSorteo"
+          title="Mostrar/ocultar mensaje cuando no hay sorteo"
+          style="background:transparent;border:1px solid #333;color:#555;border-radius:8px;padding:3px 8px;font-size:0.65rem;cursor:pointer;">👁️ Ocultar msg</button>
+      </div>
       <div id="sorteoActivoInfo"><div style="color:#555;font-size:0.78rem;text-align:center;padding:20px 0;">Sin sorteo activo</div></div>
     </div>
 
@@ -4008,6 +4013,25 @@ window.exportarParticipantes = function() {
 };
 
 window.renderSorteoPanel = function() { _actualizarUIVendedor(); };
+
+// Toggle mensaje "sin sorteo activo" en cliente
+let _sinSorteoOculto = false;
+window.toggleMensajeSinSorteo = async function() {
+  _sinSorteoOculto = !_sinSorteoOculto;
+  const btn = document.getElementById('btnToggleSinSorteo');
+  if (btn) btn.textContent = _sinSorteoOculto ? '👁️ Mostrar msg' : '👁️ Ocultar msg';
+  await setDoc(doc(db, 'config', 'sorteoUI'), { ocultarSinSorteo: _sinSorteoOculto });
+  showNotif(_sinSorteoOculto ? '✅ Mensaje oculto para clientes' : '✅ Mensaje visible para clientes');
+};
+// Cargar estado inicial del toggle
+getDoc(doc(db, 'config', 'sorteoUI')).then(snap => {
+  if (snap.exists() && snap.data().ocultarSinSorteo) {
+    _sinSorteoOculto = true;
+    const btn = document.getElementById('btnToggleSinSorteo');
+    if (btn) btn.textContent = '👁️ Mostrar msg';
+  }
+}).catch(()=>{});
+
 
 // ═══════════════════════════════════════════════════════
 //  RULETA

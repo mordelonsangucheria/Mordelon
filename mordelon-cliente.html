@@ -1793,11 +1793,7 @@ function mostrarHorarios(dias) {
   const body = document.getElementById('horariosBody');
   const chevron = document.getElementById('horariosChevron');
   banner.style.display = 'block';
-  // Abrir acordeón por defecto la primera vez
-  if (body && !body.classList.contains('abierto')) {
-    body.classList.add('abierto');
-    if (chevron) chevron.classList.add('abierto');
-  }
+  // Acordeón cerrado por defecto — el usuario lo abre con click
   lista.innerHTML = dias.map(h => `
     <div class="horario-fila">
       <span class="horario-dia">${h.dia}</span>
@@ -2877,8 +2873,21 @@ function _renderSorteoCliente() {
   if (!contenido) return;
 
   if (!s || s.activo === false) {
-    contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
-      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') + '</div>';
+    // Verificar si el vendedor quiere ocultar este mensaje
+    getDoc(doc(db, 'config', 'sorteoUI')).then(snap => {
+      const ocultar = snap.exists() && snap.data().ocultarSinSorteo;
+      const zonaSorteos = document.getElementById('zonaSorteos');
+      const btnWrap = document.getElementById('sorteosBtnWrap');
+      if (ocultar) {
+        if (zonaSorteos) zonaSorteos.style.display = 'none';
+        if (btnWrap) btnWrap.style.display = 'none';
+      } else {
+        contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
+          (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') + '</div>';
+      }
+    }).catch(() => {
+      contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">Sin sorteo activo por el momento</div>';
+    });
     if (grillaWrap) grillaWrap.style.display = 'none';
     if (boletosCard) boletosCard.style.display = 'none';
     if (histCard) histCard.style.display = 'none';
