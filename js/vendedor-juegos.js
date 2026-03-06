@@ -305,6 +305,11 @@ window.cerrarSesion = function() {
 async function registrarActividad(accion) {
   if (!usuarioActual) return;
   try {
+    const db = window._fbDB;
+    const addDoc = window._fbAddDoc;
+    const collection = window._fbCollection;
+    const serverTimestamp = window._fbServerTimestamp;
+    if (!db || !addDoc) return;
     await addDoc(collection(db,'actividad'), {
       usuario: usuarioActual,
       accion,
@@ -317,8 +322,18 @@ window.registrarActividad = registrarActividad;
 
 
 // CONTADOR DE VISITAS
-onSnapshot(doc(db,'config','stats'), (snap) => {
-  const visitas = snap.exists() ? (snap.data().visitas || 0) : 0;
-  const el = document.getElementById('cajaVisitas');
-  if (el) el.textContent = visitas.toLocaleString('es-AR');
-});
+(function initVisitas() {
+  const db = window._fbDB;
+  const onSnapshot = window._fbOnSnapshot;
+  const doc = window._fbDoc;
+  if (!db || !onSnapshot || !doc) {
+    // Reintentar si el módulo aún no cargó
+    setTimeout(initVisitas, 500);
+    return;
+  }
+  onSnapshot(doc(db,'config','stats'), (snap) => {
+    const visitas = snap.exists() ? (snap.data().visitas || 0) : 0;
+    const el = document.getElementById('cajaVisitas');
+    if (el) el.textContent = visitas.toLocaleString('es-AR');
+  });
+})();
