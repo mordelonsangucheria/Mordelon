@@ -636,17 +636,6 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     <button id="btnCerrarSesion" onclick="window.cerrarSesionCliente()" style="display:none;background:transparent;border:1px solid #333;color:#555;border-radius:20px;padding:4px 10px;font-size:0.62rem;cursor:pointer;">Salir</button>
   </div>
   <div id="promosBanner" style="display:none;"></div>
-  <div id="horariosBanner" style="display:none;" class="horarios-banner">
-    <div class="horarios-header" onclick="window.toggleHorarios()">
-      <span class="horarios-titulo">🕐 Horarios</span>
-      <span class="horarios-chevron" id="horariosChevron">▼</span>
-    </div>
-    <div class="horarios-body" id="horariosBody">
-      <div id="horariosLista"></div>
-    </div>
-  </div>
-  <div id="menuContainer"></div>
-
   <!-- ZONA SORTEOS -->
   <div id="zonaSorteos" style="display:none;padding:16px 0 8px;">
 
@@ -681,6 +670,19 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <div id="sorteoUltimoGanadorCliente" style="font-size:0.82rem;color:var(--naranja);"></div>
     </div>
   </div>
+
+
+
+    <div id="horariosBanner" style="display:none;" class="horarios-banner">
+    <div class="horarios-header" onclick="window.toggleHorarios()">
+      <span class="horarios-titulo">🕐 Horarios</span>
+      <span class="horarios-chevron" id="horariosChevron">▼</span>
+    </div>
+    <div class="horarios-body" id="horariosBody">
+      <div id="horariosLista"></div>
+    </div>
+  </div>
+  <div id="menuContainer"></div>
 
 
   <!-- ZONA DE JUEGOS -->
@@ -3114,7 +3116,7 @@ window.confirmarSeleccionCliente = async function() {
     await updateDoc(doc(db, 'sorteos', 'actual'), { numeros: numerosDB });
     const cant = _seleccionActual.size;
     msgEl.style.color = 'var(--verde)';
-    msgEl.textContent = '✅ Reservaste ' + cant + ' número' + (cant!==1?'s':'') + '! Pagá en tu próximo pedido para confirmarlos.';
+    msgEl.textContent = '✅ Reservaste ' + cant + ' número' + (cant!==1?'s':'') + '! Comunicate por WhatsApp para proceder al pago.';
     _seleccionActual.clear();
     setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 6000);
   } catch(e) {
