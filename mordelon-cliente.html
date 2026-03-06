@@ -2561,8 +2561,8 @@ TL_SIMBOLOS.forEach(s => { for(let i=0;i<s.peso;i++) TL_POOL.push(s); });
 // Sistema basado en probabilidades reales de 3 rodillos
 // Con pool: calavera ~26%, papas ~24%, bebida ~19%, queso ~15%, sanguchea ~8%, llama ~3%, fuego~0.08%
 // Prob jackpot (🔥🔥🔥): ~1/113^3... pero usamos overrides para control exacto
-const TL_PREMIOS = {
-  // [emoji]: premio cuando salen 3 iguales
+// Premios por defecto (se sobreescriben con los de Firebase)
+const TL_PREMIOS_DEFAULT = {
   '🔥': { nivel:'jackpot', label:'🔥 JACKPOT MORDELÓN 🔥', premio:'Combo Mordelón x4 · 4 sánguches + papas', color:'#FFB800', pts:2000, cupon:true,  cuponPct:100, esJackpot:true  },
   '🦙': { nivel:'grande',  label:'🦙 TRIPLE LLAMA',        premio:'Sánguche gratis con compra de otro',       color:'#3DBFB8', pts:500,  cupon:true,  cuponPct:50,  esJackpot:false },
   '🥪': { nivel:'grande',  label:'🥪 TRIPLE SÁNGUCHE',     premio:'Papas gratis con tu próximo pedido',        color:'#2DC653', pts:300,  cupon:true,  cuponPct:30,  esJackpot:false },
@@ -2571,6 +2571,34 @@ const TL_PREMIOS = {
   '🍟': { nivel:'pequeño', label:'🍟 TRIPLE PAPAS',        premio:'Salsa gratis con tu próxima compra',       color:'#3DBFB8', pts:50,   cupon:false, cuponPct:0,   esJackpot:false },
   '💀': { nivel:'ninguno', label:'💀 MORDELÓN SE RÍE',     premio:'',                                         color:'#555',    pts:0,    cupon:false, cuponPct:0,   esJackpot:false },
 };
+let TL_PREMIOS = { ...TL_PREMIOS_DEFAULT };
+
+// Escuchar cambios de premios desde Firebase (editados por el vendedor)
+onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
+  if (snap.exists() && snap.data().premios) {
+    const nuevo = {};
+    snap.data().premios.forEach(p => { nuevo[p.emoji] = p; });
+    TL_PREMIOS = nuevo;
+    // Actualizar también la distribución de probabilidades
+    _tlActualizarProbsDesdeFirebase(snap.data().premios);
+  } else {
+    TL_PREMIOS = { ...TL_PREMIOS_DEFAULT };
+  }
+  tlRenderTabla();
+});
+
+// Actualizar las probabilidades controladas según config del vendedor
+function _tlActualizarProbsDesdeFirebase(premios) {
+  if (!premios || !premios.length) return;
+  // Mapear emojis a claves de umbral
+  const mapa = { '🔥':'jackpot', '🦙':'llama', '🥪':'sanguche', '🧀':'queso', '🥤':'bebida', '🍟':'papas' };
+  premios.forEach(p => {
+    const clave = mapa[p.emoji];
+    if (clave) _tlUmbralCustom[clave] = parseFloat(p.pct) || 0;
+  });
+}
+// Umbrales personalizables (se sobreescriben con Firebase)
+const _tlUmbralCustom = { jackpot:0.1, llama:0.9, sanguche:3, queso:6, bebida:10, papas:20 };
 
 // ── Premios por par (solo 2 iguales en línea central) ──
 const TL_PREMIOS_PAR = {
@@ -2582,24 +2610,21 @@ const TL_PREMIOS_PAR = {
 // En vez de depender 100% del pool, usamos un dado cargado al inicio de cada spin
 // para garantizar las probabilidades del negocio independientemente del pool
 function tlResultadoControlado(bias = 0) {
-  // bias 0-80: % adicional de peso a símbolos comunes
   const dado = Math.random() * 100;
-  // Distribución por tirada (suma = 100%)
-  // 60% sin premio, 20% pequeño, 10% desc10%, 6% desc20%, 3% papas, 0.9% sanguchegratis, 0.1% jackpot
+  // Usar umbrales de Firebase si están disponibles, si no los defaults
   let umbral;
   if (bias > 0) {
-    // Dificultad ajustada por vendedor
     const factor = bias / 100;
     umbral = {
-      jackpot:   0.1 * (1 - factor * 0.8),
-      llama:     0.9 * (1 - factor * 0.6),
-      sanguche:  3   * (1 - factor * 0.4),
-      queso:     6   * (1 - factor * 0.2),
-      bebida:    10,
-      papas:     20,
+      jackpot:  _tlUmbralCustom.jackpot  * (1 - factor * 0.8),
+      llama:    _tlUmbralCustom.llama    * (1 - factor * 0.6),
+      sanguche: _tlUmbralCustom.sanguche * (1 - factor * 0.4),
+      queso:    _tlUmbralCustom.queso    * (1 - factor * 0.2),
+      bebida:   _tlUmbralCustom.bebida,
+      papas:    _tlUmbralCustom.papas,
     };
   } else {
-    umbral = { jackpot: 0.1, llama: 0.9, sanguche: 3, queso: 6, bebida: 10, papas: 20 };
+    umbral = { ..._tlUmbralCustom };
   }
 
   let acum = 0;
@@ -2609,21 +2634,13 @@ function tlResultadoControlado(bias = 0) {
   if (dado < (acum += umbral.queso))   return '🧀';
   if (dado < (acum += umbral.bebida))  return '🥤';
   if (dado < (acum += umbral.papas))   return '🍟';
-  return '💀'; // el resto: derrota
+  return '💀';
 }
 
-// ── Config Firebase (compatibilidad con vendedor) ────
+// ── Config Firebase (compatibilidad) ────────────────
 const SLOTS_SIMBOLOS = TL_SIMBOLOS; // alias legacy
 const SLOTS_POOL = TL_POOL;         // alias legacy
 const SLOTS_COMBOS_DEFAULT = [];    // no usado en v3
-
-// ── Config Firebase (slotsConfig) ────────────────────
-let _slotsConfig = null;
-onSnapshot(doc(db,'config','slotsConfig'), snap => {
-  _slotsConfig = snap.exists() ? snap.data() : null;
-  tlRenderTabla();
-});
-function _slotsCombos() { return []; } // legacy shim
 
 // ── Estado del juego ──────────────────────────────────
 const SLOTS_FICHAS_INIT = 3;
@@ -2898,7 +2915,7 @@ window.slotsGirar = async function() {
   slotsActualizarUI();
 
   // ── Determinar resultado ──────────────────────────
-  const bias = _slotsConfig?.biasComun || 0;
+  const bias = 0; // dificultad ya no se usa; las probabilidades se controlan desde tragallamaPremios
   const simBoton = tlResultadoControlado(bias);
 
   // Los 3 rodillos: para ganar deben salir los 3 iguales
