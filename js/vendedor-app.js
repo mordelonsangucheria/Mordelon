@@ -1,3 +1,4 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc, getDoc, addDoc, serverTimestamp, query, orderBy, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1587,27 +1588,50 @@ const JUEGOS_TOGGLE_INFO = [
   { id: 'minas',  label: 'Minas',   emoji: '💣' },
   { id: 'slots',  label: 'Slots',   emoji: '🎰' },
 ];
-let juegosEstado = {}; // { tetris: true, snake: false, ... }
+let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
 
 function renderJuegosToggles() {
   const grid = document.getElementById('juegosToggleGrid');
   if (!grid) return;
   grid.innerHTML = JUEGOS_TOGGLE_INFO.map(j => {
     const activo = juegosEstado[j.id] !== false;
+    const fichasReq = j.id === 'slots' ? true : (juegosEstado['fichasReq_' + j.id] === true);
+    const esSlots = j.id === 'slots';
     return `
-    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--gris-mid);border:1.5px solid ${activo ? 'rgba(61,191,184,.3)' : 'var(--gris-light)'};border-radius:12px;padding:10px 14px;transition:all .2s;">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:1.2rem;">${j.emoji}</span>
-        <div>
-          <div style="font-weight:800;font-size:0.8rem;">${j.label}</div>
-          <div style="font-size:0.62rem;color:${activo ? 'var(--turquesa)' : '#555'};">${activo ? 'Visible' : 'Oculto'}</div>
+    <div style="display:flex;flex-direction:column;gap:6px;background:var(--gris-mid);border:1.5px solid ${activo ? 'rgba(61,191,184,.3)' : 'var(--gris-light)'};border-radius:12px;padding:10px 14px;transition:all .2s;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.2rem;">${j.emoji}</span>
+          <div>
+            <div style="font-weight:800;font-size:0.8rem;">${j.label}</div>
+            <div style="font-size:0.62rem;color:${activo ? 'var(--turquesa)' : '#555'};">${activo ? 'Visible' : 'Oculto'}</div>
+          </div>
         </div>
+        <button data-jid="${j.id}"
+          style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${activo ? 'var(--turquesa)' : '#333'};"
+          onclick="window.toggleJuegoIndividual(this.dataset.jid)">
+          <span style="position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;transition:left .2s;left:${activo ? '23px' : '3px'};display:block;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
+        </button>
       </div>
-      <button data-jid="${j.id}"
-        style="width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${activo ? 'var(--turquesa)' : '#333'};"
-        onclick="window.toggleJuegoIndividual(this.dataset.jid)">
-        <span style="position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:white;transition:left .2s;left:${activo ? '23px' : '3px'};display:block;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
-      </button>
+      ${activo ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid #222;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:0.75rem;">🎟️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.68rem;color:${fichasReq ? 'var(--naranja)' : '#555'};">Fichas</div>
+            <div style="font-size:0.55rem;color:#444;">${esSlots ? 'Siempre activo' : (fichasReq ? '3 gratis/día + compradas' : 'Juego libre')}</div>
+          </div>
+        </div>
+        ${esSlots ? `
+          <span style="font-size:0.6rem;color:var(--naranja);font-weight:700;padding:2px 8px;background:rgba(255,152,0,.1);border-radius:6px;">SIEMPRE</span>
+        ` : `
+          <button data-jid="${j.id}"
+            style="width:38px;height:20px;border-radius:10px;border:none;cursor:pointer;position:relative;transition:background .2s;background:${fichasReq ? 'var(--naranja)' : '#333'};"
+            onclick="window.toggleFichasJuego(this.dataset.jid)">
+            <span style="position:absolute;top:2px;width:16px;height:16px;border-radius:50%;background:white;transition:left .2s;left:${fichasReq ? '19px' : '3px'};display:block;box-shadow:0 1px 3px rgba(0,0,0,.4);"></span>
+          </button>
+        `}
+      </div>` : ''}
     </div>`;
   }).join('');
 
@@ -1639,12 +1663,29 @@ window.toggleTodosJuegos = async function() {
   renderJuegosToggles();
 };
 
+// Toggle fichas requeridas por juego (excepto Slots que siempre las requiere)
+window.toggleFichasJuego = async function(id) {
+  if (id === 'slots') return; // Slots siempre requiere fichas
+  const key = 'fichasReq_' + id;
+  juegosEstado[key] = juegosEstado[key] === true ? false : true;
+  await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
+  const info = JUEGOS_TOGGLE_INFO.find(j => j.id === id);
+  const activo = juegosEstado[key] === true;
+  showNotif(`🎟️ Fichas en ${info.emoji} ${info.label}: ${activo ? 'ACTIVADAS' : 'DESACTIVADAS'}`);
+  registrarActividad(`🎟️ Fichas ${info.label} ${activo ? 'activadas' : 'desactivadas'}`);
+  renderJuegosToggles();
+};
+
 // Escuchar estado en tiempo real
 onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   const data = snap.exists() ? snap.data() : {};
   // Asegurar que juegos nuevos arranquen como activos
   JUEGOS_TOGGLE_INFO.forEach(j => {
     if (data[j.id] === undefined) data[j.id] = true;
+    // Asegurar campo fichasReq_ existe (false por defecto, excepto slots)
+    if (j.id !== 'slots' && data['fichasReq_' + j.id] === undefined) {
+      data['fichasReq_' + j.id] = false;
+    }
   });
   juegosEstado = data;
   renderJuegosToggles();

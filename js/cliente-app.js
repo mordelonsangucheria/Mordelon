@@ -889,6 +889,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
 const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
+
+// ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
+// fichasRequeridas: { tetris: true/false, snake: true/false, ... }
+// Slots SIEMPRE requiere fichas (no se puede desactivar)
+// Los demás juegos: el vendedor puede activar/desactivar
+let fichasRequeridas = {}; // se llena desde Firebase config/juegos
+
+// 3 fichas gratis por día POR JUEGO
+function juegoGratisRestantesHoy(juegoId) {
+  if (!usuarioActual) return 0;
+  const key = 'fichasGratis-' + juegoId + '-' + usuarioActual.nombre;
+  const guardado = localStorage.getItem(key);
+  if (!guardado) return 3;
+  try {
+    const data = JSON.parse(guardado);
+    const hoy = new Date().toDateString();
+    if (data.fecha !== hoy) return 3;
+    return Math.max(0, 3 - (data.usadas || 0));
+  } catch(e) { return 3; }
+}
+function juegoMarcarGratisUsado(juegoId) {
+  if (!usuarioActual) return;
+  const key = 'fichasGratis-' + juegoId + '-' + usuarioActual.nombre;
+  const hoy = new Date().toDateString();
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem(key) || '{}');
+    if (data.fecha !== hoy) data = { fecha: hoy, usadas: 0 };
+  } catch(e) { data = { fecha: hoy, usadas: 0 }; }
+  data.usadas = (data.usadas || 0) + 1;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// Verificar si un juego requiere fichas (Slots siempre requiere)
+window.juegoRequiereFichas = function(juegoId) {
+  if (juegoId === 'slots') return true;
+  return fichasRequeridas[juegoId] === true;
+};
+
+// Intentar consumir una ficha para jugar. Retorna true si puede jugar.
+// Orden: 1) ficha gratis del juego, 2) ficha comprada (compartida), 3) no puede
+window.juegoConsumirFicha = async function(juegoId) {
+  if (!window.juegoRequiereFichas(juegoId)) return true; // no requiere fichas
+  if (!usuarioActual) return false;
+
+  // 1) Fichas gratis del juego
+  const gratisRestantes = juegoGratisRestantesHoy(juegoId);
+  if (gratisRestantes > 0) {
+    juegoMarcarGratisUsado(juegoId);
+    return true;
+  }
+
+  // 2) Fichas compradas (compartidas)
+  const fichasActuales = usuarioActual.fichasSlots ?? 0;
+  if (fichasActuales > 0) {
+    const nuevas = fichasActuales - 1;
+    usuarioActual.fichasSlots = nuevas;
+    try {
+      await updateDoc(doc(db, 'clientes', usuarioActual.nombre), { fichasSlots: nuevas });
+    } catch(e) {}
+    return true;
+  }
+
+  return false; // sin fichas
+};
+
+// Obtener fichas disponibles para un juego (gratis + compradas)
+window.juegoFichasDisponibles = function(juegoId) {
+  if (!window.juegoRequiereFichas(juegoId)) return Infinity;
+  if (!usuarioActual) return 0;
+  const gratis = juegoGratisRestantesHoy(juegoId);
+  const compradas = usuarioActual.fichasSlots ?? 0;
+  return gratis + compradas;
+};
+
+// Obtener desglose de fichas
+window.juegoFichasDesglose = function(juegoId) {
+  if (!usuarioActual) return { gratis: 0, compradas: 0, total: 0 };
+  const gratis = juegoGratisRestantesHoy(juegoId);
+  const compradas = usuarioActual.fichasSlots ?? 0;
+  return { gratis, compradas, total: gratis + compradas };
+};
+
 onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   const estado = snap.exists() ? snap.data() : {};
   let algunoVisible = false;
@@ -900,6 +983,12 @@ onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
     const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
     if (btn) btn.style.display = activo ? '' : 'none';
     if (activo) algunoVisible = true;
+
+    // Leer si el juego requiere fichas (campo fichasReq_<id>)
+    // Slots siempre requiere fichas, ignorar el campo
+    if (id !== 'slots') {
+      fichasRequeridas[id] = estado['fichasReq_' + id] === true;
+    }
   });
   // Si el juego actualmente seleccionado fue desactivado, saltar al primero activo
   const btnActual = document.getElementById('btnJuego' + juegoActualRecompensa.charAt(0).toUpperCase() + juegoActualRecompensa.slice(1));
@@ -1406,11 +1495,12 @@ function slotsActualizarUI() {
   if (nEl)  nEl.textContent  = nombre || 'INVITADO';
   if (nSF)  nSF.textContent  = nombre;
 
-  const tieneGratis = tlTieneGratisHoy() && usuarioActual;
-  if (gratisVal) gratisVal.textContent = tieneGratis ? '⚡' : '✓';
+  const tieneGratis = (juegoGratisRestantesHoy('slots') > 0) && usuarioActual;
+  const gratisRestantes = juegoGratisRestantesHoy('slots');
+  if (gratisVal) gratisVal.textContent = tieneGratis ? `⚡${gratisRestantes}` : '✓';
   if (gratisBadge) {
     gratisBadge.style.opacity = tieneGratis ? '1' : '.35';
-    gratisBadge.title = tieneGratis ? 'Tirada gratis disponible' : 'Ya usaste tu tirada gratis hoy';
+    gratisBadge.title = tieneGratis ? gratisRestantes + ' tiradas gratis disponibles' : 'Ya usaste tus tiradas gratis hoy';
   }
 
   const sinFichas = slotsFichas <= 0 && !tieneGratis;
@@ -1426,22 +1516,9 @@ function slotsActualizarUI() {
   }
 }
 
-// ── Tirada gratis del día ─────────────────────────────
-function tlTieneGratisHoy() {
-  if (!usuarioActual) return false;
-  const key = 'tl-gratis-' + usuarioActual.nombre;
-  const guardado = localStorage.getItem(key);
-  if (!guardado) return true;
-  const fecha = new Date(parseInt(guardado));
-  const hoy = new Date();
-  return fecha.toDateString() !== hoy.toDateString();
-}
-function tlMarcarGratisUsado() {
-  if (!usuarioActual) return;
-  localStorage.setItem('tl-gratis-' + usuarioActual.nombre, Date.now().toString());
-}
+// ── Tiradas gratis del día (3 por día) — usa sistema unificado juegoGratisRestantesHoy('slots') ──
 window.tlUsarGratis = function() {
-  if (!tlTieneGratisHoy()) return;
+  if (juegoGratisRestantesHoy('slots') <= 0) return;
   showToast('⚡ ¡Tirada gratis activada! Presioná GIRAR');
 };
 
@@ -1469,7 +1546,7 @@ function tlRenderTabla() {
         <span style="color:${r.color};">${r.e} ${r.premio}</span>
       </div>`).join('')}
     <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a2a2a;font-size:0.58rem;color:#333;">
-      ⚡ 1 tirada gratis por día · Pack: 50 fichas = $500 · Cupones válidos por 7 días · Solo 1 uso
+      ⚡ 3 fichas gratis por día · Pack: 5 fichas = $500 · Cupones válidos por 7 días · Solo 1 uso
     </div>`;
 }
 
@@ -1609,7 +1686,7 @@ window.tlCopiarCupon = function() {
 // ── Girar ─────────────────────────────────────────────
 window.slotsGirar = async function() {
   if (slotsSpinning || !usuarioActual) return;
-  const usarGratis = slotsFichas <= 0 && tlTieneGratisHoy();
+  const usarGratis = slotsFichas <= 0 && juegoGratisRestantesHoy('slots') > 0;
   if (slotsFichas <= 0 && !usarGratis) return;
 
   slotsSpinning = true;
@@ -1618,7 +1695,7 @@ window.slotsGirar = async function() {
   // Descontar ficha o marcar gratis
   const ref = doc(db, 'clientes', usuarioActual.nombre);
   if (usarGratis) {
-    tlMarcarGratisUsado();
+    juegoMarcarGratisUsado('slots');
   } else {
     slotsFichas--;
     usuarioActual.fichasSlots = slotsFichas;
@@ -1751,7 +1828,7 @@ window.slotsGirar = async function() {
       // Sin premio
       if (msgEl) {
         const frases = ['💀 Sin suerte esta vez…','😅 ¡Casi!','🎲 La próxima es tuya','😤 ¡Otra vez!'];
-        msgEl.textContent = slotsFichas > 0 || tlTieneGratisHoy() ? frases[Math.floor(Math.random()*frases.length)] : '😢 Sin fichas';
+        msgEl.textContent = slotsFichas > 0 || juegoGratisRestantesHoy('slots') > 0 ? frases[Math.floor(Math.random()*frases.length)] : '😢 Sin fichas';
         msgEl.style.color = '#444';
       }
       const statsRef = doc(db,'config','slotsStats');
