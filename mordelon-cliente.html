@@ -1076,6 +1076,9 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 </a>
 
 <script type="module">
+// ── BLOQUEO DE NAVEGACIÓN HASTA RESOLVER LOGIN ──
+let loginResuelto = false;
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp, doc, onSnapshot, updateDoc, setDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -1740,7 +1743,7 @@ function notificarClienteListo() {
       document.getElementById('numPedidoConfirmado').textContent = '#' + numeroPedidoLocal;
       actualizarBarraEstado(snap.data().estado);
       escucharEstadoPedido(pedido.firestoreId);
-      showScreen('confirmado');
+      if (loginResuelto) showScreen('confirmado');
     }).catch(() => localStorage.removeItem('mordelon-pedido-activo'));
   } catch(e) {
     localStorage.removeItem('mordelon-pedido-activo');
@@ -2204,13 +2207,17 @@ function loginExitoso() {
 }
 
 function entrarAMenu() {
-  // Cambiar screen-login → screen-menu (sin usar showScreen para no perder .active del login)
-  document.getElementById('screen-login').classList.remove('active');
-  document.getElementById('screen-login').style.display = 'none';
+  loginResuelto = true;
+  // Cambiar screen-login → screen-menu
+  const loginScr = document.getElementById('screen-login');
+  loginScr.classList.remove('active');
+  loginScr.style.display = 'none';
+  document.querySelectorAll('.screen:not(#screen-login)').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-menu').classList.add('active');
-
   // Mostrar nombre en header si está logueado
   actualizarHeaderUsuario();
+  const badge = document.getElementById('btnCerrarSesion');
+  if (badge) badge.style.display = usuarioActual ? 'inline-block' : 'none';
 }
 
 function actualizarHeaderUsuario() {
@@ -2226,9 +2233,13 @@ function actualizarHeaderUsuario() {
 
 // ── Auto-login si tiene sesión guardada ──
 async function intentarAutoLogin() {
+  // Limpiar claves viejas que podrían causar bypass del login
+  localStorage.removeItem('mordelon-sesion');
+  localStorage.removeItem('slotsNombreC');  // viejo sistema slots
+  
   const sesionGuardada = localStorage.getItem('mordelon-usuario');
   if (!sesionGuardada) {
-    // Sin sesión → mostrar login
+    // Sin sesión → mostrar login (ya está activo por defecto)
     return;
   }
   try {
@@ -2250,17 +2261,16 @@ intentarAutoLogin();
 
 // ── Cerrar sesión del cliente ──
 window.cerrarSesionCliente = function() {
+  loginResuelto = false;
   usuarioActual = null;
   localStorage.removeItem('mordelon-usuario');
-  // Volver al login
-  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+  document.querySelectorAll('.screen:not(#screen-login)').forEach(s => s.classList.remove('active'));
   const loginScr = document.getElementById('screen-login');
   loginScr.classList.add('active');
   loginScr.style.display = 'flex';
-  // Limpiar campos
   const li = document.getElementById('loginNombre'); if(li) li.value='';
   const lc = document.getElementById('loginClave');  if(lc) lc.value='';
-  document.getElementById('loginMsg').textContent = '';
+  const lm = document.getElementById('loginMsg'); if(lm) lm.textContent = '';
 };
 
 // ── Guardar pedido en historial del usuario ──
