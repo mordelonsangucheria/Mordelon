@@ -2630,6 +2630,9 @@ function minasDescubrir(r, c) {
     return;
   }
 
+  // Contar celdas reveladas ANTES del flood fill
+  const ptsAntes = mRevealed.flat().filter(Boolean).length;
+
   // BFS flood fill para celdas vacías
   const queue = [[r, c]];
   while (queue.length) {
@@ -2645,8 +2648,6 @@ function minasDescubrir(r, c) {
     }
   }
 
-  // Sumar puntos por celdas reveladas
-  const ptsAntes = mRevealed.flat().filter(Boolean).length;
   // Verificar victoria
   let sin_revelar = 0;
   for (let rr=0;rr<mRows;rr++) for (let cc=0;cc<mCols;cc++)
