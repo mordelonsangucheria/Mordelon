@@ -3554,11 +3554,13 @@ function dinoInit() {
 function dinoLoop() {
   if(!dRunning) return;
   dFrame++;
-  // Velocidad base: arranca lento (1.8) y sube gradualmente hasta ~7
-  // dinoDificultad (0-80) suma hasta +3 a la velocidad máxima
-  const difBonus = (dinoDificultad / 80) * 3;
-  const baseSpeed = 1.8 + (dScore / 80) * 0.6;
-  dSpeed = Math.min(baseSpeed, 7 + difBonus) + difBonus * 0.15;
+  // dinoDificultad (0-80): 0 = normal, 80 = muy difícil
+  // Afecta: velocidad inicial, velocidad máxima, y ritmo de aceleración
+  const difRatio = dinoDificultad / 80;           // 0.0 → 1.0
+  const velocidadInicial = 1.8 + difRatio * 3.2;  // rango: 1.8 → 5.0
+  const velocidadMax     = 7   + difRatio * 5;    // rango: 7   → 12
+  const aceleracion      = 0.6 + difRatio * 1.2;  // rango: 0.6 → 1.8
+  dSpeed = Math.min(velocidadInicial + (dScore / 80) * aceleracion, velocidadMax);
 
   // Physics
   if(!dino.onGround) {
@@ -3568,11 +3570,14 @@ function dinoLoop() {
   }
   dino.frame = Math.floor(dFrame / 6) % 2;
 
-  // Spawn obstacles
-  if(obstacles.length === 0 || obstacles[obstacles.length-1].x < DW - (180 + Math.random()*120)) {
+  // Spawn obstacles — con dificultad alta, el gap mínimo es menor (más frecuentes)
+  const gapMin = 180 - (dinoDificultad / 80) * 80;  // 180 → 100 según dificultad
+  const gapMax = 120 - (dinoDificultad / 80) * 40;  // 120 → 80 según dificultad
+  if(obstacles.length === 0 || obstacles[obstacles.length-1].x < DW - (gapMin + Math.random()*gapMax)) {
     const h = 20 + Math.floor(Math.random()*22);
     const w = 12 + Math.floor(Math.random()*10);
-    const isBird = dScore > 400 && Math.random() < 0.3;
+    const birdThreshold = Math.max(50, 400 - (dinoDificultad / 80) * 350); // aparecen antes con más dificultad
+    const isBird = dScore > birdThreshold && Math.random() < (0.3 + (dinoDificultad / 80) * 0.25);
     obstacles.push({ x:DW+10, y: isBird ? GROUND-30 : GROUND, w, h: isBird ? 14 : h, bird:isBird, frame:0 });
   }
 
