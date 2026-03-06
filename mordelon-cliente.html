@@ -1797,13 +1797,23 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
 const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', slots: '🎰 Slots' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
+// Mostrar todos los botones de juegos por defecto (Firebase los oculta si corresponde)
+document.addEventListener('DOMContentLoaded', () => {
+  ['tetris','snake','2048','dino','minas','slots'].forEach(id => {
+    const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (btn) btn.style.display = '';
+  });
+});
+
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
 const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
 onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   const estado = snap.exists() ? snap.data() : {};
   let algunoVisible = false;
   JUEGOS_IDS.forEach(id => {
-    const activo = estado[id] !== false; // default: activo
+    // Si el campo no existe en Firebase, el juego está ACTIVO por defecto
+    const val = estado[id];
+    const activo = (val === undefined || val === null || val !== false);
     // Ocultar/mostrar botón selector
     const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
     if (btn) btn.style.display = activo ? '' : 'none';

@@ -3076,7 +3076,12 @@ window.toggleTodosJuegos = async function() {
 
 // Escuchar estado en tiempo real
 onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
-  juegosEstado = snap.exists() ? snap.data() : {};
+  const data = snap.exists() ? snap.data() : {};
+  // Asegurar que juegos nuevos arranquen como activos
+  JUEGOS_TOGGLE_INFO.forEach(j => {
+    if (data[j.id] === undefined) data[j.id] = true;
+  });
+  juegosEstado = data;
   renderJuegosToggles();
 });
 
