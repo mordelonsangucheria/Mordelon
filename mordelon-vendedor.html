@@ -838,6 +838,31 @@ select.mac-field option { background:#222; }
       </button>
     </div>
     <div id="juegosToggleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+
+    <!-- 🦕 DIFICULTAD DINO -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🦕 DIFICULTAD — LLAMA RUNNER</div>
+        <div id="dinoDifLabel" style="font-size:0.72rem;color:var(--verde);font-weight:800;">Normal</div>
+      </div>
+      <input type="range" id="dinoDifSlider" min="0" max="80" value="0"
+        oninput="window.previewDinoDif(this.value)"
+        style="width:100%;accent-color:var(--turquesa);margin-bottom:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:#444;margin-bottom:10px;">
+        <span>Más fácil</span><span>Normal</span><span>Muy difícil</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarDinoDif()"
+          style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">
+          💾 Guardar
+        </button>
+        <button onclick="window.resetDinoDif()"
+          style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">
+          ↺ Reset
+        </button>
+      </div>
+      <div id="dinoDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    </div>
   </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
@@ -4186,6 +4211,64 @@ window.resetConfigSlots = async function() {
   _slotsRenderEditor();
   showNotif('✅ Config slots reseteada');
 };
+
+// ═══════════════════════════════════════════════════════
+//  DIFICULTAD LLAMA RUNNER (DINO)
+// ═══════════════════════════════════════════════════════
+
+function _dinoDifLabelText(val) {
+  const v = parseInt(val);
+  if (v === 0) return 'Normal';
+  if (v <= 20) return 'Un poco más difícil';
+  if (v <= 40) return 'Difícil';
+  if (v <= 60) return 'Muy difícil';
+  return '🔥 Al límite';
+}
+
+function _dinoDifLabelColor(val) {
+  const v = parseInt(val);
+  if (v === 0) return 'var(--verde)';
+  if (v <= 30) return 'var(--naranja)';
+  return 'var(--rojo)';
+}
+
+window.previewDinoDif = function(val) {
+  const label = document.getElementById('dinoDifLabel');
+  if (label) {
+    label.textContent = _dinoDifLabelText(val);
+    label.style.color = _dinoDifLabelColor(val);
+  }
+};
+
+window.guardarDinoDif = async function() {
+  const slider = document.getElementById('dinoDifSlider');
+  const msgEl  = document.getElementById('dinoDifMsg');
+  if (!slider) return;
+  const val = parseInt(slider.value) || 0;
+  try {
+    await setDoc(doc(db, 'config', 'dinoDificultad'), { valor: val });
+    if (msgEl) { msgEl.style.color = 'var(--verde)'; msgEl.textContent = '✅ Dificultad guardada'; }
+    registrarActividad('🦕 Dificultad Dino → ' + _dinoDifLabelText(val));
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error al guardar'; }
+  }
+};
+
+window.resetDinoDif = async function() {
+  const slider = document.getElementById('dinoDifSlider');
+  if (slider) slider.value = 0;
+  window.previewDinoDif(0);
+  await window.guardarDinoDif();
+};
+
+// Cargar valor actual de Firebase al iniciar
+getDoc(doc(db, 'config', 'dinoDificultad')).then(snap => {
+  const val = snap.exists() ? (snap.data().valor || 0) : 0;
+  const slider = document.getElementById('dinoDifSlider');
+  if (slider) slider.value = val;
+  window.previewDinoDif(val);
+}).catch(() => {});
 
 
 // Toggle mensaje "sin sorteo activo" en cliente

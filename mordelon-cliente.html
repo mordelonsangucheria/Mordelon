@@ -2027,6 +2027,13 @@ onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   if (zona) zona.style.display = algunoVisible ? 'block' : 'none';
 });
 
+// ── DIFICULTAD DINO desde Firebase ─────────────────────────────────────────
+onSnapshot(doc(db, 'config', 'dinoDificultad'), (snap) => {
+  if (snap.exists()) {
+    window.setDinoDificultad(snap.data().valor || 0);
+  }
+});
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
@@ -3523,11 +3530,21 @@ const NARANJ = '#D4831A';
 
 let dino, obstacles, dScore, dHi = parseInt(localStorage.getItem('dinoHiC')||'0');
 let dSpeed, dFrame, dRunning, dOver, dAnimFrame;
+let dinoDificultad = 0; // 0 = normal, valor de Firebase (0-80)
+
+// Escuchar dificultad desde Firebase
+try {
+  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(({getDoc, doc}) => {
+    // Se intenta leer desde la instancia global de db si existe
+  });
+} catch(e) {}
+// Función para que el sistema Firebase la llame al cargar config
+window.setDinoDificultad = function(val) { dinoDificultad = parseInt(val) || 0; };
 
 function dinoInit() {
   dino = { x:40, y:GROUND, w:26, h:32, vy:0, onGround:true, ducking:false, frame:0 };
   obstacles = [];
-  dScore = 0; dSpeed = 4; dFrame = 0; dRunning = true; dOver = false;
+  dScore = 0; dSpeed = 1.8; dFrame = 0; dRunning = true; dOver = false;
   document.getElementById('dinoScore').textContent = 0;
   document.getElementById('dinoHi').textContent = dHi;
   cancelAnimationFrame(dAnimFrame);
@@ -3537,7 +3554,11 @@ function dinoInit() {
 function dinoLoop() {
   if(!dRunning) return;
   dFrame++;
-  dSpeed = 4 + Math.floor(dScore / 300) * 0.5;
+  // Velocidad base: arranca lento (1.8) y sube gradualmente hasta ~7
+  // dinoDificultad (0-80) suma hasta +3 a la velocidad máxima
+  const difBonus = (dinoDificultad / 80) * 3;
+  const baseSpeed = 1.8 + (dScore / 80) * 0.6;
+  dSpeed = Math.min(baseSpeed, 7 + difBonus) + difBonus * 0.15;
 
   // Physics
   if(!dino.onGround) {
