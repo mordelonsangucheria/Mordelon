@@ -284,7 +284,19 @@ function dinoDead() {
   DX.fillText('Tap o Espacio para reiniciar',DW/2,110);
 }
 
-window.dinoJump = function() { if(dOver){dinoInit();return;} if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;dino.fastFall=false;} };
+window.dinoJump = async function() {
+  if(dOver){
+    // Reiniciar después de game over — verificar fichas
+    if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('dino')) {
+      if (typeof window.juegoConsumirFicha==='function') {
+        var ok = await window.juegoConsumirFicha('dino');
+        if (!ok) { if(typeof showToast==='function') showToast('🎟️ Sin fichas para Dino'); return; }
+      }
+    }
+    dinoInit();return;
+  }
+  if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;dino.fastFall=false;}
+};
 // Fast fall: en el aire cae rápido, en el piso se agacha
 window.dinoFastFall = function() {
   if(!dRunning) return;
@@ -293,7 +305,15 @@ window.dinoFastFall = function() {
 };
 window.dinoDuck = function(on) { if(dRunning) dino.ducking=on; };
 window.dinoInit  = dinoInit;
-window.dinoReset = function() { cancelAnimationFrame(dAnimFrame); dinoInit(); };
+window.dinoReset = async function() {
+  if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('dino')) {
+    if (typeof window.juegoConsumirFicha==='function') {
+      var ok = await window.juegoConsumirFicha('dino');
+      if (!ok) { if(typeof showToast==='function') showToast('🎟️ Sin fichas para Dino'); return; }
+    }
+  }
+  cancelAnimationFrame(dAnimFrame); dinoInit();
+};
 
 document.addEventListener('keydown', e=>{
   if(document.getElementById('juegoDino').style.display==='none') return;

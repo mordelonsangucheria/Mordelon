@@ -12,6 +12,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Exponer Firebase para scripts no-módulo (vendedor-juegos.js, etc.)
+window._fbDB = db;
+window._fbOnSnapshot = onSnapshot;
+window._fbDoc = doc;
+window._fbAddDoc = addDoc;
+window._fbCollection = collection;
+window._fbServerTimestamp = serverTimestamp;
+
 // CARGAR USUARIOS desde Firebase
 async function cargarUsuariosVendedor() {
   try {

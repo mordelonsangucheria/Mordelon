@@ -2193,7 +2193,15 @@ window.minasDificultad = function(d) {
 };
 
 window.minasInit      = minasInit;
-window.minasReset     = function() { minasInit(); };
+window.minasReset     = async function() {
+  if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('minas')) {
+    if (typeof window.juegoConsumirFicha==='function') {
+      const ok = await window.juegoConsumirFicha('minas');
+      if (!ok) { showToast('🎟️ Sin fichas para Minas'); return; }
+    }
+  }
+  minasInit();
+};
 
 
 

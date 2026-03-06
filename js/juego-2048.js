@@ -25,7 +25,15 @@ window.g2048Move=function(dir){
   if(moved){g2Board=b;g2Spawn();document.getElementById('g2048Score').textContent=g2Score;if(g2Score>g2Hi){g2Hi=g2Score;localStorage.setItem('g2048HiC',g2Hi);document.getElementById('g2048Hi').textContent=g2Hi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('2048',g2Hi);}g2Render();}
 };
 window.g2048Init=g2048Init;
-window.g2048Reset=function(){g2048Init();};
+window.g2048Reset=async function(){
+  if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('2048')) {
+    if (typeof window.juegoConsumirFicha==='function') {
+      var ok = await window.juegoConsumirFicha('2048');
+      if (!ok) { if(typeof showToast==='function') showToast('🎟️ Sin fichas para 2048'); return; }
+    }
+  }
+  g2048Init();
+};
 document.addEventListener('keydown',e=>{
   if(document.getElementById('juego2048').style.display==='none')return;
   if(e.key==='ArrowUp')window.g2048Move('up');

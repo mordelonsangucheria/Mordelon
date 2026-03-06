@@ -37,7 +37,16 @@ function tDraw(){
 function tetrisOver(){ clearInterval(tTimer); tetrisRunning=false; TX.fillStyle='rgba(0,0,0,0.7)'; TX.fillRect(0,150,200,60); TX.fillStyle='#fff'; TX.font='bold 16px Nunito'; TX.textAlign='center'; TX.fillText('GAME OVER',100,175); TX.font='12px Nunito'; TX.fillText('Puntos: '+tScore,100,195); }
 window.tetrisPause=function(){tPaused=!tPaused;};
 window.tetrisInit=tetrisInit;
-window.tetrisReset=function(){clearInterval(tTimer);tetrisInit();tDraw();};
+window.tetrisReset=async function(){
+  // Si requiere fichas, consumir una antes de reiniciar
+  if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('tetris')) {
+    if (typeof window.juegoConsumirFicha==='function') {
+      var ok = await window.juegoConsumirFicha('tetris');
+      if (!ok) { if(typeof showToast==='function') showToast('🎟️ Sin fichas para Tetris'); return; }
+    }
+  }
+  clearInterval(tTimer);tetrisInit();tDraw();
+};
 window.tetrisDir=function(d){
   if(!tetrisRunning||tPaused)return;
   if(d==='left'&&!tCollide(-1,0))tX--;

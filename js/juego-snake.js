@@ -29,7 +29,15 @@ function sDraw(){
 function snakeOver(){clearInterval(sTimer);snakeRunning=false;SX.fillStyle='rgba(0,0,0,0.7)';SX.fillRect(0,100,280,60);SX.fillStyle='#fff';SX.font='bold 16px Nunito';SX.textAlign='center';SX.fillText('GAME OVER',140,125);SX.font='12px Nunito';SX.fillText('Puntos: '+sScore,140,145);}
 window.snakeDir=function(dx,dy){if(!snakeRunning)return;if(dx!==0&&sDir.x!==0)return;if(dy!==0&&sDir.y!==0)return;sNext={x:dx,y:dy};};
 window.snakeInit=snakeInit;
-window.snakeReset=function(){clearInterval(sTimer);snakeInit();sDraw();};
+window.snakeReset=async function(){
+  if (typeof window.juegoRequiereFichas==='function' && window.juegoRequiereFichas('snake')) {
+    if (typeof window.juegoConsumirFicha==='function') {
+      var ok = await window.juegoConsumirFicha('snake');
+      if (!ok) { if(typeof showToast==='function') showToast('🎟️ Sin fichas para Snake'); return; }
+    }
+  }
+  clearInterval(sTimer);snakeInit();sDraw();
+};
 document.addEventListener('keydown',e=>{
   if(document.getElementById('juegoSnake').style.display==='none')return;
   if(e.key==='ArrowUp')window.snakeDir(0,-1);
