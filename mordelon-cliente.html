@@ -2342,7 +2342,15 @@ function slotsActualizarUI() {
 
 // ── Init (cuando se selecciona el juego) ──
 window.slotsInit = function() {
-  slotsCargarEstado();
+  // Cargar estado inline (slotsCargarEstado no accesible desde window)
+  if (usuarioActual) {
+    slotsFichas  = usuarioActual.fichasSlots ?? SLOTS_FICHAS_INIT;
+    slotsHiScore = usuarioActual.recordSlots ?? 0;
+  } else {
+    slotsFichas  = SLOTS_FICHAS_INIT;
+    slotsHiScore = 0;
+  }
+  slotsScore = 0;
   ['slotReel0','slotReel1','slotReel2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
