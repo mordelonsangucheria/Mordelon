@@ -474,6 +474,7 @@ select.mac-field option { background:#222; }
   <div class="tab" data-tab="promos">🎉 Promos</div>
   <div class="tab" data-tab="descuentos">🎟️ Cupones</div>
   <div class="tab" data-tab="usuarios">👥 Usuarios</div>
+  <div class="tab" data-tab="sorteos">🎟️ Sorteos</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -1033,6 +1034,151 @@ select.mac-field option { background:#222; }
 
 
 
+
+<!-- PANEL SORTEOS -->
+<div id="panel-sorteos" class="panel">
+
+  <!-- SORTEO ACTIVO / CREAR -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+
+    <!-- Estado del sorteo activo -->
+    <div id="sorteoActivoCard" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:10px;">🎟️ SORTEO ACTIVO</div>
+      <div id="sorteoActivoInfo" style="color:#555;font-size:0.78rem;text-align:center;padding:20px 0;">Sin sorteo activo</div>
+    </div>
+
+    <!-- Crear nuevo sorteo -->
+    <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:16px;padding:16px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--naranja);margin-bottom:10px;">➕ CREAR SORTEO</div>
+      <input id="sorteoNombre" placeholder="Premio (ej: Combo familiar 🍔)" style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:0.78rem;margin-bottom:6px;box-sizing:border-box;">
+      <input id="sorteoDescripcion" placeholder="Descripción del premio..." style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:0.78rem;margin-bottom:6px;box-sizing:border-box;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+        <div>
+          <div style="font-size:0.6rem;color:#555;margin-bottom:3px;">PRECIO POR BOLETO</div>
+          <div style="display:flex;align-items:center;background:#111;border:1px solid #333;border-radius:8px;padding:0 10px;">
+            <span style="color:#555;font-size:0.82rem;">$</span>
+            <input id="sorteoPrecio" type="number" value="500" min="1" style="flex:1;background:transparent;border:none;color:#fff;font-size:0.82rem;padding:7px 4px;outline:none;">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;color:#555;margin-bottom:3px;">FECHA DEL SORTEO</div>
+          <input id="sorteoFecha" type="date" style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:7px 10px;color:#fff;font-size:0.78rem;box-sizing:border-box;">
+        </div>
+      </div>
+      <button onclick="window.crearSorteo()" style="width:100%;background:var(--naranja);border:none;color:#111;border-radius:8px;padding:9px;font-family:'Righteous',cursive;font-size:0.78rem;cursor:pointer;">✨ Crear sorteo</button>
+    </div>
+  </div>
+
+  <!-- Controles del sorteo -->
+  <div id="sorteoControles" style="display:none;margin-bottom:18px;">
+    <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:16px;padding:16px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;margin-bottom:12px;">⚙️ CONTROLES</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="window.sortearGanador()" id="btnSortear"
+          style="flex:1;background:linear-gradient(135deg,var(--naranja),#ff8800);border:none;color:#111;border-radius:10px;padding:11px 14px;font-family:'Righteous',cursive;font-size:0.8rem;cursor:pointer;min-width:120px;">
+          🎰 SORTEAR GANADOR
+        </button>
+        <button onclick="window.toggleSorteoActivo()"  id="btnToggleSorteo"
+          style="flex:1;background:var(--gris-mid);border:1px solid var(--verde);color:var(--verde);border-radius:10px;padding:11px 14px;font-family:'Righteous',cursive;font-size:0.8rem;cursor:pointer;min-width:120px;">
+          ✅ SORTEO ACTIVO
+        </button>
+        <button onclick="window.cerrarSorteo()"
+          style="background:transparent;border:1px solid var(--rojo);color:var(--rojo);border-radius:10px;padding:11px 14px;font-size:0.78rem;cursor:pointer;">
+          🗑️ Cerrar
+        </button>
+      </div>
+      <div id="sorteoControlMsg" style="font-size:0.72rem;min-height:16px;margin-top:8px;text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- Cargar boletos a cliente -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">
+    <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:16px;padding:16px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:12px;">💳 CARGAR BOLETOS</div>
+      <input id="sorteoClienteNombre" placeholder="Nombre del cliente" oninput="window.buscarClienteSorteo()"
+        style="width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:8px 10px;color:#fff;font-size:0.78rem;margin-bottom:6px;box-sizing:border-box;">
+      <div id="sorteoClienteInfo" style="display:none;background:#0a1a1a;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:0.75rem;">
+        <div style="color:#aaa;" id="sorteoClienteNombreConf"></div>
+        <div style="color:var(--naranja);" id="sorteoClienteBoletosConf"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="font-size:0.7rem;color:#555;">Cantidad:</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button onclick="window.cambiarCantBoletos(-1)" style="background:#222;border:1px solid #444;color:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;">−</button>
+          <span id="sorteoCantBoletos" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);min-width:24px;text-align:center;">1</span>
+          <button onclick="window.cambiarCantBoletos(1)" style="background:#222;border:1px solid #444;color:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:1rem;">+</button>
+        </div>
+        <div id="sorteoCostoTotal" style="font-size:0.72rem;color:var(--verde);margin-left:4px;"></div>
+      </div>
+      <button onclick="window.cargarBoletosSorteo()" style="width:100%;background:var(--turquesa);border:none;color:#111;border-radius:8px;padding:9px;font-family:'Righteous',cursive;font-size:0.78rem;cursor:pointer;">🎟️ Cargar boletos</button>
+      <div id="sorteoCargaMsg" style="font-size:0.7rem;min-height:14px;margin-top:6px;text-align:center;"></div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:16px;padding:16px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;margin-bottom:12px;">📊 ESTADÍSTICAS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:0.6rem;color:#555;">BOLETOS VENDIDOS</div>
+          <div id="statBoletosVendidos" style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--naranja);">0</div>
+        </div>
+        <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:0.6rem;color:#555;">RECAUDADO</div>
+          <div id="statRecaudado" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--verde);">$0</div>
+        </div>
+        <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:0.6rem;color:#555;">PARTICIPANTES</div>
+          <div id="statParticipantes" style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--turquesa);">0</div>
+        </div>
+        <div style="background:var(--gris-mid);border-radius:10px;padding:10px;text-align:center;">
+          <div style="font-size:0.6rem;color:#555;">ÚLT. GANADOR</div>
+          <div id="statUltimoGanador" style="font-size:0.72rem;color:#aaa;margin-top:2px;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de participantes -->
+  <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:16px;padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;">👥 PARTICIPANTES</div>
+      <button onclick="window.exportarParticipantes()" style="background:transparent;border:1px solid #444;color:#666;border-radius:8px;padding:5px 10px;font-size:0.68rem;cursor:pointer;">📋 Exportar</button>
+    </div>
+    <div id="sorteoParticipantesList" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
+      <div style="color:#444;font-size:0.75rem;text-align:center;padding:16px;">Sin participantes aún</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL RULETA -->
+<div id="ruletaModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this && !_ruletaAnimando)window.cerrarRuleta()">
+  <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:20px;padding:24px;width:100%;max-width:420px;text-align:center;position:relative;">
+    <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--naranja);margin-bottom:18px;">🎰 SORTEO EN CURSO</div>
+
+    <!-- Ruleta visual tipo slot -->
+    <div style="position:relative;height:90px;overflow:hidden;border:2px solid var(--naranja);border-radius:14px;background:#0a0a0a;margin-bottom:16px;">
+      <!-- Indicador central -->
+      <div style="position:absolute;top:50%;left:0;right:0;height:36px;transform:translateY(-50%);border-top:2px solid rgba(255,140,0,.5);border-bottom:2px solid rgba(255,140,0,.5);pointer-events:none;z-index:2;"></div>
+      <!-- Gradientes arriba/abajo -->
+      <div style="position:absolute;top:0;left:0;right:0;height:25px;background:linear-gradient(to bottom,#0a0a0a,transparent);z-index:2;pointer-events:none;"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:25px;background:linear-gradient(to top,#0a0a0a,transparent);z-index:2;pointer-events:none;"></div>
+      <!-- Carrusel de nombres -->
+      <div id="ruletaCarrusel" style="position:absolute;left:0;right:0;top:0;transition:none;will-change:transform;"></div>
+    </div>
+
+    <div id="ruletaEstado" style="font-size:0.82rem;color:#888;min-height:20px;margin-bottom:14px;">Preparando sorteo...</div>
+    <div id="ruletaGanadorFinal" style="display:none;background:linear-gradient(135deg,#1a2a00,#0a1a00);border:2px solid var(--verde);border-radius:14px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:0.7rem;color:var(--verde);margin-bottom:6px;">🏆 GANADOR</div>
+      <div id="ruletaGanadorNombre" style="font-family:'Righteous',cursive;font-size:1.5rem;color:var(--blanco);"></div>
+      <div id="ruletaGanadorBoleto" style="font-size:0.72rem;color:#888;margin-top:4px;"></div>
+    </div>
+    <button id="btnCerrarRuleta" onclick="window.cerrarRuleta()" style="display:none;background:var(--verde);border:none;color:#111;border-radius:10px;padding:10px 28px;font-family:'Righteous',cursive;font-size:0.85rem;cursor:pointer;">✅ Confirmar ganador</button>
+    <button onclick="if(!_ruletaAnimando)window.cerrarRuleta()" style="position:absolute;top:12px;right:14px;background:transparent;border:none;color:#555;font-size:1.2rem;cursor:pointer;">✕</button>
+  </div>
+</div>
+
+
 <!-- ACTIVAR SONIDO -->
 <div id="audioActivar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9990;background:#1a1a1a;border:1.5px solid var(--turquesa);border-radius:14px;padding:10px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(61,191,184,.3);">
   <span style="font-size:0.85rem;color:#aaa;">🔔 Activá el sonido de pedidos</span>
@@ -1528,6 +1674,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
   if (tab === 'descuentos') renderCupones();
+  if (tab === 'sorteos') window.renderSorteoPanel?.();
 };
 
 // ===== HORARIOS =====
@@ -3556,5 +3703,334 @@ document.querySelectorAll('.tab[data-tab]').forEach(t => {
       .catch(e => console.log('SW error:', e));
   }
 </script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SISTEMA DE SORTEOS — MORDELÓN VENDEDOR
+// ═══════════════════════════════════════════════════════
+
+let _sorteoActual    = null;   // doc completo del sorteo activo
+let _sorteoCantidad  = 1;      // cantidad de boletos a cargar
+let _ruletaAnimando  = false;
+let _sorteoClienteInfo = null; // cliente buscado actualmente
+
+// ── Listener en tiempo real ──────────────────────────
+onSnapshot(doc(db, 'sorteos', 'actual'), (snap) => {
+  _sorteoActual = snap.exists() ? snap.data() : null;
+  _actualizarUIVendedor();
+});
+
+function _actualizarUIVendedor() {
+  const s = _sorteoActual;
+  const infoEl    = document.getElementById('sorteoActivoInfo');
+  const ctrlEl    = document.getElementById('sorteoControles');
+  const btnToggle = document.getElementById('btnToggleSorteo');
+  const btnSort   = document.getElementById('btnSortear');
+  if (!infoEl) return;
+
+  if (!s) {
+    infoEl.innerHTML = '<div style="color:#555;font-size:0.78rem;text-align:center;padding:20px 0;">Sin sorteo activo</div>';
+    if (ctrlEl) ctrlEl.style.display = 'none';
+    document.getElementById('statBoletosVendidos').textContent = '0';
+    document.getElementById('statRecaudado').textContent = '$0';
+    document.getElementById('statParticipantes').textContent = '0';
+    _renderParticipantes([]);
+    return;
+  }
+
+  const estaActivo = s.activo !== false;
+  const participantes = s.participantes || {};
+  const totalBoletos  = Object.values(participantes).reduce((a,b)=>a+(b.cantidad||0),0);
+  const recaudado     = totalBoletos * (s.precio || 0);
+  const cantPart      = Object.keys(participantes).length;
+
+  infoEl.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <span style="font-size:2rem;">${s.emoji||'🎟️'}</span>
+      <div style="text-align:left;flex:1;">
+        <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--blanco);">${s.nombre||'—'}</div>
+        <div style="font-size:0.7rem;color:#888;margin-top:2px;">${s.descripcion||''}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+          <span style="background:#1a1a00;color:var(--naranja);border-radius:6px;padding:2px 8px;font-size:0.65rem;">$${(s.precio||0).toLocaleString('es-AR')}/boleto</span>
+          ${s.fecha?`<span style="background:#111;color:#888;border-radius:6px;padding:2px 8px;font-size:0.65rem;">📅 ${new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</span>`:''}
+          <span style="background:${estaActivo?'#0a1a0a':'#1a0a0a'};color:${estaActivo?'var(--verde)':'var(--rojo)'};border-radius:6px;padding:2px 8px;font-size:0.65rem;">${estaActivo?'● ACTIVO':'● PAUSADO'}</span>
+        </div>
+      </div>
+    </div>`;
+
+  if (ctrlEl) ctrlEl.style.display = 'block';
+  if (btnToggle) {
+    btnToggle.textContent = estaActivo ? '⏸️ PAUSAR SORTEO' : '▶️ ACTIVAR SORTEO';
+    btnToggle.style.borderColor = estaActivo ? 'var(--rojo)' : 'var(--verde)';
+    btnToggle.style.color       = estaActivo ? 'var(--rojo)' : 'var(--verde)';
+  }
+  if (btnSort) btnSort.disabled = !estaActivo || Object.keys(participantes).length === 0;
+
+  document.getElementById('statBoletosVendidos').textContent = totalBoletos;
+  document.getElementById('statRecaudado').textContent = '$' + recaudado.toLocaleString('es-AR');
+  document.getElementById('statParticipantes').textContent = cantPart;
+  if (s.ultimoGanador) document.getElementById('statUltimoGanador').textContent = s.ultimoGanador;
+
+  _renderParticipantes(Object.entries(participantes));
+  _actualizarCostoTotal();
+}
+
+function _renderParticipantes(entries) {
+  const el = document.getElementById('sorteoParticipantesList');
+  if (!el) return;
+  if (!entries.length) {
+    el.innerHTML = '<div style="color:#444;font-size:0.75rem;text-align:center;padding:16px;">Sin participantes aún</div>';
+    return;
+  }
+  const sorted = [...entries].sort((a,b)=>(b[1].cantidad||0)-(a[1].cantidad||0));
+  el.innerHTML = sorted.map(([nombre, datos], i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:${i%2===0?'var(--gris-mid)':'transparent'};border-radius:8px;padding:6px 10px;">
+      <div style="font-size:0.75rem;color:var(--blanco);">👤 ${nombre}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:0.68rem;color:var(--naranja);">🎟️ ${datos.cantidad||0} boleto${(datos.cantidad||0)!==1?'s':''}</span>
+        <span style="font-size:0.62rem;color:#555;">N°${(datos.numeros||[]).join(', ')}</span>
+      </div>
+    </div>`).join('');
+}
+
+function _actualizarCostoTotal() {
+  const precio = _sorteoActual?.precio || 0;
+  const el = document.getElementById('sorteoCostoTotal');
+  if (el && precio) el.textContent = '= $' + (_sorteoCantidad * precio).toLocaleString('es-AR');
+}
+
+// ── Crear sorteo ──────────────────────────────────────
+window.crearSorteo = async function() {
+  const nombre = document.getElementById('sorteoNombre').value.trim();
+  const desc   = document.getElementById('sorteoDescripcion').value.trim();
+  const precio = parseInt(document.getElementById('sorteoPrecio').value) || 0;
+  const fecha  = document.getElementById('sorteoFecha').value;
+
+  if (!nombre) { showNotif('⚠️ Ingresá un nombre para el premio'); return; }
+  if (!precio) { showNotif('⚠️ Ingresá el precio del boleto'); return; }
+  if (_sorteoActual) { if (!confirm('¿Reemplazar el sorteo actual? Los participantes se perderán.')) return; }
+
+  const emojis = ['🎟️','🍔','🏆','🎁','🎉','🍕','🌟'];
+  const emoji  = emojis[Math.floor(Math.random()*emojis.length)];
+
+  await setDoc(doc(db, 'sorteos', 'actual'), {
+    nombre, descripcion: desc, precio, fecha: fecha||'', emoji,
+    activo: true,
+    participantes: {},
+    ultimoGanador: null,
+    creadoEn: Date.now(),
+    creadoPor: usuarioActual || 'Admin',
+  });
+
+  document.getElementById('sorteoNombre').value = '';
+  document.getElementById('sorteoDescripcion').value = '';
+  registrarActividad('🎟️ Sorteo creado: ' + nombre);
+  showNotif('✅ Sorteo creado');
+};
+
+// ── Toggle activo/pausado ─────────────────────────────
+window.toggleSorteoActivo = async function() {
+  if (!_sorteoActual) return;
+  const nuevo = _sorteoActual.activo === false ? true : false;
+  await updateDoc(doc(db,'sorteos','actual'), { activo: nuevo });
+  registrarActividad(nuevo ? '▶️ Sorteo activado' : '⏸️ Sorteo pausado');
+};
+
+// ── Cerrar/eliminar sorteo ────────────────────────────
+window.cerrarSorteo = async function() {
+  if (!confirm('¿Cerrar el sorteo actual? Esta acción no se puede deshacer.')) return;
+  await deleteDoc(doc(db, 'sorteos', 'actual'));
+  registrarActividad('🗑️ Sorteo cerrado');
+  showNotif('Sorteo cerrado');
+};
+
+// ── Buscar cliente para cargar boletos ────────────────
+window.buscarClienteSorteo = async function() {
+  const nombre = document.getElementById('sorteoClienteNombre').value.trim().toUpperCase();
+  const infoEl = document.getElementById('sorteoClienteInfo');
+  _sorteoClienteInfo = null;
+  if (!nombre || nombre.length < 2) { infoEl.style.display='none'; return; }
+  try {
+    const snap = await getDoc(doc(db,'clientes',nombre));
+    if (!snap.exists()) { infoEl.style.display='none'; return; }
+    const data = snap.data();
+    _sorteoClienteInfo = { nombre, ...data };
+    const participantes = _sorteoActual?.participantes || {};
+    const boletosActuales = participantes[nombre]?.cantidad || 0;
+    document.getElementById('sorteoClienteNombreConf').textContent = '👤 ' + nombre;
+    document.getElementById('sorteoClienteBoletosConf').textContent =
+      boletosActuales ? '🎟️ Ya tiene ' + boletosActuales + ' boleto' + (boletosActuales!==1?'s':'') : '🎟️ Sin boletos aún';
+    infoEl.style.display = 'block';
+    _actualizarCostoTotal();
+  } catch(e) { infoEl.style.display='none'; }
+};
+
+window.cambiarCantBoletos = function(delta) {
+  _sorteoCantidad = Math.max(1, Math.min(20, (_sorteoCantidad||1) + delta));
+  document.getElementById('sorteoCantBoletos').textContent = _sorteoCantidad;
+  _actualizarCostoTotal();
+};
+
+// ── Cargar boletos a cliente ──────────────────────────
+window.cargarBoletosSorteo = async function() {
+  const msgEl = document.getElementById('sorteoCargaMsg');
+  if (!_sorteoActual) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ No hay sorteo activo'; return; }
+  if (!_sorteoClienteInfo) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Buscá un cliente primero'; return; }
+  if (_sorteoActual.activo === false) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ El sorteo está pausado'; return; }
+
+  const nombre = _sorteoClienteInfo.nombre;
+  const participantes = { ...(_sorteoActual.participantes || {}) };
+  const actual = participantes[nombre] || { cantidad: 0, numeros: [] };
+
+  // Generar números correlativos únicos
+  const todosNumeros = Object.values(participantes).flatMap(p => p.numeros||[]);
+  const maxNum = todosNumeros.length ? Math.max(...todosNumeros) : 0;
+  const nuevosNumeros = Array.from({length:_sorteoCantidad}, (_,i) => maxNum+i+1);
+
+  participantes[nombre] = {
+    cantidad: actual.cantidad + _sorteoCantidad,
+    numeros: [...actual.numeros, ...nuevosNumeros],
+  };
+
+  try {
+    await updateDoc(doc(db,'sorteos','actual'), { participantes });
+    const total = participantes[nombre].cantidad;
+    msgEl.style.color = 'var(--verde)';
+    msgEl.textContent = '✅ ' + _sorteoCantidad + ' boleto' + (_sorteoCantidad!==1?'s':'') + ' cargado' + (_sorteoCantidad!==1?'s':'') + ' a ' + nombre + ' (total: '+total+')';
+    registrarActividad('🎟️ ' + _sorteoCantidad + ' boletos cargados a ' + nombre);
+    setTimeout(() => { msgEl.textContent=''; }, 4000);
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error al cargar boletos';
+  }
+};
+
+// ── Exportar lista de participantes ──────────────────
+window.exportarParticipantes = function() {
+  if (!_sorteoActual) { showNotif('⚠️ No hay sorteo activo'); return; }
+  const p = _sorteoActual.participantes || {};
+  const fecha = new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
+  let txt = '=== SORTEO: ' + _sorteoActual.nombre + ' ===\n';
+  txt += 'Precio por boleto: $' + _sorteoActual.precio + '\n\n';
+  Object.entries(p).sort((a,b)=>(b[1].cantidad||0)-(a[1].cantidad||0)).forEach(([n,d])=>{
+    txt += n + ': ' + (d.cantidad||0) + ' boleto(s) — N°' + (d.numeros||[]).join(', ') + '\n';
+  });
+  txt += '\nTotal boletos: ' + Object.values(p).reduce((a,b)=>a+(b.cantidad||0),0);
+  txt += '\nRecaudado: $' + (Object.values(p).reduce((a,b)=>a+(b.cantidad||0),0) * _sorteoActual.precio).toLocaleString('es-AR');
+  const blob = new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'sorteo-' + fecha + '.txt'; a.click();
+  URL.revokeObjectURL(url);
+};
+
+window.renderSorteoPanel = function() { _actualizarUIVendedor(); };
+
+// ═══════════════════════════════════════════════════════
+//  RULETA
+// ═══════════════════════════════════════════════════════
+
+window.sortearGanador = function() {
+  if (!_sorteoActual) return;
+  const participantes = _sorteoActual.participantes || {};
+  if (!Object.keys(participantes).length) { showNotif('⚠️ No hay participantes'); return; }
+
+  // Armar pool de boletos (uno por boleto comprado)
+  const pool = [];
+  Object.entries(participantes).forEach(([nombre, datos]) => {
+    (datos.numeros||[]).forEach(num => pool.push({ nombre, num }));
+  });
+
+  if (!pool.length) { showNotif('⚠️ Sin boletos cargados'); return; }
+
+  // Elegir ganador real al azar
+  const ganador = pool[Math.floor(Math.random() * pool.length)];
+
+  // Construir lista de nombres para el carrusel (mezcla random + ganador al final)
+  const todosNombres = Object.keys(participantes);
+  const listaCarrusel = [];
+  for (let i = 0; i < 40; i++) {
+    listaCarrusel.push(todosNombres[Math.floor(Math.random()*todosNombres.length)]);
+  }
+  listaCarrusel.push(ganador.nombre); // el último siempre es el ganador
+
+  _animarRuleta(listaCarrusel, ganador);
+};
+
+function _animarRuleta(lista, ganador) {
+  _ruletaAnimando = true;
+  const modal     = document.getElementById('ruletaModal');
+  const carrusel  = document.getElementById('ruletaCarrusel');
+  const estadoEl  = document.getElementById('ruletaEstado');
+  const ganadorEl = document.getElementById('ruletaGanadorFinal');
+  const ganadorNom = document.getElementById('ruletaGanadorNombre');
+  const ganadorBol = document.getElementById('ruletaGanadorBoleto');
+  const btnCerrar = document.getElementById('btnCerrarRuleta');
+
+  // Reset
+  ganadorEl.style.display  = 'none';
+  btnCerrar.style.display  = 'none';
+  estadoEl.textContent     = '🎰 Sorteando...';
+  modal.style.display      = 'flex';
+
+  const ITEM_H = 36; // px por nombre en el carrusel
+  const VISIBLE_CENTER = 27; // offset para centrar en la ventana (90px / 2 - 18px)
+
+  // Renderizar todos los items
+  carrusel.innerHTML = lista.map((n,i) => `
+    <div style="height:${ITEM_H}px;display:flex;align-items:center;justify-content:center;
+      font-family:'Righteous',cursive;font-size:${i===lista.length-1?'1rem':'0.82rem'};
+      color:${i===lista.length-1?'var(--naranja)':'#666'};padding:0 10px;
+      transition: color 0.2s;">
+      ${n}
+    </div>`).join('');
+
+  // Posición final: centrar el último item (ganador) en la ventana
+  const finalY = -(lista.length - 1) * ITEM_H + VISIBLE_CENTER;
+
+  // Animación con requestAnimationFrame
+  const totalMs  = 3800;
+  const startMs  = performance.now();
+  const startY   = 0;
+
+  function easeOut(t) { return 1 - Math.pow(1-t, 4); }
+
+  function frame(now) {
+    const elapsed = now - startMs;
+    const t = Math.min(elapsed / totalMs, 1);
+    const eased = easeOut(t);
+    const currentY = startY + (finalY - startY) * eased;
+    carrusel.style.transform = `translateY(${currentY}px)`;
+
+    // Actualizar estado según velocidad
+    if (t < 0.5) estadoEl.textContent = '🎰 Mezclando boletos...';
+    else if (t < 0.85) estadoEl.textContent = '⚡ Casi...';
+    else if (t < 1) estadoEl.textContent = '🎯 Definiendo ganador...';
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      // Animación terminada
+      _ruletaAnimando = false;
+      estadoEl.textContent = '';
+      ganadorNom.textContent = ganador.nombre;
+      ganadorBol.textContent = 'Boleto N°' + ganador.num;
+      ganadorEl.style.display  = 'block';
+      btnCerrar.style.display  = 'inline-block';
+
+      // Guardar en Firebase
+      updateDoc(doc(db,'sorteos','actual'), { ultimoGanador: ganador.nombre + ' (N°' + ganador.num + ')' });
+      registrarActividad('🏆 Ganador del sorteo: ' + ganador.nombre + ' — Boleto N°' + ganador.num);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+window.cerrarRuleta = function() {
+  if (_ruletaAnimando) return;
+  document.getElementById('ruletaModal').style.display = 'none';
+};
+</script>
+
 </body>
 </html>

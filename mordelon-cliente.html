@@ -647,10 +647,32 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
   </div>
   <div id="menuContainer"></div>
 
+  <!-- ZONA SORTEOS -->
+  <div id="zonaSorteos" style="display:none;padding:16px 0 8px;">
+    <div id="sorteoClienteCard" style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:18px;padding:18px;margin-bottom:14px;">
+      <div id="sorteoClienteContenido" style="text-align:center;color:#555;font-size:0.82rem;padding:12px 0;">Sin sorteo activo por el momento</div>
+    </div>
+    <div id="sorteoBoletosMiosCard" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:18px;margin-bottom:14px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:10px;">🎟️ MIS BOLETOS</div>
+      <div id="sorteoBoletosMiosInfo"></div>
+    </div>
+    <div id="sorteoHistorialCard" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:18px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;margin-bottom:10px;">🏆 ÚLTIMO GANADOR</div>
+      <div id="sorteoUltimoGanadorCliente" style="font-size:0.82rem;color:var(--naranja);"></div>
+    </div>
+  </div>
+
   <!-- ZONA DE JUEGOS -->
   <div id="zonaJuegos" style="padding:16px 0 100px;">
     <div style="text-align:center;margin-bottom:12px;">
       <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">🎮 Mientras esperás</div>
+      <!-- Botón sorteos -->
+      <div id="sorteosBtnWrap" style="display:none;margin-bottom:10px;">
+        <button onclick="window.toggleZonaSorteos()" id="btnSorteoToggle"
+          style="background:linear-gradient(135deg,#2a1000,#1a0800);border:1.5px solid var(--naranja);color:var(--naranja);border-radius:20px;padding:9px 22px;font-family:'Righteous',cursive;font-size:0.78rem;letter-spacing:1px;cursor:pointer;transition:all .2s;width:100%;max-width:280px;">
+          🎟️ VER SORTEO ACTIVO
+        </button>
+      </div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
         <button onclick="window.elegirJuego('tetris')" id="btnJuegoTetris" style="background:var(--gris-mid);border:2px solid var(--turquesa);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🧱 Tetris</button>
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
@@ -1005,7 +1027,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 </div>
 
 <!-- MODAL CALIFICACIÓN -->
-<div id="modalRating" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px;">
+<div id="modalRating" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;">
   <div style="background:var(--gris-dark,#1a1a1a);border:1.5px solid var(--turquesa,#3dbfb8);border-radius:20px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(61,191,184,.2);">
     <div style="font-size:2.4rem;margin-bottom:8px;">🙌</div>
     <div style="font-size:1.1rem;font-weight:800;color:var(--turquesa,#3dbfb8);margin-bottom:4px;">¡Gracias por tu pedido!</div>
@@ -1431,6 +1453,8 @@ window.nuevoPedido = function() {
   document.querySelectorAll('#entregaSelector .metodo-btn').forEach(b => b.classList.remove('entrega-sel'));
   document.getElementById('infoRetiro').style.display = 'none';
   document.getElementById('infoDelivery').style.display = 'none';
+  if (unsubEstado) { unsubEstado(); unsubEstado = null; }
+  pedidoActivoId = null;
   document.getElementById('whatsappCliente').style.borderColor = 'var(--rojo)';
   document.getElementById('waCheck').style.display = 'none';
   document.getElementById('waError').style.display = 'none';
@@ -1679,8 +1703,9 @@ function notificarClienteListo() {
   }
 }
 
-// Recuperar pedido anterior (FAB) si el cliente cerró el navegador
-(function recuperarPedidoAnterior() {
+// Recuperar pedido activo si el cliente cerró el navegador
+(function recuperarPedido() {
+  // Recuperar pedido anterior (FAB)
   try {
     const rawAnt = localStorage.getItem('mordelon-pedido-ant');
     if (rawAnt) {
@@ -1860,11 +1885,8 @@ function proximaApertura() {
     return horario.desde;
   }
   // Buscar el próximo día abierto
-  // horariosData está ordenado [Lunes..Domingo]; getDay() devuelve 0=Dom..6=Sáb
-  // Convertir al índice de horariosData: Lunes=0 ... Domingo=6
-  const diaIdx = (ahora.getDay() + 6) % 7;
   for (let i = 1; i <= 7; i++) {
-    const sig = horariosData[(diaIdx + i) % 7];
+    const sig = horariosData[(ahora.getDay() + i) % 7];
     if (sig && sig.abierto) return sig.dia + ' a las ' + sig.desde;
   }
   return null;
@@ -2002,7 +2024,7 @@ function actualizarBarraRecompensa() {
     snake:  parseInt(localStorage.getItem('snakeHiC') || '0'),
     '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
     dino:   parseInt(localStorage.getItem('dinoHiC') || '0'),
-    minas:  parseInt(localStorage.getItem('minasHiC_score') || '0'),
+    minas:  parseInt(localStorage.getItem('minasHiC') || '0'),
     slots:  parseInt(localStorage.getItem('slotsHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
@@ -2093,7 +2115,7 @@ window.loginEntrar = async function() {
       return;
     }
     usuarioActual = { nombre, ...data };
-    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave: btoa(clave) }));
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -2133,7 +2155,7 @@ window.registrarse = async function() {
     };
     await setDoc(ref, nuevoUsuario);
     usuarioActual = { ...nuevoUsuario };
-    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave: btoa(clave) }));
+    localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -2234,8 +2256,7 @@ async function intentarAutoLogin() {
     return;
   }
   try {
-    const { nombre, clave: claveGuardada } = JSON.parse(sesionGuardada);
-    const clave = (() => { try { return atob(claveGuardada); } catch(e) { return claveGuardada; } })();
+    const { nombre, clave } = JSON.parse(sesionGuardada);
     const snap = await getDoc(doc(db, 'clientes', nombre));
     if (snap.exists() && snap.data().clave === clave) {
       usuarioActual = { nombre, ...snap.data() };
@@ -2630,9 +2651,6 @@ function minasDescubrir(r, c) {
     return;
   }
 
-  // Contar celdas reveladas ANTES del flood fill
-  const ptsAntes = mRevealed.flat().filter(Boolean).length;
-
   // BFS flood fill para celdas vacías
   const queue = [[r, c]];
   while (queue.length) {
@@ -2648,6 +2666,8 @@ function minasDescubrir(r, c) {
     }
   }
 
+  // Sumar puntos por celdas reveladas
+  const ptsAntes = mRevealed.flat().filter(Boolean).length;
   // Verificar victoria
   let sin_revelar = 0;
   for (let rr=0;rr<mRows;rr++) for (let cc=0;cc<mCols;cc++)
@@ -2660,14 +2680,6 @@ function minasDescubrir(r, c) {
   const scoreEl = document.getElementById('minasScore');
   if (scoreEl) scoreEl.textContent = mScore;
 
-  // Guardar récord en cada jugada (no solo al ganar)
-  const hiActualParcial = parseInt(localStorage.getItem('minasHiC_score') || '0');
-  if (mScore > hiActualParcial) {
-    localStorage.setItem('minasHiC_score', mScore);
-    if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('minas', mScore);
-    actualizarHiMinas();
-  }
-
   if (sin_revelar === 0) {
     mWon = true;
     clearInterval(mTimerInterval);
@@ -2676,7 +2688,7 @@ function minasDescubrir(r, c) {
     const puntajeFinal = mScore + Math.round(tiempoBonus);
     mScore = puntajeFinal;
     if (scoreEl) scoreEl.textContent = mScore;
-    // Actualizar récord con puntaje final (con bonus de tiempo)
+    // Guardar récord de puntaje
     const hiActual = parseInt(localStorage.getItem('minasHiC_score') || '0');
     if (puntajeFinal > hiActual) {
       localStorage.setItem('minasHiC_score', puntajeFinal);
@@ -2793,6 +2805,10 @@ function minasRender(boomR, boomC) {
 
 window.minasDificultad = function(d) {
   mDif = d;
+  ['facil','medio','dificil'].forEach(k => {
+    const btn = document.getElementById('minasBtnFacil'.replace('facil', '') + 'Btn' + k.charAt(0).toUpperCase() + k.slice(1));
+    // Fallback naming
+  });
   document.getElementById('minasBtnFacil').style.background = d==='facil' ? 'rgba(45,198,83,.2)' : 'var(--gris-mid)';
   document.getElementById('minasBtnFacil').style.borderColor = d==='facil' ? 'var(--verde)' : 'var(--gris-light)';
   document.getElementById('minasBtnFacil').style.color = d==='facil' ? 'var(--verde)' : '#888';
@@ -3264,5 +3280,134 @@ DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
 })();
 
 </script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SISTEMA DE SORTEOS — MORDELÓN CLIENTE
+// ═══════════════════════════════════════════════════════
+
+let _sorteoData = null;
+
+// Botón de acceso al sorteo — se inserta dinámicamente junto a los juegos
+(function insertarBotonSorteo() {
+  // Esperar a que el DOM esté listo
+  const tryInsert = () => {
+    const zona = document.getElementById('zonaSorteos');
+    const juegosZona = document.getElementById('zonaJuegos');
+    if (!zona || !juegosZona) { setTimeout(tryInsert, 200); return; }
+  };
+  tryInsert();
+})();
+
+// Listener en tiempo real del sorteo
+onSnapshot(doc(db, 'sorteos', 'actual'), (snap) => {
+  _sorteoData = snap.exists() ? snap.data() : null;
+  _renderSorteoCliente();
+});
+
+function _renderSorteoCliente() {
+  const zonaSorteos  = document.getElementById('zonaSorteos');
+  const card         = document.getElementById('sorteoClienteCard');
+  const contenido    = document.getElementById('sorteoClienteContenido');
+  const boletosCard  = document.getElementById('sorteoBoletosMiosCard');
+  const histCard     = document.getElementById('sorteoHistorialCard');
+  if (!zonaSorteos) return;
+
+  const s = _sorteoData;
+  const btnWrap = document.getElementById('sorteosBtnWrap');
+  if (btnWrap) btnWrap.style.display = (s && s.activo !== false) ? 'block' : 'none';
+
+  if (!s || s.activo === false) {
+    contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
+      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') +
+      '</div>';
+    boletosCard.style.display = 'none';
+    histCard.style.display = 'none';
+    return;
+  }
+
+  // Card principal del sorteo
+  const totalBoletos = Object.values(s.participantes||{}).reduce((a,b)=>a+(b.cantidad||0),0);
+  const cantPart     = Object.keys(s.participantes||{}).length;
+  const fechaStr     = s.fecha ? new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) : null;
+
+  contenido.innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:2.5rem;margin-bottom:6px;">${s.emoji||'🎟️'}</div>
+      <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);">${s.nombre}</div>
+      ${s.descripcion ? `<div style="font-size:0.75rem;color:#888;margin-top:4px;">${s.descripcion}</div>` : ''}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Precio</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--naranja);">$${(s.precio||0).toLocaleString('es-AR')}</div>
+      </div>
+      <div style="background:rgba(61,191,184,.1);border:1px solid rgba(61,191,184,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Boletos</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--turquesa);">${totalBoletos}</div>
+      </div>
+      <div style="background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Jugadores</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--verde);">${cantPart}</div>
+      </div>
+    </div>
+    ${fechaStr ? `<div style="text-align:center;font-size:0.75rem;color:#666;margin-bottom:12px;">📅 Sorteo: ${fechaStr}</div>` : ''}
+    <div style="background:#0a0a00;border:1px dashed rgba(255,140,0,.4);border-radius:10px;padding:10px;text-align:center;font-size:0.72rem;color:#888;">
+      💳 Para participar, pedile a Mordelón que te cargue boletos en tu próximo pedido
+    </div>`;
+
+  // Mis boletos (si está logueado)
+  if (usuarioActual?.nombre) {
+    const misDatos = (s.participantes||{})[usuarioActual.nombre];
+    if (misDatos && misDatos.cantidad > 0) {
+      boletosCard.style.display = 'block';
+      const pct = totalBoletos > 0 ? Math.round((misDatos.cantidad / totalBoletos) * 100) : 0;
+      document.getElementById('sorteoBoletosMiosInfo').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Righteous',cursive;font-size:1.6rem;color:var(--naranja);">${misDatos.cantidad}</div>
+            <div style="font-size:0.68rem;color:#666;">boleto${misDatos.cantidad!==1?'s':''}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--verde);">${pct}%</div>
+            <div style="font-size:0.68rem;color:#666;">de chances</div>
+          </div>
+        </div>
+        <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px;">
+          <div style="background:linear-gradient(90deg,var(--naranja),var(--verde));height:100%;width:${pct}%;border-radius:6px;transition:width 1s;"></div>
+        </div>
+        <div style="font-size:0.65rem;color:#555;">Tus números: N°${(misDatos.numeros||[]).join(' · N°')}</div>`;
+    } else {
+      boletosCard.style.display = 'none';
+    }
+  } else {
+    boletosCard.style.display = 'none';
+  }
+
+  // Último ganador
+  if (s.ultimoGanador) {
+    histCard.style.display = 'block';
+    document.getElementById('sorteoUltimoGanadorCliente').textContent = '🏆 ' + s.ultimoGanador;
+  } else {
+    histCard.style.display = 'none';
+  }
+}
+
+// Re-render cuando el usuario se loguea
+const _origLoginCallback = window._onLoginCallback;
+window._onLoginCallback = function(u) {
+  if (_origLoginCallback) _origLoginCallback(u);
+  _renderSorteoCliente();
+};
+
+// Mostrar/ocultar zona de sorteos
+window.toggleZonaSorteos = function() {
+  const z = document.getElementById('zonaSorteos');
+  if (!z) return;
+  const visible = z.style.display !== 'none';
+  z.style.display = visible ? 'none' : 'block';
+};
+</script>
+
 </body>
 </html>
