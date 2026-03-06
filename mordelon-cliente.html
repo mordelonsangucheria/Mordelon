@@ -816,7 +816,15 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onpointerdown="window.dinoJump()" style="background:var(--turquesa);border:none;color:#111;border-radius:14px;padding:12px 40px;font-family:'Righteous',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;">▲ SALTAR</button>
         <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
       </div>
-      <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Espacio / Tap para saltar · Agacharse: ↓</p>
+      <div style="display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px;margin:10px auto;width:fit-content;">
+        <div></div>
+        <button onpointerdown="window.dinoJump()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:52px;height:52px;">▲</button>
+        <div></div>
+        <div></div>
+        <button onpointerdown="window.dinoFastFall()" onpointerup="if(dino&&dino.onGround)dino.ducking=false;" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:52px;height:52px;">▼</button>
+        <div></div>
+      </div>
+      <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:4px;">▲ saltar · ▼ caída rápida / agacharse</p>
     </div>
 
     <!-- BUSCAMINAS -->
@@ -3562,11 +3570,12 @@ function dinoLoop() {
   const aceleracion      = 0.6 + difRatio * 1.2;  // rango: 0.6 → 1.8
   dSpeed = Math.min(velocidadInicial + (dScore / 80) * aceleracion, velocidadMax);
 
-  // Physics
+  // Physics — fast fall: si está en el aire y apretó abajo, cae más rápido
   if(!dino.onGround) {
-    dino.vy += 0.7;
+    const gravedad = dino.fastFall ? 2.4 : 0.7;
+    dino.vy += gravedad;
     dino.y += dino.vy;
-    if(dino.y >= GROUND) { dino.y = GROUND; dino.vy = 0; dino.onGround = true; }
+    if(dino.y >= GROUND) { dino.y = GROUND; dino.vy = 0; dino.onGround = true; dino.fastFall = false; }
   }
   dino.frame = Math.floor(dFrame / 6) % 2;
 
@@ -3805,7 +3814,13 @@ function dinoDead() {
   DX.fillText('Tap o Espacio para reiniciar',DW/2,110);
 }
 
-window.dinoJump = function() { if(dOver){dinoInit();return;} if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;} };
+window.dinoJump = function() { if(dOver){dinoInit();return;} if(!dRunning)return; if(dino.onGround){dino.vy=-12;dino.onGround=false;dino.fastFall=false;} };
+// Fast fall: en el aire cae rápido, en el piso se agacha
+window.dinoFastFall = function() {
+  if(!dRunning) return;
+  if(!dino.onGround) { dino.fastFall = true; }
+  else { dino.ducking = true; }
+};
 window.dinoDuck = function(on) { if(dRunning) dino.ducking=on; };
 window.dinoInit  = dinoInit;
 window.dinoReset = function() { cancelAnimationFrame(dAnimFrame); dinoInit(); };
@@ -3813,16 +3828,16 @@ window.dinoReset = function() { cancelAnimationFrame(dAnimFrame); dinoInit(); };
 document.addEventListener('keydown', e=>{
   if(document.getElementById('juegoDino').style.display==='none') return;
   if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();window.dinoJump();}
-  if(e.key==='ArrowDown'){e.preventDefault();window.dinoDuck(true);}
+  if(e.key==='ArrowDown'){e.preventDefault();window.dinoFastFall();}
 });
-document.addEventListener('keyup', e=>{ if(e.key==='ArrowDown') window.dinoDuck(false); });
+document.addEventListener('keyup', e=>{ if(e.key==='ArrowDown'){ if(dino&&dino.onGround) dino.ducking=false; } });
 DC.addEventListener('pointerdown', ()=>window.dinoJump(), {passive:true});
 (()=>{
   let sy;
   DC.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
   DC.addEventListener('touchend',e=>{
     const dy=e.changedTouches[0].clientY-sy;
-    if(dy>20){window.dinoDuck(true);setTimeout(()=>window.dinoDuck(false),300);}
+    if(dy>20){ window.dinoFastFall(); setTimeout(()=>{ if(dino&&dino.onGround) dino.ducking=false; },300); }
     else window.dinoJump();
   },{passive:true});
 })();
