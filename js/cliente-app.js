@@ -1293,7 +1293,7 @@ onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
     _tlPremiosOrdenados = lista;
     // Reconstruir TL_PREMIOS keyed por emoji (para compatibilidad con lógica de spin)
     const nuevo = {};
-    lista.forEach(p => { nuevo[p.emoji] = p; });
+    lista.forEach(p => { p.pts = parseInt(p.pts) || 0; nuevo[p.emoji] = p; });
     TL_PREMIOS = nuevo;
     // Actualizar umbrales de probabilidad y emojis del pool visual
     _tlActualizarProbsDesdeFirebase(lista);
@@ -1509,19 +1509,9 @@ function tlAnimarRodillo(idxRod, simboloFinal, delay) {
         frames++;
         if (frames >= totalFrames) {
           clearInterval(intervalo);
-          // Efecto casi-ganar: 30% del tiempo mostrar el símbolo ganador 1 frame antes y luego cambiarlo
-          if (simboloFinal !== '💀' && Math.random() < 0.3 && idxRod < 2) {
-            inner.innerHTML = `<div class="tl-sym"><span class="tl-sym-e">${simboloFinal}</span></div>`;
-            setTimeout(() => {
-              const diff = TL_POOL.filter(s => s.e !== simboloFinal);
-              const alt = diff[Math.floor(Math.random() * diff.length)];
-              inner.innerHTML = `<div class="tl-sym"><span class="tl-sym-e">${alt.e}</span><span class="tl-sym-lbl">${alt.nombre}</span></div>`;
-              resolve();
-            }, 160);
-          } else {
-            inner.innerHTML = `<div class="tl-sym"><span class="tl-sym-e">${simboloFinal}</span><span class="tl-sym-lbl">${TL_SIMBOLOS.find(s=>s.e===simboloFinal)?.nombre||''}</span></div>`;
-            resolve();
-          }
+          // Mostrar resultado final
+          inner.innerHTML = `<div class="tl-sym"><span class="tl-sym-e">${simboloFinal}</span><span class="tl-sym-lbl">${TL_SIMBOLOS.find(s=>s.e===simboloFinal)?.nombre||''}</span></div>`;
+          resolve();
         }
       }, 60);
     }, delay);
@@ -1695,7 +1685,7 @@ window.slotsGirar = async function() {
       }
 
       // Puntos
-      slotsScore += premio.pts;
+      slotsScore += parseInt(premio.pts) || 0;
       if (slotsScore > slotsHiScore) {
         slotsHiScore = slotsScore;
         updateDoc(ref, { recordSlots: slotsHiScore }).catch(()=>{});
@@ -1753,8 +1743,8 @@ window.slotsGirar = async function() {
         updateDoc(statsRef, {
           totalSpins:    (d.totalSpins||0)+1,
           totalGanados:  (d.totalGanados||0)+1,
-          ptsOtorgados:  (d.ptsOtorgados||0)+premio.pts,
-        }).catch(()=>setDoc(statsRef,{ totalSpins:1, totalGanados:1, fichasOtorgadas:0, ptsOtorgados:premio.pts }));
+          ptsOtorgados:  (d.ptsOtorgados||0)+(parseInt(premio.pts)||0),
+        }).catch(()=>setDoc(statsRef,{ totalSpins:1, totalGanados:1, fichasOtorgadas:0, ptsOtorgados:parseInt(premio.pts)||0 }));
       });
 
     } else {
