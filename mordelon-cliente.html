@@ -2097,51 +2097,54 @@ window.slotsGirar = function() {
   setTimeout(() => { const e=document.getElementById('slotReel0'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[0]]; }, 700);
   setTimeout(() => { const e=document.getElementById('slotReel1'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[1]]; }, 950);
   setTimeout(() => {
-    const e=document.getElementById('slotReel2'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[2]];
+    try {
+      const e=document.getElementById('slotReel2'); if(e) e.textContent=SLOTS_SIMBOLOS[resultado[2]];
 
-    const s = resultado.map(i => SLOTS_SIMBOLOS[i]);
-    const msgEl = document.getElementById('slotsMensaje');
-    let puntos = 0, msg = '';
+      const s = resultado.map(i => SLOTS_SIMBOLOS[i]);
+      const msgEl = document.getElementById('slotsMensaje');
+      let puntos = 0, msg = '';
 
-    const colores = { win: 'var(--turquesa)', jackpot: '#FFD700', super: '#FF4D4D', nada: '#555' };
-
-    if (s[0]===s[1] && s[1]===s[2]) {
-      if (s[0]==='🔥') {
-        puntos = 1000; msg = '🔥 ¡SUPER JACKPOT! +1000 pts';
-        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FF4D4D';el.style.boxShadow='0 0 16px rgba(255,77,77,.6)';} });
-        if (msgEl) msgEl.style.color = colores.super;
+      if (s[0]===s[1] && s[1]===s[2]) {
+        if (s[0]==='🔥') {
+          puntos = 1000; msg = '🔥 ¡SUPER JACKPOT! +1000 pts';
+          reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FF4D4D';el.style.boxShadow='0 0 16px rgba(255,77,77,.6)';} });
+          if (msgEl) msgEl.style.color = '#FF4D4D';
+        } else {
+          puntos = 500; msg = '🎉 ¡JACKPOT! +500 pts';
+          reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FFD700';el.style.boxShadow='0 0 16px rgba(255,215,0,.5)';} });
+          if (msgEl) msgEl.style.color = '#FFD700';
+        }
+      } else if (s[0]===s[1] || s[1]===s[2] || s[0]===s[2]) {
+        puntos = 100; msg = '✨ ¡Dos iguales! +100 pts';
+        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--turquesa)';el.style.boxShadow='';} });
+        if (msgEl) msgEl.style.color = 'var(--turquesa)';
       } else {
-        puntos = 500; msg = \`🎉 ¡JACKPOT \${s[0]}! +500 pts\`;
-        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='#FFD700';el.style.boxShadow='0 0 16px rgba(255,215,0,.5)';} });
-        if (msgEl) msgEl.style.color = colores.jackpot;
+        msg = slotsFichas > 0 ? '😅 Sin suerte… ¡otra vez!' : '😢 Sin fichas';
+        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
+        if (msgEl) msgEl.style.color = '#555';
       }
-    } else if (s[0]===s[1] || s[1]===s[2] || s[0]===s[2]) {
-      puntos = 100; msg = '✨ ¡Dos iguales! +100 pts';
-      reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--turquesa)';el.style.boxShadow='';} });
-      if (msgEl) msgEl.style.color = colores.win;
-    } else {
-      msg = slotsFichas > 0 ? '😅 Sin suerte… ¡otra vez!' : '😢 Sin fichas';
-      reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
-      if (msgEl) msgEl.style.color = colores.nada;
-    }
 
-    if (puntos > 0) {
-      slotsScore += puntos;
-      if (slotsScore > slotsHiScore) {
-        slotsHiScore = slotsScore;
-        // Guardar récord en Firebase
-        updateDoc(ref, { record: slotsHiScore });
-        if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('slots', slotsScore);
+      if (puntos > 0) {
+        slotsScore += puntos;
+        if (slotsScore > slotsHiScore) {
+          slotsHiScore = slotsScore;
+          try { updateDoc(ref, { record: slotsHiScore }); } catch(_e) {}
+          if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('slots', slotsScore);
+        }
       }
+
+      if (msgEl) msgEl.textContent = msg;
+
+      setTimeout(() => {
+        reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
+      }, 1500);
+    } catch(err) {
+      console.error('slots error:', err);
+    } finally {
+      // Siempre desbloquear, pase lo que pase
+      slotsSpinning = false;
+      slotsActualizarUI();
     }
-
-    if (msgEl) msgEl.textContent = msg;
-    slotsSpinning = false;
-    slotsActualizarUI();
-
-    setTimeout(() => {
-      reels.forEach(id => { const el=document.getElementById(id); if(el){el.style.borderColor='var(--gris-light)';el.style.boxShadow='';} });
-    }, 1500);
   }, 1200);
 }
 
