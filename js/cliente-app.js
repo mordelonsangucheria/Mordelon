@@ -876,19 +876,19 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
   set: (v) => { juegoActualRecompensa = v; }
 });
 
-const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', slots: '🎰 Slots' };
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
 // Mostrar todos los botones de juegos por defecto (Firebase los oculta si corresponde)
 document.addEventListener('DOMContentLoaded', () => {
-  ['tetris','snake','2048','dino','minas','slots'].forEach(id => {
+  ['tetris','snake','2048','dino','minas','invaders','slots'].forEach(id => {
     const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
     if (btn) btn.style.display = '';
   });
 });
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots'];
 
 // ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
 // fichasRequeridas: { tetris: true/false, snake: true/false, ... }
@@ -1041,6 +1041,7 @@ function actualizarBarraRecompensa() {
     '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
     dino:   parseInt(localStorage.getItem('dinoHiC') || '0'),
     minas:  parseInt(localStorage.getItem('minasHiC') || '0'),
+    invaders: parseInt(localStorage.getItem('invadersHiC') || '0'),
     slots:  parseInt(localStorage.getItem('slotsHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
@@ -1855,7 +1856,7 @@ window.notificarRecordJuego = function(juego, nuevoRecord) {
 
 async function generarCuponRecompensa(cfg, juego) {
   recompensaYaGanada[juego] = true;
-  const prefijos = { tetris: 'TETRIS', snake: 'SNAKE', '2048': 'DOS4K', dino: 'LLAMA' };
+  const prefijos = { tetris: 'TETRIS', snake: 'SNAKE', '2048': 'DOS4K', dino: 'LLAMA', invaders: 'INVAD' };
   const prefijo = prefijos[juego] || 'GAME';
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const rand = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
@@ -1907,7 +1908,7 @@ window.copiarCodigoRecompensa = function() {
 // Cuando se usa un cupón de recompensa, limpiar el local storage
 onSnapshot(doc(db,'config','cupones'), (snap) => {
   const lista = snap.exists() ? (snap.data().lista || []) : [];
-  ['tetris','snake','2048','dino'].forEach(juego => {
+  ['tetris','snake','2048','dino','minas','invaders'].forEach(juego => {
     const lsKey = 'mordelon-recompensa-cupon-' + juego;
     const lsUsadoKey = 'mordelon-recompensa-usado-' + juego;
     const codigoGuardado = localStorage.getItem(lsKey);

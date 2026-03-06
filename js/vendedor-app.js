@@ -1594,6 +1594,7 @@ const JUEGOS_TOGGLE_INFO = [
   { id: '2048',   label: '2048',    emoji: '🔢' },
   { id: 'dino',   label: 'Dino',    emoji: '🦕' },
   { id: 'minas',  label: 'Minas',   emoji: '💣' },
+  { id: 'invaders', label: 'Invaders', emoji: '👾' },
   { id: 'slots',  label: 'Slots',   emoji: '🎰' },
 ];
 let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
