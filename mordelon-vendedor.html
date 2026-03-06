@@ -473,6 +473,7 @@ select.mac-field option { background:#222; }
   <div class="tab" data-tab="cronometro">⏱️ Timer</div>
   <div class="tab" data-tab="promos">🎉 Promos</div>
   <div class="tab" data-tab="descuentos">🎟️ Cupones</div>
+  <div class="tab" data-tab="usuarios">👥 Usuarios</div>
 </div>
 
 <div id="panel-pedidos" class="panel active">
@@ -968,6 +969,66 @@ select.mac-field option { background:#222; }
 </div>
 
 <div class="notif-banner" id="notifBanner">🔔 ¡Nuevo pedido!</div>
+<div id="panel-usuarios" class="panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);letter-spacing:2px;">👥 USUARIOS REGISTRADOS</div>
+    <button onclick="window.cargarUsuarios()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:6px 14px;font-size:0.75rem;cursor:pointer;">🔄 Actualizar</button>
+  </div>
+
+  <!-- Buscador -->
+  <div style="margin-bottom:12px;">
+    <input id="usuariosBuscar" type="text" placeholder="🔍 Buscar por nombre..."
+      oninput="window.filtrarUsuarios(this.value)"
+      style="width:100%;box-sizing:border-box;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;"/>
+  </div>
+
+  <!-- Stats rápidas -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;">
+    <div style="flex:1;background:var(--gris-dark);border:1px solid var(--turquesa);border-radius:10px;padding:10px;text-align:center;">
+      <div style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--turquesa);" id="usuariosTotal">—</div>
+      <div style="font-size:0.62rem;color:#555;margin-top:2px;">USUARIOS</div>
+    </div>
+    <div style="flex:1;background:var(--gris-dark);border:1px solid var(--naranja);border-radius:10px;padding:10px;text-align:center;">
+      <div style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--naranja);" id="usuariosFichasTotal">—</div>
+      <div style="font-size:0.62rem;color:#555;margin-top:2px;">FICHAS EN JUEGO</div>
+    </div>
+    <div style="flex:1;background:var(--gris-dark);border:1px solid var(--verde);border-radius:10px;padding:10px;text-align:center;">
+      <div style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--verde);" id="usuariosPedidosTotal">—</div>
+      <div style="font-size:0.62rem;color:#555;margin-top:2px;">PEDIDOS TOTALES</div>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div id="usuariosLista" style="display:flex;flex-direction:column;gap:8px;">
+    <div style="text-align:center;color:#555;font-size:0.8rem;padding:20px;">Hacé clic en "Actualizar" para cargar</div>
+  </div>
+
+  <!-- Modal detalle usuario -->
+  <div id="usuarioModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box;">
+    <div style="max-width:400px;margin:0 auto;background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);" id="modalUsuarioNombre"></div>
+        <button onclick="document.getElementById('usuarioModal').style.display='none'"
+          style="background:transparent;border:none;color:#555;font-size:1.2rem;cursor:pointer;">✕</button>
+      </div>
+      <div id="modalUsuarioDetalle"></div>
+      <!-- Acciones -->
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="modalFichasCant" type="number" min="1" max="99" value="3"
+            style="width:70px;background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:8px;padding:8px;font-size:0.85rem;outline:none;text-align:center;"/>
+          <button onclick="window.cargarFichasDesdeModal()"
+            style="flex:1;background:var(--naranja);border:none;color:#111;border-radius:8px;padding:9px;font-family:'Righteous',cursive;font-size:0.78rem;cursor:pointer;">🎰 Cargar fichas</button>
+        </div>
+        <button onclick="window.resetearClaveDesdeModal()"
+          style="background:var(--gris-mid);border:1.5px solid var(--rojo);color:var(--rojo);border-radius:8px;padding:9px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">🔑 Resetear clave → 0000</button>
+        <div id="modalAccionMsg" style="font-size:0.72rem;min-height:16px;text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- ACTIVAR SONIDO -->
 <div id="audioActivar" style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9990;background:#1a1a1a;border:1.5px solid var(--turquesa);border-radius:14px;padding:10px 20px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(61,191,184,.3);">
@@ -3202,6 +3263,171 @@ window.verTodosUsuariosSlots = async function() {
     gridEl.innerHTML = '<div style="color:var(--rojo);font-size:0.7rem;">Error al cargar</div>';
   }
 };
+
+// ── GESTIÓN DE USUARIOS ──────────────────────────────────────────────────
+let _usuariosTodos = [];
+let _usuarioModalActual = null;
+
+window.cargarUsuarios = async function() {
+  const listaEl = document.getElementById('usuariosLista');
+  if (!listaEl) return;
+  listaEl.innerHTML = '<div style="text-align:center;color:#555;padding:20px;">Cargando...</div>';
+
+  try {
+    const snap = await getDocs(collection(db, 'clientes'));
+    _usuariosTodos = [];
+    snap.forEach(d => _usuariosTodos.push({ nombre: d.id, ...d.data() }));
+    _usuariosTodos.sort((a,b) => a.nombre.localeCompare(b.nombre));
+
+    // Stats
+    const totalFichas   = _usuariosTodos.reduce((s,u) => s + (u.fichasSlots||0), 0);
+    const totalPedidos  = _usuariosTodos.reduce((s,u) => s + (u.historialPedidos?.length||0), 0);
+    document.getElementById('usuariosTotal').textContent       = _usuariosTodos.length;
+    document.getElementById('usuariosFichasTotal').textContent = totalFichas;
+    document.getElementById('usuariosPedidosTotal').textContent = totalPedidos;
+
+    renderUsuarios(_usuariosTodos);
+  } catch(e) {
+    listaEl.innerHTML = '<div style="color:var(--rojo);text-align:center;padding:20px;">Error al cargar usuarios</div>';
+    console.error(e);
+  }
+};
+
+function renderUsuarios(lista) {
+  const listaEl = document.getElementById('usuariosLista');
+  if (!lista.length) {
+    listaEl.innerHTML = '<div style="text-align:center;color:#555;padding:20px;">No hay usuarios registrados</div>';
+    return;
+  }
+  listaEl.innerHTML = lista.map(u => `
+    <div onclick="window.abrirUsuarioModal('${u.nombre}')"
+      style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s;"
+      onmouseover="this.style.borderColor='var(--turquesa)'" onmouseout="this.style.borderColor='var(--gris-light)'">
+      <div>
+        <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:var(--blanco);">👤 ${u.nombre}</div>
+        <div style="font-size:0.65rem;color:#555;margin-top:3px;">
+          📍 ${u.direccion || 'Sin dirección'} &nbsp;·&nbsp;
+          📦 ${u.historialPedidos?.length||0} pedidos &nbsp;·&nbsp;
+          📅 ${u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR') : '—'}
+        </div>
+      </div>
+      <div style="text-align:right;font-size:0.7rem;">
+        <div style="color:var(--naranja);">🎰 ${u.fichasSlots??0} fichas</div>
+        <div style="color:var(--verde);">🏆 ${u.recordSlots??0} pts</div>
+      </div>
+    </div>`).join('');
+}
+
+window.filtrarUsuarios = function(q) {
+  if (!q) { renderUsuarios(_usuariosTodos); return; }
+  const filtrado = _usuariosTodos.filter(u => u.nombre.includes(q.toUpperCase()));
+  renderUsuarios(filtrado);
+};
+
+window.abrirUsuarioModal = function(nombre) {
+  const u = _usuariosTodos.find(x => x.nombre === nombre);
+  if (!u) return;
+  _usuarioModalActual = u;
+
+  document.getElementById('modalUsuarioNombre').textContent = '👤 ' + nombre;
+  document.getElementById('modalAccionMsg').textContent = '';
+  document.getElementById('modalFichasCant').value = '3';
+
+  const creadoFecha = u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+  const hist = (u.historialPedidos||[]).slice(0,5).map(p =>
+    `<div style="display:flex;justify-content:space-between;font-size:0.68rem;padding:4px 0;border-bottom:1px solid #222;">
+      <span style="color:#888;">${new Date(p.timestamp).toLocaleDateString('es-AR')}</span>
+      <span style="color:#888;">${p.items} producto${p.items!==1?'s':''}</span>
+      <span style="color:var(--verde);">$${p.total?.toLocaleString('es-AR')||'—'}</span>
+    </div>`
+  ).join('') || '<div style="color:#444;font-size:0.68rem;">Sin pedidos</div>';
+
+  document.getElementById('modalUsuarioDetalle').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div style="background:var(--gris-mid);border-radius:8px;padding:10px;">
+        <div style="font-size:0.6rem;color:#555;">CLAVE</div>
+        <div style="font-family:'Righteous',cursive;font-size:1.2rem;color:var(--blanco);letter-spacing:4px;">${u.clave||'—'}</div>
+      </div>
+      <div style="background:var(--gris-mid);border-radius:8px;padding:10px;">
+        <div style="font-size:0.6rem;color:#555;">FICHAS</div>
+        <div style="font-family:'Righteous',cursive;font-size:1.2rem;color:var(--naranja);">${u.fichasSlots??0}</div>
+      </div>
+      <div style="background:var(--gris-mid);border-radius:8px;padding:10px;">
+        <div style="font-size:0.6rem;color:#555;">RÉCORD SLOTS</div>
+        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--verde);">${u.recordSlots??0} pts</div>
+      </div>
+      <div style="background:var(--gris-mid);border-radius:8px;padding:10px;">
+        <div style="font-size:0.6rem;color:#555;">REGISTRO</div>
+        <div style="font-size:0.78rem;color:#aaa;">${creadoFecha}</div>
+      </div>
+    </div>
+    <div style="background:var(--gris-mid);border-radius:8px;padding:10px;margin-bottom:10px;">
+      <div style="font-size:0.6rem;color:#555;margin-bottom:4px;">DIRECCIÓN</div>
+      <div style="font-size:0.82rem;color:#aaa;">${u.direccion||'—'}</div>
+    </div>
+    <div style="background:var(--gris-mid);border-radius:8px;padding:10px;">
+      <div style="font-size:0.6rem;color:#555;margin-bottom:6px;">ÚLTIMOS PEDIDOS</div>
+      ${hist}
+    </div>`;
+
+  document.getElementById('usuarioModal').style.display = 'block';
+};
+
+window.cargarFichasDesdeModal = async function() {
+  const u = _usuarioModalActual;
+  const cant = parseInt(document.getElementById('modalFichasCant').value) || 0;
+  const msgEl = document.getElementById('modalAccionMsg');
+  if (!u || cant < 1) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Cantidad inválida'; return; }
+
+  try {
+    const nuevas = (u.fichasSlots||0) + cant;
+    await updateDoc(doc(db, 'clientes', u.nombre), { fichasSlots: nuevas });
+    u.fichasSlots = nuevas;
+    _usuarioModalActual.fichasSlots = nuevas;
+    // Actualizar en lista
+    const idx = _usuariosTodos.findIndex(x => x.nombre === u.nombre);
+    if (idx >= 0) _usuariosTodos[idx].fichasSlots = nuevas;
+
+    msgEl.style.color = 'var(--verde)';
+    msgEl.textContent = '✅ ' + cant + ' fichas cargadas (total: ' + nuevas + ')';
+    document.getElementById('modalUsuarioNombre').textContent = '👤 ' + u.nombre;
+    // Refresh clave display
+    window.abrirUsuarioModal(u.nombre);
+    registrarActividad('🎰 ' + cant + ' fichas cargadas a ' + u.nombre);
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al cargar fichas';
+  }
+};
+
+window.resetearClaveDesdeModal = async function() {
+  const u = _usuarioModalActual;
+  const msgEl = document.getElementById('modalAccionMsg');
+  if (!u) return;
+  if (!confirm('¿Resetear la clave de ' + u.nombre + ' a 0000?')) return;
+  try {
+    await updateDoc(doc(db, 'clientes', u.nombre), { clave: '0000' });
+    u.clave = '0000';
+    msgEl.style.color = 'var(--turquesa)';
+    msgEl.textContent = '✅ Clave reseteada a 0000';
+    window.abrirUsuarioModal(u.nombre);
+    registrarActividad('🔑 Clave reseteada: ' + u.nombre);
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al resetear clave';
+  }
+};
+
+// Cargar usuarios automáticamente cuando se abre esa pestaña
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      if (t.dataset.tab === 'usuarios' && _usuariosTodos.length === 0) {
+        window.cargarUsuarios();
+      }
+    });
+  });
+});
 
 // Bind tab clicks after module loads
 document.querySelectorAll('.tab[data-tab]').forEach(t => {
