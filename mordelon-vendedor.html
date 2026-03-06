@@ -843,17 +843,37 @@ select.mac-field option { background:#222; }
   <!-- 🎰 FICHAS DE SLOTS -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
-    <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Cargá fichas extra a un cliente. Ingresá su número de WhatsApp y la cantidad.</p>
+    <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Buscá un usuario por nombre y cargale fichas. Los nombres están en mayúsculas.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <input id="fichasWaCliente" type="tel" placeholder="📱 WhatsApp del cliente (ej: 2271123456)"
-        style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;width:100%;box-sizing:border-box;"/>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <input id="fichasCantidad" type="number" min="1" max="99" value="3" placeholder="Cantidad"
-          style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;width:90px;box-sizing:border-box;"/>
-        <button onclick="window.cargarFichas()" class="btn btn-turquesa" style="flex:1;background:var(--naranja);border-color:var(--naranja);">🎰 Cargar fichas</button>
+      <div style="display:flex;gap:8px;">
+        <input id="fichasNombreCliente" type="text" maxlength="20" placeholder="Nombre del usuario (ej: JUAN)"
+          style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;flex:1;box-sizing:border-box;"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') window.buscarUsuarioSlots()"/>
+        <button onclick="window.buscarUsuarioSlots()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.8rem;cursor:pointer;white-space:nowrap;">🔍 Buscar</button>
+      </div>
+      <!-- Resultado de búsqueda -->
+      <div id="fichasUsuarioInfo" style="display:none;background:var(--gris-mid);border:1.5px solid var(--turquesa);border-radius:10px;padding:12px 14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--turquesa);" id="fichasNombreConfirm"></div>
+            <div style="font-size:0.7rem;color:#888;margin-top:2px;">Fichas actuales: <strong id="fichasActualesConfirm" style="color:var(--naranja)"></strong> · Récord: <strong id="fichasRecordConfirm" style="color:var(--verde)"></strong></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="fichasCantidad" type="number" min="1" max="99" value="3"
+            style="background:var(--gris-dark);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;width:80px;box-sizing:border-box;"/>
+          <button onclick="window.cargarFichas()" style="flex:1;background:var(--naranja);border:none;color:#111;border-radius:10px;padding:10px 14px;font-family:'Righteous',cursive;font-size:0.82rem;cursor:pointer;">🎰 Cargar fichas</button>
+        </div>
+      </div>
+      <!-- Lista de usuarios recientes -->
+      <div id="fichasUsuariosLista" style="display:none;">
+        <div style="font-size:0.68rem;color:#555;margin-bottom:6px;font-family:'Righteous',cursive;letter-spacing:1px;">TODOS LOS USUARIOS</div>
+        <div id="fichasUsuariosGrid" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
       </div>
     </div>
     <div id="fichasMensaje" style="font-size:0.75rem;margin-top:10px;min-height:18px;"></div>
+    <button onclick="window.verTodosUsuariosSlots()" style="background:transparent;border:none;color:#555;font-size:0.68rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Ver todos los usuarios</button>
   </div>
 
 
@@ -3090,28 +3110,100 @@ renderJuegosToggles();
 actualizarUIRecompensa();
 
 // ── FICHAS DE SLOTS ──────────────────────────────────────────────────────
-window.cargarFichas = async function() {
-  const waRaw  = document.getElementById('fichasWaCliente').value.trim();
-  const cant   = parseInt(document.getElementById('fichasCantidad').value) || 0;
-  const msgEl  = document.getElementById('fichasMensaje');
+let _fichasUsuarioActual = null;
 
-  if (!waRaw) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Ingresá el WhatsApp del cliente'; return; }
+window.buscarUsuarioSlots = async function() {
+  const nombre = document.getElementById('fichasNombreCliente').value.trim().toUpperCase();
+  const msgEl  = document.getElementById('fichasMensaje');
+  const infoEl = document.getElementById('fichasUsuarioInfo');
+
+  if (!nombre || nombre.length < 2) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '⚠️ Ingresá un nombre';
+    return;
+  }
+
+  msgEl.style.color = 'var(--turquesa)';
+  msgEl.textContent = 'Buscando...';
+  infoEl.style.display = 'none';
+
+  try {
+    const snap = await getDoc(doc(db, 'slotsUsuarios', nombre));
+    if (!snap.exists()) {
+      msgEl.style.color = 'var(--rojo)';
+      msgEl.textContent = `❌ No existe el usuario "${nombre}"`;
+      _fichasUsuarioActual = null;
+      return;
+    }
+    const data = snap.data();
+    _fichasUsuarioActual = { nombre, ...data };
+
+    document.getElementById('fichasNombreConfirm').textContent   = nombre;
+    document.getElementById('fichasActualesConfirm').textContent = data.fichas ?? 0;
+    document.getElementById('fichasRecordConfirm').textContent   = (data.record ?? 0) + ' pts';
+    infoEl.style.display = 'block';
+    msgEl.textContent = '';
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al buscar';
+  }
+};
+
+window.cargarFichas = async function() {
+  const cant  = parseInt(document.getElementById('fichasCantidad').value) || 0;
+  const msgEl = document.getElementById('fichasMensaje');
+
+  if (!_fichasUsuarioActual) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Buscá un usuario primero'; return; }
   if (cant < 1) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Ingresá una cantidad válida'; return; }
 
-  const waKey = waRaw.replace(/\D/g,'');
   try {
-    const snap = await getDoc(doc(db, 'slotsFichas', waKey));
-    const actual = snap.exists() ? (snap.data().fichas || 0) : 0;
-    await setDoc(doc(db, 'slotsFichas', waKey), { fichas: actual + cant });
+    const nombre = _fichasUsuarioActual.nombre;
+    const actual = _fichasUsuarioActual.fichas ?? 0;
+    const nuevas = actual + cant;
+    await updateDoc(doc(db, 'slotsUsuarios', nombre), { fichas: nuevas });
+
+    // Actualizar UI
+    document.getElementById('fichasActualesConfirm').textContent = nuevas;
+    _fichasUsuarioActual.fichas = nuevas;
+
     msgEl.style.color = 'var(--verde)';
-    msgEl.textContent = `✅ ${cant} ficha${cant>1?'s':''} cargada${cant>1?'s':''} a ${waRaw}`;
-    registrarActividad(`🎰 ${cant} fichas cargadas a ${waRaw}`);
-    document.getElementById('fichasWaCliente').value = '';
+    msgEl.textContent = `✅ ${cant} ficha${cant>1?'s':''} cargada${cant>1?'s':''} a ${nombre} (total: ${nuevas})`;
+    registrarActividad(`🎰 ${cant} fichas cargadas a ${nombre}`);
     document.getElementById('fichasCantidad').value = '3';
     setTimeout(() => { msgEl.textContent = ''; }, 4000);
   } catch(e) {
     msgEl.style.color = 'var(--rojo)';
     msgEl.textContent = '❌ Error al cargar fichas';
+  }
+};
+
+window.verTodosUsuariosSlots = async function() {
+  const listaEl = document.getElementById('fichasUsuariosLista');
+  const gridEl  = document.getElementById('fichasUsuariosGrid');
+  if (!gridEl) return;
+
+  listaEl.style.display = 'block';
+  gridEl.innerHTML = '<div style="color:#555;font-size:0.7rem;">Cargando...</div>';
+
+  try {
+    const snap = await getDocs(collection(db, 'slotsUsuarios'));
+    if (snap.empty) { gridEl.innerHTML = '<div style="color:#555;font-size:0.7rem;">No hay usuarios aún</div>'; return; }
+
+    const usuarios = [];
+    snap.forEach(d => usuarios.push({ nombre: d.id, ...d.data() }));
+    usuarios.sort((a,b) => (b.record||0) - (a.record||0));
+
+    gridEl.innerHTML = usuarios.map(u => `
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--gris-dark);border-radius:8px;padding:8px 12px;cursor:pointer;"
+           onclick="document.getElementById('fichasNombreCliente').value='${u.nombre}';window.buscarUsuarioSlots();">
+        <div>
+          <span style="font-family:'Righteous',cursive;font-size:0.82rem;color:var(--blanco);">${u.nombre}</span>
+          <span style="font-size:0.65rem;color:#555;margin-left:8px;">🎰 ${u.fichas??0} fichas</span>
+        </div>
+        <span style="font-size:0.65rem;color:var(--verde);">🏆 ${u.record??0} pts</span>
+      </div>`).join('');
+  } catch(e) {
+    gridEl.innerHTML = '<div style="color:var(--rojo);font-size:0.7rem;">Error al cargar</div>';
   }
 };
 
