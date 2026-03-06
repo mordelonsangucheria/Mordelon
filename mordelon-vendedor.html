@@ -4125,31 +4125,49 @@ onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
   _tlRenderPremiosEditor();
 });
 
+function _tlActualizarTotal() {
+  const totalEl = document.getElementById('tlPctTotal');
+  if (!totalEl) return;
+  const total = _tlPremiosLocal.reduce((s, p) => s + (parseFloat(p.pct) || 0), 0);
+  const redondeado = Math.round(total * 10) / 10;
+  const ok = Math.abs(redondeado - 100) < 0.5;
+  totalEl.textContent = `Total: ${redondeado}% ${ok ? '✅' : '⚠️ debe ser 100%'}`;
+  totalEl.style.color = ok ? 'var(--verde)' : 'var(--rojo)';
+}
+window.tlActualizarTotal = _tlActualizarTotal;
+
 function _tlRenderPremiosEditor() {
   const editor = document.getElementById('tlPremiosEditor');
   if (!editor) return;
 
   editor.innerHTML = _tlPremiosLocal.map((p, i) => `
     <div style="background:#111;border:1px solid #222;border-radius:10px;padding:10px 12px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span style="font-size:1.3rem;">${p.emoji}</span>
+      <!-- Fila 1: emoji + nombre + % -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <input type="text" value="${p.emoji}" data-idx="${i}" data-field="emoji"
+          oninput="window.tlEditPremio(this)"
+          maxlength="4"
+          title="Icono del premio (emoji)"
+          style="width:42px;background:#0a0a0a;border:1px solid #444;border-radius:6px;color:white;font-size:1.1rem;padding:4px 5px;box-sizing:border-box;text-align:center;">
         <input type="text" value="${p.label}" data-idx="${i}" data-field="label"
           oninput="window.tlEditPremio(this)"
           placeholder="Nombre del premio"
           style="flex:1;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:${p.color};font-size:0.8rem;font-weight:800;padding:5px 8px;box-sizing:border-box;font-family:inherit;">
-        <div style="display:flex;align-items:center;gap:4px;min-width:75px;">
+        <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
           <input type="number" value="${p.pct}" min="0" max="100" step="0.1" data-idx="${i}" data-field="pct"
-            oninput="window.tlEditPremio(this);window.tlActualizarTotal()"
-            style="width:52px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#FFB800;font-size:0.8rem;font-weight:800;padding:5px 6px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
-          <span style="font-size:0.7rem;color:#555;">%</span>
+            oninput="window.tlEditPremio(this);_tlActualizarTotal()"
+            style="width:50px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#FFB800;font-size:0.8rem;font-weight:800;padding:5px 5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
+          <span style="font-size:0.68rem;color:#555;">%</span>
         </div>
       </div>
-      ${p.esJackpot ? '' : `<input type="text" value="${p.premio}" data-idx="${i}" data-field="premio"
+      <!-- Fila 2: descripción del premio -->
+      <input type="text" value="${p.premio||''}" data-idx="${i}" data-field="premio"
         oninput="window.tlEditPremio(this)"
-        placeholder="Descripción del premio (ej: Papas gratis)"
-        style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:0.73rem;padding:5px 8px;box-sizing:border-box;font-family:inherit;margin-bottom:6px;">`}
-      ${p.emoji !== '💀' && !p.esJackpot ? `
-      <div style="display:flex;align-items:center;gap:8px;margin-top:${p.esJackpot?'0':'0'}px;">
+        placeholder="Descripción que ve el cliente (ej: Papas gratis)"
+        style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:0.73rem;padding:5px 8px;box-sizing:border-box;font-family:inherit;margin-bottom:${p.emoji === '💀' ? '0' : '6px'};">
+      <!-- Fila 3: cupón (solo si no es calavera) -->
+      ${p.emoji !== '💀' ? `
+      <div style="display:flex;align-items:center;gap:8px;">
         <label style="font-size:0.65rem;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
           <input type="checkbox" ${p.cupon?'checked':''} data-idx="${i}" data-field="cupon"
             onchange="window.tlEditPremioCheck(this)"
@@ -4158,7 +4176,7 @@ function _tlRenderPremiosEditor() {
         </label>
         ${p.cupon ? `<div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:0.65rem;color:#555;">Desc.</span>
-          <input type="number" value="${p.cuponPct}" min="1" max="100" data-idx="${i}" data-field="cuponPct"
+          <input type="number" value="${p.cuponPct||0}" min="1" max="100" data-idx="${i}" data-field="cuponPct"
             oninput="window.tlEditPremio(this)"
             style="width:44px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:var(--turquesa);font-size:0.75rem;padding:4px 5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
           <span style="font-size:0.65rem;color:#555;">%</span>
@@ -4172,24 +4190,14 @@ function _tlRenderPremiosEditor() {
 window.tlEditPremio = function(input) {
   const idx   = parseInt(input.dataset.idx);
   const field = input.dataset.field;
-  let val = field === 'pct' || field === 'cuponPct' ? parseFloat(input.value) || 0 : input.value;
+  const val   = (field === 'pct' || field === 'cuponPct') ? (parseFloat(input.value) || 0) : input.value;
   _tlPremiosLocal[idx][field] = val;
 };
 
 window.tlEditPremioCheck = function(input) {
   const idx = parseInt(input.dataset.idx);
   _tlPremiosLocal[idx].cupon = input.checked;
-  _tlRenderPremiosEditor(); // re-render para mostrar/ocultar campo cuponPct
-};
-
-window.tlActualizarTotal = function() {
-  const totalEl = document.getElementById('tlPctTotal');
-  if (!totalEl) return;
-  const total = _tlPremiosLocal.reduce((s, p) => s + (parseFloat(p.pct) || 0), 0);
-  const redondeado = Math.round(total * 10) / 10;
-  const ok = Math.abs(redondeado - 100) < 0.5;
-  totalEl.textContent = `Total: ${redondeado}% ${ok ? '✅' : '⚠️ debe ser 100%'}`;
-  totalEl.style.color = ok ? 'var(--verde)' : 'var(--rojo)';
+  _tlRenderPremiosEditor();
 };
 
 window.tlGuardarPremios = async function() {

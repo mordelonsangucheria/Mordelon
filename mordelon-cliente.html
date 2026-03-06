@@ -2545,17 +2545,38 @@ async function guardarPedidoEnUsuario(pedidoId, total, items) {
 
 // ── Símbolos del Tragallama ─────────────────────────
 // peso: frecuencia relativa de aparición por rodillo
-const TL_SIMBOLOS = [
-  { e:'💀', nombre:'Calavera',  peso:30, rareza:'común'      },  // pierde
+// Símbolos base (los emojis se actualizan desde Firebase si el vendedor los cambia)
+let TL_SIMBOLOS = [
+  { e:'💀', nombre:'Calavera',  peso:30, rareza:'común'      },
   { e:'🍟', nombre:'Papas',     peso:28, rareza:'común'      },
   { e:'🥤', nombre:'Bebida',    peso:22, rareza:'común'      },
   { e:'🧀', nombre:'Queso',     peso:18, rareza:'poco común' },
   { e:'🥪', nombre:'Sánguche',  peso:10, rareza:'raro'       },
   { e:'🦙', nombre:'Llama',     peso:4,  rareza:'épico'      },
-  { e:'🔥', nombre:'Fuego',     peso:1,  rareza:'legendario' },  // jackpot
+  { e:'🔥', nombre:'Fuego',     peso:1,  rareza:'legendario' },
 ];
-const TL_POOL = [];
-TL_SIMBOLOS.forEach(s => { for(let i=0;i<s.peso;i++) TL_POOL.push(s); });
+let TL_POOL = [];
+function _tlReconstruirPool() {
+  TL_POOL.length = 0;
+  TL_SIMBOLOS.forEach(s => { for(let i=0;i<s.peso;i++) TL_POOL.push(s); });
+}
+_tlReconstruirPool();
+
+// Actualizar emojis del pool cuando cambia la config
+function _tlActualizarSimbolosDesdeFirebase(premios) {
+  if (!premios || !premios.length) return;
+  // premios está en orden: jackpot(pos0)...sin_premio(pos6)
+  // TL_SIMBOLOS está en orden inverso de rareza: [común...legendario]
+  // Mapear por posición inversa
+  const posASimbol = [6,5,4,3,2,1,0]; // posición en premios → índice en TL_SIMBOLOS
+  premios.forEach((p, i) => {
+    const si = posASimbol[i];
+    if (si !== undefined && TL_SIMBOLOS[si]) {
+      TL_SIMBOLOS[si].e = p.emoji;
+    }
+  });
+  _tlReconstruirPool();
+}
 
 // ── Premios por resultado ───────────────────────────
 // Sistema basado en probabilidades reales de 3 rodillos
@@ -2573,15 +2594,24 @@ const TL_PREMIOS_DEFAULT = {
 };
 let TL_PREMIOS = { ...TL_PREMIOS_DEFAULT };
 
+// Lista ordenada de premios por posición (índice 0 = jackpot, último = sin premio)
+// Se actualiza desde Firebase. Se usa para la tabla y para obtener el premio al girar.
+let _tlPremiosOrdenados = null; // null = usar defaults
+
 // Escuchar cambios de premios desde Firebase (editados por el vendedor)
 onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
   if (snap.exists() && snap.data().premios) {
+    const lista = snap.data().premios;
+    _tlPremiosOrdenados = lista;
+    // Reconstruir TL_PREMIOS keyed por emoji (para compatibilidad con lógica de spin)
     const nuevo = {};
-    snap.data().premios.forEach(p => { nuevo[p.emoji] = p; });
+    lista.forEach(p => { nuevo[p.emoji] = p; });
     TL_PREMIOS = nuevo;
-    // Actualizar también la distribución de probabilidades
-    _tlActualizarProbsDesdeFirebase(snap.data().premios);
+    // Actualizar umbrales de probabilidad y emojis del pool visual
+    _tlActualizarProbsDesdeFirebase(lista);
+    _tlActualizarSimbolosDesdeFirebase(lista);
   } else {
+    _tlPremiosOrdenados = null;
     TL_PREMIOS = { ...TL_PREMIOS_DEFAULT };
   }
   tlRenderTabla();
@@ -2590,15 +2620,21 @@ onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
 // Actualizar las probabilidades controladas según config del vendedor
 function _tlActualizarProbsDesdeFirebase(premios) {
   if (!premios || !premios.length) return;
-  // Mapear emojis a claves de umbral
-  const mapa = { '🔥':'jackpot', '🦙':'llama', '🥪':'sanguche', '🧀':'queso', '🥤':'bebida', '🍟':'papas' };
-  premios.forEach(p => {
-    const clave = mapa[p.emoji];
-    if (clave) _tlUmbralCustom[clave] = parseFloat(p.pct) || 0;
+  // Los premios vienen en orden: jackpot, llama, sanguche, queso, bebida, papas, sin_premio
+  const claves = ['jackpot','llama','sanguche','queso','bebida','papas'];
+  premios.forEach((p, i) => {
+    if (i < claves.length) _tlUmbralCustom[claves[i]] = parseFloat(p.pct) || 0;
   });
 }
 // Umbrales personalizables (se sobreescriben con Firebase)
 const _tlUmbralCustom = { jackpot:0.1, llama:0.9, sanguche:3, queso:6, bebida:10, papas:20 };
+
+// Obtener el emoji del resultado según posición en la lista de premios
+function _tlEmojiPorPosicion(pos) {
+  if (_tlPremiosOrdenados && _tlPremiosOrdenados[pos]) return _tlPremiosOrdenados[pos].emoji;
+  const defaults = ['🔥','🦙','🥪','🧀','🥤','🍟','💀'];
+  return defaults[pos] || '💀';
+}
 
 // ── Premios por par (solo 2 iguales en línea central) ──
 const TL_PREMIOS_PAR = {
@@ -2611,7 +2647,6 @@ const TL_PREMIOS_PAR = {
 // para garantizar las probabilidades del negocio independientemente del pool
 function tlResultadoControlado(bias = 0) {
   const dado = Math.random() * 100;
-  // Usar umbrales de Firebase si están disponibles, si no los defaults
   let umbral;
   if (bias > 0) {
     const factor = bias / 100;
@@ -2628,13 +2663,13 @@ function tlResultadoControlado(bias = 0) {
   }
 
   let acum = 0;
-  if (dado < (acum += umbral.jackpot)) return '🔥';
-  if (dado < (acum += umbral.llama))   return '🦙';
-  if (dado < (acum += umbral.sanguche))return '🥪';
-  if (dado < (acum += umbral.queso))   return '🧀';
-  if (dado < (acum += umbral.bebida))  return '🥤';
-  if (dado < (acum += umbral.papas))   return '🍟';
-  return '💀';
+  if (dado < (acum += umbral.jackpot)) return _tlEmojiPorPosicion(0);
+  if (dado < (acum += umbral.llama))   return _tlEmojiPorPosicion(1);
+  if (dado < (acum += umbral.sanguche))return _tlEmojiPorPosicion(2);
+  if (dado < (acum += umbral.queso))   return _tlEmojiPorPosicion(3);
+  if (dado < (acum += umbral.bebida))  return _tlEmojiPorPosicion(4);
+  if (dado < (acum += umbral.papas))   return _tlEmojiPorPosicion(5);
+  return _tlEmojiPorPosicion(6); // sin premio
 }
 
 // ── Config Firebase (compatibilidad) ────────────────
@@ -2726,24 +2761,23 @@ window.tlUsarGratis = function() {
 function tlRenderTabla() {
   const el = document.getElementById('slotsTablaPremiOS');
   if (!el) return;
-  const rows = [
-    { e:'🔥🔥🔥', premio:'Combo Mordelón x4 (JACKPOT)', color:'#FFB800', prob:'~0.1%' },
-    { e:'🦙🦙🦙', premio:'Sánguche gratis con compra',   color:'#3DBFB8', prob:'~0.9%' },
-    { e:'🥪🥪🥪', premio:'Papas gratis',                 color:'#2DC653', prob:'~3%'   },
-    { e:'🧀🧀🧀', premio:'20% de descuento',             color:'#D4831A', prob:'~6%'   },
-    { e:'🥤🥤🥤', premio:'10% de descuento',             color:'#D4831A', prob:'~10%'  },
-    { e:'🍟🍟🍟', premio:'Salsa gratis con compra',      color:'#3DBFB8', prob:'~20%'  },
-    { e:'💀💀💀', premio:'Sin premio',                   color:'#333',    prob:'~60%'  },
-  ];
+
+  // Armar filas desde TL_PREMIOS (que se actualiza desde Firebase)
+  // Excluir el "sin premio" (💀) de la tabla visible
+  const emojisOrden = ['🔥','🦙','🥪','🧀','🥤','🍟'];
+  const rows = emojisOrden.map(e => {
+    const p = TL_PREMIOS[e];
+    if (!p) return null;
+    return { e: `${e}${e}${e}`, premio: p.premio || p.label, color: p.color || '#aaa' };
+  }).filter(Boolean);
+
   el.innerHTML = `
     <div class="tl-tabla-row" style="border-bottom:1px solid #1a2a2a;padding-bottom:6px;margin-bottom:4px;">
-      <span style="font-family:'Righteous',cursive;font-size:0.68rem;color:var(--naranja);">🏆 TABLA DE PREMIOS</span>
-      <span style="font-size:0.58rem;color:#444;">PROB.</span>
+      <span style="font-family:'Righteous',cursive;font-size:0.68rem;color:var(--naranja);">🏆 PREMIOS POSIBLES</span>
     </div>
     ${rows.map(r => `
       <div class="tl-tabla-row">
         <span style="color:${r.color};">${r.e} ${r.premio}</span>
-        <span style="color:#444;">${r.prob}</span>
       </div>`).join('')}
     <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a2a2a;font-size:0.58rem;color:#333;">
       ⚡ 1 tirada gratis por día · Pack: 50 fichas = $500 · Válido sólo para la próxima compra
