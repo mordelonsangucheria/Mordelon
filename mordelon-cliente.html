@@ -649,18 +649,39 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
 
   <!-- ZONA SORTEOS -->
   <div id="zonaSorteos" style="display:none;padding:16px 0 8px;">
+
+    <!-- Card principal del sorteo -->
     <div id="sorteoClienteCard" style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:18px;padding:18px;margin-bottom:14px;">
       <div id="sorteoClienteContenido" style="text-align:center;color:#555;font-size:0.82rem;padding:12px 0;">Sin sorteo activo por el momento</div>
     </div>
+
+    <!-- Grilla de números -->
+    <div id="sorteoGrillaClienteWrap" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:18px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);">🔢 ELEGÍ TUS NÚMEROS</div>
+        <div id="sorteoGrillaLeyenda" style="display:flex;gap:8px;font-size:0.62rem;flex-wrap:wrap;"></div>
+      </div>
+      <div id="sorteoSeleccionInfo" style="display:none;background:#0a1a0a;border:1px solid var(--verde);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:0.75rem;"></div>
+      <div id="sorteoGrillaCliente" style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:12px;"></div>
+      <button id="btnConfirmarSeleccion" onclick="window.confirmarSeleccionCliente()" style="display:none;width:100%;background:var(--naranja);border:none;color:#111;border-radius:10px;padding:11px;font-family:'Righteous',cursive;font-size:0.82rem;cursor:pointer;">
+        🎟️ RESERVAR NÚMEROS SELECCIONADOS
+      </button>
+      <div id="sorteoSeleccionMsg" style="font-size:0.72rem;min-height:14px;margin-top:6px;text-align:center;"></div>
+    </div>
+
+    <!-- Mis números reservados/confirmados -->
     <div id="sorteoBoletosMiosCard" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:18px;margin-bottom:14px;">
-      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:10px;">🎟️ MIS BOLETOS</div>
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);margin-bottom:10px;">🎟️ MIS NÚMEROS</div>
       <div id="sorteoBoletosMiosInfo"></div>
     </div>
-    <div id="sorteoHistorialCard" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:18px;">
-      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;margin-bottom:10px;">🏆 ÚLTIMO GANADOR</div>
+
+    <!-- Último ganador -->
+    <div id="sorteoHistorialCard" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:18px;padding:14px;">
+      <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:#aaa;margin-bottom:6px;">🏆 ÚLTIMO GANADOR</div>
       <div id="sorteoUltimoGanadorCliente" style="font-size:0.82rem;color:var(--naranja);"></div>
     </div>
   </div>
+
 
   <!-- ZONA DE JUEGOS -->
   <div id="zonaJuegos" style="padding:16px 0 100px;">
@@ -2829,108 +2850,112 @@ window.minasReset     = function() { minasInit(); };
 
 
 // ═══════════════════════════════════════════════════════
-//  SISTEMA DE SORTEOS — MORDELÓN CLIENTE
+//  SISTEMA DE SORTEOS — MORDELÓN CLIENTE v3
 // ═══════════════════════════════════════════════════════
 
-let _sorteoData = null;
+let _sorteoData       = null;
+let _seleccionActual  = new Set();   // números elegidos en esta sesión (aún no reservados)
+let _misNumeros       = { reservados: [], confirmados: [] };
+let _cupoCliente      = 0;           // cuántos boletos tiene disponibles para elegir
 
-// Botón de acceso al sorteo — se inserta dinámicamente junto a los juegos
-(function insertarBotonSorteo() {
-  // Esperar a que el DOM esté listo
-  const tryInsert = () => {
-    const zona = document.getElementById('zonaSorteos');
-    const juegosZona = document.getElementById('zonaJuegos');
-    if (!zona || !juegosZona) { setTimeout(tryInsert, 200); return; }
-  };
-  tryInsert();
-})();
-
-// Listener en tiempo real del sorteo
+// ── Listener en tiempo real ──────────────────────────
 onSnapshot(doc(db, 'sorteos', 'actual'), (snap) => {
   _sorteoData = snap.exists() ? snap.data() : null;
   _renderSorteoCliente();
 });
 
 function _renderSorteoCliente() {
-  const zonaSorteos  = document.getElementById('zonaSorteos');
-  const card         = document.getElementById('sorteoClienteCard');
-  const contenido    = document.getElementById('sorteoClienteContenido');
-  const boletosCard  = document.getElementById('sorteoBoletosMiosCard');
-  const histCard     = document.getElementById('sorteoHistorialCard');
-  if (!zonaSorteos) return;
-
   const s = _sorteoData;
   const btnWrap = document.getElementById('sorteosBtnWrap');
   if (btnWrap) btnWrap.style.display = (s && s.activo !== false) ? 'block' : 'none';
 
+  const contenido    = document.getElementById('sorteoClienteContenido');
+  const grillaWrap   = document.getElementById('sorteoGrillaClienteWrap');
+  const boletosCard  = document.getElementById('sorteoBoletosMiosCard');
+  const histCard     = document.getElementById('sorteoHistorialCard');
+  if (!contenido) return;
+
   if (!s || s.activo === false) {
     contenido.innerHTML = '<div style="color:#555;text-align:center;padding:16px 0;font-size:0.82rem;">' +
-      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') +
-      '</div>';
-    boletosCard.style.display = 'none';
-    histCard.style.display = 'none';
+      (s && s.activo === false ? '⏸️ Sorteo pausado temporalmente' : 'Sin sorteo activo por el momento') + '</div>';
+    if (grillaWrap) grillaWrap.style.display = 'none';
+    if (boletosCard) boletosCard.style.display = 'none';
+    if (histCard) histCard.style.display = 'none';
     return;
   }
 
-  // Card principal del sorteo
-  const totalBoletos = Object.values(s.participantes||{}).reduce((a,b)=>a+(b.cantidad||0),0);
-  const cantPart     = Object.keys(s.participantes||{}).length;
-  const cupoMax      = s.cupo || 0;
-  const disponibles  = cupoMax ? cupoMax - totalBoletos : null;
-  const fechaStr     = s.fecha ? new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) : null;
+  const numeros    = s.numeros || {};
+  const cupo       = s.cupo || 100;
+  const confirmados = Object.values(numeros).filter(n=>n.estado==='confirmado').length;
+  const disponibles = cupo - Object.keys(numeros).length;
+  const cupoMax     = s.cupo || 0;
 
+  // Info del sorteo
+  const fechaStr = s.fecha ? new Date(s.fecha+'T12:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'}) : null;
   contenido.innerHTML = `
-    <div style="text-align:center;margin-bottom:16px;">
-      <div style="font-size:2.5rem;margin-bottom:6px;">${s.emoji||'🎟️'}</div>
-      <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);">${s.nombre}</div>
-      ${s.descripcion ? `<div style="font-size:0.75rem;color:#888;margin-top:4px;">${s.descripcion}</div>` : ''}
+    <div style="text-align:center;margin-bottom:14px;">
+      <div style="font-size:2.2rem;margin-bottom:4px;">${s.emoji||'🎟️'}</div>
+      <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--blanco);">${s.nombre}</div>
+      ${s.descripcion ? `<div style="font-size:0.72rem;color:#888;margin-top:3px;">${s.descripcion}</div>` : ''}
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
-      <div style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Precio</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--naranja);">$${(s.precio||0).toLocaleString('es-AR')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div style="background:rgba(255,140,0,.1);border:1px solid rgba(255,140,0,.3);border-radius:10px;padding:8px;text-align:center;">
+        <div style="font-size:0.55rem;color:#888;text-transform:uppercase;margin-bottom:3px;">Precio</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:var(--naranja);">$${(s.precio||0).toLocaleString('es-AR')}</div>
       </div>
-      <div style="background:rgba(61,191,184,.1);border:1px solid rgba(61,191,184,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">${cupoMax?'Disponibles':'Vendidos'}</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:${disponibles===0?'var(--rojo)':'var(--turquesa)'};">\n          ${cupoMax?(disponibles<=0?'¡LLENO!':disponibles):totalBoletos}</div>
+      <div style="background:rgba(61,191,184,.1);border:1px solid rgba(61,191,184,.3);border-radius:10px;padding:8px;text-align:center;">
+        <div style="font-size:0.55rem;color:#888;text-transform:uppercase;margin-bottom:3px;">Disponibles</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:${disponibles<=0?'var(--rojo)':'var(--turquesa)'};">${disponibles<=0?'¡LLENO!':disponibles}</div>
       </div>
-      <div style="background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);border-radius:10px;padding:10px;text-align:center;">
-        <div style="font-size:0.58rem;color:#888;text-transform:uppercase;margin-bottom:4px;">Jugadores</div>
-        <div style="font-family:'Righteous',cursive;font-size:0.95rem;color:var(--verde);">${cantPart}</div>
+      <div style="background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.3);border-radius:10px;padding:8px;text-align:center;">
+        <div style="font-size:0.55rem;color:#888;text-transform:uppercase;margin-bottom:3px;">Total</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:var(--verde);">${cupo}</div>
       </div>
     </div>
-    ${fechaStr ? `<div style="text-align:center;font-size:0.75rem;color:#666;margin-bottom:12px;">📅 Sorteo: ${fechaStr}</div>` : ''}
     ${cupoMax ? `<div style="margin-bottom:10px;">
-      <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:4px;">
-        <div style="height:100%;width:${Math.min(100,Math.round(totalBoletos/cupoMax*100))}%;background:${disponibles===0?'var(--rojo)':disponibles<10?'var(--naranja)':'var(--verde)'};border-radius:6px;transition:width 1s;"></div>
+      <div style="background:#222;border-radius:6px;height:5px;overflow:hidden;margin-bottom:3px;">
+        <div style="height:100%;width:${Math.min(100,Math.round(Object.keys(numeros).length/cupoMax*100))}%;background:${disponibles<=0?'var(--rojo)':disponibles<10?'var(--naranja)':'var(--verde)'};border-radius:6px;transition:width 1s;"></div>
       </div>
-      <div style="font-size:0.65rem;color:#666;text-align:center;">${disponibles<=0?'¡Sorteo completo!':disponibles+' boletos disponibles de '+cupoMax}</div>
+      <div style="font-size:0.62rem;color:#555;text-align:center;">${disponibles<=0?'¡Sorteo completo!':disponibles+' números disponibles de '+cupoMax}</div>
     </div>` : ''}
-    <div style="background:#0a0a00;border:1px dashed rgba(255,140,0,.4);border-radius:10px;padding:10px;text-align:center;font-size:0.72rem;color:#888;">
-      💳 Para participar, pedile a Mordelón que te cargue boletos en tu próximo pedido
+    ${fechaStr ? `<div style="text-align:center;font-size:0.72rem;color:#666;margin-bottom:10px;">📅 Sorteo: ${fechaStr}</div>` : ''}
+    <div style="background:#0a0a00;border:1px dashed rgba(255,140,0,.4);border-radius:10px;padding:10px;text-align:center;font-size:0.7rem;color:#888;">
+      🔢 Elegí tus números en la grilla de abajo · Pagás en tu próximo pedido
     </div>`;
 
-  // Mis boletos (si está logueado)
+  // Grilla
+  if (grillaWrap) grillaWrap.style.display = 'block';
+  _renderGrillaCliente(numeros, cupo);
+
+  // Mis números
   if (usuarioActual?.nombre) {
-    const misDatos = (s.participantes||{})[usuarioActual.nombre];
-    if (misDatos && misDatos.cantidad > 0) {
+    const misRes  = Object.entries(numeros).filter(([,d])=>d.cliente===usuarioActual.nombre && d.estado==='reservado').map(([n])=>parseInt(n));
+    const misConf = Object.entries(numeros).filter(([,d])=>d.cliente===usuarioActual.nombre && d.estado==='confirmado').map(([n])=>parseInt(n));
+    _misNumeros = { reservados: misRes, confirmados: misConf };
+
+    if (misRes.length || misConf.length) {
       boletosCard.style.display = 'block';
-      const pct = totalBoletos > 0 ? Math.round((misDatos.cantidad / totalBoletos) * 100) : 0;
+      const totalMios = misRes.length + misConf.length;
+      const totalConf = Object.values(numeros).filter(n=>n.estado==='confirmado').length;
+      const pct = totalConf > 0 ? Math.round((misConf.length / (s.cupo||100)) * 100) : 0;
       document.getElementById('sorteoBoletosMiosInfo').innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
           <div>
-            <div style="font-family:'Righteous',cursive;font-size:1.6rem;color:var(--naranja);">${misDatos.cantidad}</div>
-            <div style="font-size:0.68rem;color:#666;">boleto${misDatos.cantidad!==1?'s':''}</div>
+            <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--naranja);">${totalMios}</div>
+            <div style="font-size:0.65rem;color:#666;">número${totalMios!==1?'s':''} total</div>
           </div>
-          <div style="text-align:right;">
+          ${pct>0?`<div style="text-align:right;">
             <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--verde);">${pct}%</div>
-            <div style="font-size:0.68rem;color:#666;">de chances</div>
-          </div>
+            <div style="font-size:0.65rem;color:#666;">de chances</div>
+          </div>`:''}
         </div>
-        <div style="background:#222;border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px;">
-          <div style="background:linear-gradient(90deg,var(--naranja),var(--verde));height:100%;width:${pct}%;border-radius:6px;transition:width 1s;"></div>
-        </div>
-        <div style="font-size:0.65rem;color:#555;">Tus números: N°${(misDatos.numeros||[]).join(' · N°')}</div>`;
+        ${misConf.length ? `<div style="margin-bottom:6px;">
+          <div style="font-size:0.62rem;color:var(--verde);margin-bottom:2px;">✅ Confirmados: N° ${misConf.sort((a,b)=>a-b).join(', ')}</div>
+          ${pct>0?`<div style="background:#222;border-radius:4px;height:4px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:var(--verde);border-radius:4px;"></div>
+          </div>`:''}
+        </div>` : ''}
+        ${misRes.length ? `<div style="font-size:0.62rem;color:var(--naranja);">⏳ Pendientes de pago: N° ${misRes.sort((a,b)=>a-b).join(', ')}</div>` : ''}`;
     } else {
       boletosCard.style.display = 'none';
     }
@@ -2947,19 +2972,164 @@ function _renderSorteoCliente() {
   }
 }
 
-// Re-render cuando el usuario se loguea
-const _origLoginCallback = window._onLoginCallback;
-window._onLoginCallback = function(u) {
-  if (_origLoginCallback) _origLoginCallback(u);
-  _renderSorteoCliente();
+function _renderGrillaCliente(numeros, cupo) {
+  const el = document.getElementById('sorteoGrillaCliente');
+  const leyenda = document.getElementById('sorteoGrillaLeyenda');
+  if (!el) return;
+
+  // Leyenda
+  if (leyenda) leyenda.innerHTML = `
+    <span><span style="display:inline-block;width:9px;height:9px;background:#111;border:1px solid #444;border-radius:2px;margin-right:3px;"></span>Libre</span>
+    <span><span style="display:inline-block;width:9px;height:9px;background:#1a0a00;border:1px solid var(--naranja);border-radius:2px;margin-right:3px;"></span>Reservado</span>
+    <span><span style="display:inline-block;width:9px;height:9px;background:#003a10;border:1px solid var(--verde);border-radius:2px;margin-right:3px;"></span>Confirmado</span>
+    <span><span style="display:inline-block;width:9px;height:9px;background:#1a1a00;border:1px solid var(--turquesa);border-radius:2px;margin-right:3px;"></span>Tuyo</span>`;
+
+  el.innerHTML = '';
+  for (let i = 1; i <= cupo; i++) {
+    const info   = numeros[String(i)];
+    const esMio  = info && usuarioActual?.nombre && info.cliente === usuarioActual.nombre;
+    const enSel  = _seleccionActual.has(i);
+    const libre  = !info;
+
+    let bg, border, color, cursor = 'pointer', title = 'N° ' + i;
+    if (enSel) {
+      bg = '#1a1a00'; border = 'var(--turquesa)'; color = 'var(--turquesa)';
+      title = 'N°' + i + ' — Seleccionado (click para quitar)';
+    } else if (!info) {
+      bg = '#111'; border = '#333'; color = '#555';
+      title = 'N°' + i + ' — Libre';
+    } else if (esMio && info.estado === 'reservado') {
+      bg = '#1a0a00'; border = 'var(--naranja)'; color = 'var(--naranja)';
+      title = 'N°' + i + ' — Tuyo (pendiente de pago)'; cursor = 'default';
+    } else if (esMio && info.estado === 'confirmado') {
+      bg = '#003a10'; border = 'var(--verde)'; color = 'var(--verde)';
+      title = 'N°' + i + ' — Tuyo ✅'; cursor = 'default';
+    } else if (info.estado === 'reservado') {
+      bg = '#1a0800'; border = '#553300'; color = '#553300';
+      title = 'N°' + i + ' — Reservado'; cursor = 'not-allowed';
+    } else {
+      bg = '#001a08'; border = '#005020'; color = '#005020';
+      title = 'N°' + i + ' — Confirmado'; cursor = 'not-allowed';
+    }
+
+    const div = document.createElement('div');
+    div.style.cssText = `aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+      border-radius:5px;font-size:0.62rem;font-family:'Righteous',cursive;
+      border:1.5px solid ${border};background:${bg};color:${color};
+      cursor:${cursor};transition:all .15s;user-select:none;`;
+    div.textContent = i;
+    div.title = title;
+
+    if (libre || enSel) {
+      div.addEventListener('click', () => _toggleNumero(i));
+      div.addEventListener('mouseover', () => { if (libre || enSel) div.style.transform='scale(1.15)'; });
+      div.addEventListener('mouseout',  () => { div.style.transform='scale(1)'; });
+    }
+    el.appendChild(div);
+  }
+  _actualizarInfoSeleccion();
+}
+
+function _toggleNumero(n) {
+  if (!usuarioActual?.nombre) {
+    const msgEl = document.getElementById('sorteoSeleccionMsg');
+    if (msgEl) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Tenés que estar logueado para elegir números'; }
+    return;
+  }
+  if (!_sorteoData || _sorteoData.activo === false) return;
+
+  // Verificar que el número sigue libre en tiempo real
+  const numeros = _sorteoData.numeros || {};
+  if (numeros[String(n)] && !_seleccionActual.has(n)) return;
+
+  if (_seleccionActual.has(n)) {
+    _seleccionActual.delete(n);
+  } else {
+    _seleccionActual.add(n);
+  }
+  _renderGrillaCliente(numeros, _sorteoData.cupo||100);
+}
+
+function _actualizarInfoSeleccion() {
+  const infoEl = document.getElementById('sorteoSeleccionInfo');
+  const btnEl  = document.getElementById('btnConfirmarSeleccion');
+  const msgEl  = document.getElementById('sorteoSeleccionMsg');
+  if (!infoEl || !btnEl) return;
+
+  const cant = _seleccionActual.size;
+  if (cant === 0) {
+    infoEl.style.display = 'none';
+    btnEl.style.display  = 'none';
+    if (msgEl) msgEl.textContent = '';
+    return;
+  }
+
+  const precio = _sorteoData?.precio || 0;
+  const total  = cant * precio;
+  const nums   = [..._seleccionActual].sort((a,b)=>a-b);
+  infoEl.style.display = 'block';
+  infoEl.innerHTML = `
+    <span style="color:var(--turquesa);">✔ Seleccionados: N° ${nums.join(', ')}</span>
+    ${precio ? `<span style="color:var(--verde);margin-left:10px;">Total: $${total.toLocaleString('es-AR')}</span>` : ''}`;
+  btnEl.style.display = 'block';
+  btnEl.textContent = `🎟️ RESERVAR ${cant} NÚMERO${cant!==1?'S':''} — $${total.toLocaleString('es-AR')}`;
+}
+
+// ── Confirmar selección (reservar) ────────────────────
+window.confirmarSeleccionCliente = async function() {
+  const msgEl = document.getElementById('sorteoSeleccionMsg');
+  if (!usuarioActual?.nombre) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Tenés que estar logueado'; return; }
+  if (!_sorteoData || !_seleccionActual.size) return;
+  if (_sorteoData.activo === false) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ El sorteo está pausado'; return; }
+
+  const cliente  = usuarioActual.nombre;
+  const numerosDB = { ...(_sorteoData.numeros || {}) };
+  const ahora    = Date.now();
+  const conflictos = [];
+
+  for (const n of _seleccionActual) {
+    const key = String(n);
+    if (numerosDB[key]) {
+      // Verificar prioridad por timestamp
+      if (numerosDB[key].ts <= ahora - 500) { // ya fue tomado antes
+        conflictos.push(n);
+      }
+    }
+  }
+
+  if (conflictos.length) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '⚠️ Los números ' + conflictos.join(', ') + ' ya fueron tomados. Elegí otros.';
+    _seleccionActual.clear();
+    _renderGrillaCliente(numerosDB, _sorteoData.cupo||100);
+    return;
+  }
+
+  // Reservar todos los números seleccionados
+  for (const n of _seleccionActual) {
+    numerosDB[String(n)] = { cliente, estado: 'reservado', ts: ahora };
+  }
+
+  try {
+    await updateDoc(doc(db, 'sorteos', 'actual'), { numeros: numerosDB });
+    const cant = _seleccionActual.size;
+    msgEl.style.color = 'var(--verde)';
+    msgEl.textContent = '✅ Reservaste ' + cant + ' número' + (cant!==1?'s':'') + '! Pagá en tu próximo pedido para confirmarlos.';
+    _seleccionActual.clear();
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 6000);
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al reservar, intentá de nuevo';
+  }
 };
 
-// Mostrar/ocultar zona de sorteos
+// Mostrar/ocultar zona sorteos
 window.toggleZonaSorteos = function() {
   const z = document.getElementById('zonaSorteos');
   if (!z) return;
   const visible = z.style.display !== 'none';
   z.style.display = visible ? 'none' : 'block';
+  if (!visible) _seleccionActual.clear();
 };
 
 </script>
