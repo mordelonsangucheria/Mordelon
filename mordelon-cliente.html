@@ -2173,15 +2173,24 @@ function loginExitoso() {
     onSnapshot(doc(db, 'clientes', usuarioActual.nombre), (s) => {
       if (!s.exists()) return;
       const d = s.data();
-      // Fichas cargadas por vendedor
-      if ((d.fichasSlots ?? 0) > (usuarioActual.fichasSlots ?? 0)) {
-        const extra = (d.fichasSlots ?? 0) - (usuarioActual.fichasSlots ?? 0);
+      // Fichas cargadas por vendedor en tiempo real
+      const fichasNuevas = d.fichasSlots ?? 0;
+      const fichasAntes  = usuarioActual.fichasSlots ?? 0;
+      if (fichasNuevas > fichasAntes) {
+        const extra = fichasNuevas - fichasAntes;
+        // Actualizar variable global de slots también
+        slotsFichas = fichasNuevas;
         const msgEl = document.getElementById('slotsMensaje');
-        if (msgEl) { msgEl.textContent = '🎉 ¡Recibiste ' + extra + ' ficha' + (extra>1?'s':'') + '!'; msgEl.style.color = 'var(--turquesa)'; }
+        if (msgEl) {
+          msgEl.textContent = '🎉 ¡Recibiste ' + extra + ' ficha' + (extra>1?'s':'') + '!';
+          msgEl.style.color = 'var(--turquesa)';
+        }
       }
+      // Siempre sincronizar usuarioActual con Firebase
       usuarioActual = { ...usuarioActual, ...d };
-      // Actualizar UI slots si está activo
-      if (typeof slotsActualizarUI === 'function') slotsActualizarUI();
+      slotsFichas  = usuarioActual.fichasSlots ?? slotsFichas;
+      slotsHiScore = usuarioActual.recordSlots ?? slotsHiScore;
+      slotsActualizarUI();
     });
   }
 
@@ -2284,14 +2293,13 @@ function slotsNormNombre(n) {
   return n.trim().toUpperCase().replace(/\s+/g,' ').slice(0,20);
 }
 
-// ── Mostrar/ocultar pantallas ──
+// ── slotsLogin eliminado — solo existe slotsJuego ──
 function slotsShowLogin() {
-  document.getElementById('slotsLogin').style.display = 'block';
-  document.getElementById('slotsJuego').style.display = 'none';
+  // Ya no hay pantalla de login en slots — no hacer nada
 }
 function slotsShowJuego() {
-  document.getElementById('slotsLogin').style.display = 'none';
-  document.getElementById('slotsJuego').style.display = 'block';
+  const el = document.getElementById('slotsJuego');
+  if (el) el.style.display = 'block';
 }
 
 // ── Actualizar UI ──
@@ -2318,89 +2326,7 @@ function slotsActualizarUI() {
   }
 }
 
-// ── Login de slots (para usuarios sin cuenta de app) ──
-window.slotsEntrar = async function() {
-  const input = document.getElementById('slotsNombreInput');
-  const msgEl = document.getElementById('slotsLoginMsg');
-  const nombre = slotsNormNombre(input.value || '');
 
-  if (!nombre || nombre.length < 2) {
-    msgEl.textContent = '⚠️ Ingresá un nombre de al menos 2 letras';
-    return;
-  }
-
-  msgEl.style.color = 'var(--turquesa)';
-  msgEl.textContent = 'Verificando...';
-
-  try {
-    const ref = doc(db, 'slotsUsuarios', nombre);
-    const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      // Usuario existente — cargar sus datos
-      const data = snap.data();
-      slotsUsuario = { nombre, fichas: data.fichas ?? SLOTS_FICHAS_INIT, record: data.record ?? 0 };
-    } else {
-      // Usuario nuevo — crear
-      const nuevoUsuario = { nombre, fichas: SLOTS_FICHAS_INIT, record: 0, creadoEn: Date.now() };
-      await setDoc(ref, nuevoUsuario);
-      slotsUsuario = { nombre, fichas: SLOTS_FICHAS_INIT, record: 0 };
-    }
-
-    slotsFichas  = slotsUsuario.fichas;
-    slotsHiScore = slotsUsuario.record;
-    slotsScore   = 0;
-
-    // Guardar nombre en localStorage para recordarlo
-    localStorage.setItem('slotsNombreC', nombre);
-
-    // Escuchar cambios en tiempo real (fichas cargadas por vendedor)
-    if (_slotsListener) _slotsListener();
-    _slotsListener = onSnapshot(doc(db, 'slotsUsuarios', nombre), (s) => {
-      if (!s.exists()) return;
-      const d = s.data();
-      const nuevasFichas = d.fichas ?? 0;
-      if (nuevasFichas > slotsFichas) {
-        const extra = nuevasFichas - slotsFichas;
-        slotsFichas = nuevasFichas;
-        const msgEl2 = document.getElementById('slotsMensaje');
-        if (msgEl2) { msgEl2.textContent = `🎉 ¡Recibiste ${extra} ficha${extra>1?'s':''}!`; msgEl2.style.color = 'var(--turquesa)'; }
-        slotsActualizarUI();
-      }
-      if ((d.record ?? 0) > slotsHiScore) {
-        slotsHiScore = d.record;
-        slotsActualizarUI();
-      }
-    });
-
-    msgEl.textContent = '';
-    input.value = '';
-
-    // Mostrar tambores random
-    ['slotReel0','slotReel1','slotReel2'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
-    });
-    const msgJuego = document.getElementById('slotsMensaje');
-    if (msgJuego) { msgJuego.textContent = '¡Girá para ganar puntos!'; msgJuego.style.color = '#555'; }
-
-    slotsShowJuego();
-    slotsActualizarUI();
-
-  } catch(e) {
-    console.error('slotsEntrar error:', e);
-    msgEl.style.color = 'var(--rojo)';
-    msgEl.textContent = '❌ Error al conectar. Intentá de nuevo.';
-  }
-};
-
-// ── Cerrar sesión ──
-window.slotsCerrarSesion = function() {
-  if (_slotsListener) { _slotsListener(); _slotsListener = null; }
-  slotsUsuario = null;
-  slotsScore = 0; slotsFichas = 0; slotsHiScore = 0;
-  slotsShowLogin();
-};
 
 // ── Init (cuando se selecciona el juego) ──
 window.slotsInit = function() {
