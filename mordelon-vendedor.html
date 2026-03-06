@@ -839,6 +839,24 @@ select.mac-field option { background:#222; }
   </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
+
+  <!-- 🎰 FICHAS DE SLOTS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
+    <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Cargá fichas extra a un cliente. Ingresá su número de WhatsApp y la cantidad.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <input id="fichasWaCliente" type="tel" placeholder="📱 WhatsApp del cliente (ej: 2271123456)"
+        style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;width:100%;box-sizing:border-box;"/>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="fichasCantidad" type="number" min="1" max="99" value="3" placeholder="Cantidad"
+          style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:10px 14px;font-size:0.85rem;font-family:inherit;outline:none;width:90px;box-sizing:border-box;"/>
+        <button onclick="window.cargarFichas()" class="btn btn-turquesa" style="flex:1;background:var(--naranja);border-color:var(--naranja);">🎰 Cargar fichas</button>
+      </div>
+    </div>
+    <div id="fichasMensaje" style="font-size:0.75rem;margin-top:10px;min-height:18px;"></div>
+  </div>
+
+
   <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
       <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO</div>
@@ -856,6 +874,7 @@ select.mac-field option { background:#222; }
       <button onclick="window.selJuegoRecompensa('2048')" id="rtab-2048" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🔢 2048</button>
       <button onclick="window.selJuegoRecompensa('dino')" id="rtab-dino" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🦕 Dino</button>
       <button onclick="window.selJuegoRecompensa('minas')" id="rtab-minas" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">💣 Minas</button>
+      <button onclick="window.selJuegoRecompensa('slots')" id="rtab-slots" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🎰 Slots</button>
     </div>
 
     <!-- CONFIG DEL JUEGO SELECCIONADO -->
@@ -2830,13 +2849,14 @@ onSnapshot(doc(db,'config','stats'), (snap) => {
 });
 
 // ── RECOMPENSA POR JUEGO (multi-juego) ───────────────────────────────────
-const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas'];
+const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
 const JUEGOS_INFO = {
   tetris: { label: '🧱 Tetris', prefijo: 'TETRIS' },
   snake:  { label: '🐍 Snake',  prefijo: 'SNAKE'  },
   '2048': { label: '🔢 2048',   prefijo: 'DOS4K'  },
   dino:   { label: '🦕 Dino',   prefijo: 'LLAMA'  },
-  minas:  { label: '💣 Minas',  prefijo: 'MINAS'  }
+  minas:  { label: '💣 Minas',  prefijo: 'MINAS'  },
+  slots:  { label: '🎰 Slots',  prefijo: 'SLOTS'  }
 };
 
 // Estado global: objeto { tetris:{puntos,pct,activo}, snake:{...}, ... }
@@ -3000,6 +3020,7 @@ const JUEGOS_TOGGLE_INFO = [
   { id: '2048',   label: '2048',    emoji: '🔢' },
   { id: 'dino',   label: 'Dino',    emoji: '🦕' },
   { id: 'minas',  label: 'Minas',   emoji: '💣' },
+  { id: 'slots',  label: 'Slots',   emoji: '🎰' },
 ];
 let juegosEstado = {}; // { tetris: true, snake: false, ... }
 
@@ -3062,6 +3083,32 @@ onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
 // Llamar renders iniciales con defaults (sin esperar Firebase)
 renderJuegosToggles();
 actualizarUIRecompensa();
+
+// ── FICHAS DE SLOTS ──────────────────────────────────────────────────────
+window.cargarFichas = async function() {
+  const waRaw  = document.getElementById('fichasWaCliente').value.trim();
+  const cant   = parseInt(document.getElementById('fichasCantidad').value) || 0;
+  const msgEl  = document.getElementById('fichasMensaje');
+
+  if (!waRaw) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Ingresá el WhatsApp del cliente'; return; }
+  if (cant < 1) { msgEl.style.color='var(--rojo)'; msgEl.textContent='⚠️ Ingresá una cantidad válida'; return; }
+
+  const waKey = waRaw.replace(/\D/g,'');
+  try {
+    const snap = await getDoc(doc(db, 'slotsFichas', waKey));
+    const actual = snap.exists() ? (snap.data().fichas || 0) : 0;
+    await setDoc(doc(db, 'slotsFichas', waKey), { fichas: actual + cant });
+    msgEl.style.color = 'var(--verde)';
+    msgEl.textContent = `✅ ${cant} ficha${cant>1?'s':''} cargada${cant>1?'s':''} a ${waRaw}`;
+    registrarActividad(`🎰 ${cant} fichas cargadas a ${waRaw}`);
+    document.getElementById('fichasWaCliente').value = '';
+    document.getElementById('fichasCantidad').value = '3';
+    setTimeout(() => { msgEl.textContent = ''; }, 4000);
+  } catch(e) {
+    msgEl.style.color = 'var(--rojo)';
+    msgEl.textContent = '❌ Error al cargar fichas';
+  }
+};
 
 // Bind tab clicks after module loads
 document.querySelectorAll('.tab[data-tab]').forEach(t => {

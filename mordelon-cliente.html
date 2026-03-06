@@ -527,6 +527,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <button onclick="window.elegirJuego('snake')" id="btnJuegoSnake" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🐍 Snake</button>
         <button onclick="window.elegirJuego('2048')" id="btnJuego2048" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🔢 2048</button>
         <button onclick="window.elegirJuego('dino')" id="btnJuegoDino" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🦕 Dino</button>
+        <button onclick="window.elegirJuego('slots')" id="btnJuegoSlots" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🎰 Slots</button>
         <button onclick="window.elegirJuego('minas')" id="btnJuegoMinas" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">💣 Minas</button>
       </div>
     </div>
@@ -651,8 +652,66 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       </div>
       <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:8px;">Tap para descubrir · Mantené presionado para marcar 🚩</p>
     </div>
+
+    <!-- TRAGAMONEDAS -->
+    <div id="juegoSlots" style="display:none;text-align:center;">
+
+      <!-- Fichas y puntaje -->
+      <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:12px;padding:7px 14px;">
+          <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">FICHAS</div>
+          <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--naranja);" id="slotsFichas">3</div>
+        </div>
+        <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:12px;padding:7px 14px;">
+          <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">PUNTOS</div>
+          <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--turquesa);" id="slotsScore">0</div>
+        </div>
+        <div style="background:var(--gris-dark);border:1.5px solid var(--verde);border-radius:12px;padding:7px 14px;">
+          <div style="font-size:0.6rem;color:#888;margin-bottom:1px;">RÉCORD</div>
+          <div style="font-family:'Righteous',cursive;font-size:1.4rem;color:var(--verde);" id="slotsHi">0</div>
+        </div>
+      </div>
+
+      <!-- Tambores -->
+      <div style="display:flex;justify-content:center;gap:8px;margin:0 auto 10px;">
+        <div id="slotReel0" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🍔</div>
+        <div id="slotReel1" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🍕</div>
+        <div id="slotReel2" style="width:80px;height:90px;background:var(--gris-dark);border:2px solid var(--gris-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:3rem;transition:border-color .3s;">🌮</div>
+      </div>
+
+      <!-- Mensaje resultado -->
+      <div id="slotsMensaje" style="font-family:'Righteous',cursive;font-size:0.95rem;letter-spacing:1px;min-height:26px;margin-bottom:10px;color:#555;">¡Girá para ganar puntos!</div>
+
+      <!-- Botón girar -->
+      <button id="btnGirarSlots" onclick="window.slotsGirar()"
+        style="background:linear-gradient(135deg,var(--turquesa),var(--verde));border:none;color:#111;border-radius:16px;padding:14px 50px;font-family:'Righteous',cursive;font-size:1.1rem;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:14px;">
+        🎰 GIRAR
+      </button>
+
+      <!-- Sin fichas -->
+      <div id="slotsSinFichas" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:0.8rem;color:#888;margin-bottom:10px;">😢 Te quedaste sin fichas</div>
+        <a id="slotsWaLink" href="#" target="_blank"
+          style="display:inline-block;background:rgba(37,211,102,.15);border:1.5px solid #25D366;color:#25D366;border-radius:12px;padding:10px 22px;font-family:'Righteous',cursive;font-size:0.8rem;letter-spacing:1px;text-decoration:none;">
+          📲 Pedir fichas por WhatsApp
+        </a>
+        <div style="font-size:0.62rem;color:#444;margin-top:6px;">El vendedor te las carga al instante</div>
+      </div>
+
+      <!-- Tabla de premios -->
+      <div style="background:var(--gris-dark);border:1px solid rgba(61,191,184,.2);border-radius:12px;padding:10px 14px;text-align:left;">
+        <div style="font-family:'Righteous',cursive;font-size:0.7rem;color:var(--turquesa);letter-spacing:1px;margin-bottom:7px;">🏆 PREMIOS</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:0.7rem;align-items:center;">
+          <span>🔥🔥🔥</span><span style="color:#FFD700;font-weight:800;">SUPER JACKPOT — 1000 pts</span>
+          <span>🍔🍔🍔</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
+          <span>🍕🍕🍕</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
+          <span>🌮🌮🌮</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
+          <span>🍟🍟🍟</span><span style="color:#FFD700;">Jackpot — 500 pts</span>
+          <span style="color:#aaa;">Dos iguales</span><span style="color:#aaa;">100 pts</span>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
 <!-- PANTALLA: CARRITO -->
 <div class="screen" id="screen-carrito">
@@ -1735,11 +1794,11 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
   set: (v) => { juegoActualRecompensa = v; }
 });
 
-const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas' };
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', slots: '🎰 Slots' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
 onSnapshot(doc(db, 'config', 'juegos'), (snap) => {
   const estado = snap.exists() ? snap.data() : {};
   let algunoVisible = false;
@@ -1793,7 +1852,8 @@ function actualizarBarraRecompensa() {
     snake:  parseInt(localStorage.getItem('snakeHiC') || '0'),
     '2048': parseInt(localStorage.getItem('g2048HiC') || '0'),
     dino:   parseInt(localStorage.getItem('dinoHiC') || '0'),
-    minas:  parseInt(localStorage.getItem('minasHiC') || '0')
+    minas:  parseInt(localStorage.getItem('minasHiC') || '0'),
+    slots:  parseInt(localStorage.getItem('slotsHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
 
@@ -1825,6 +1885,185 @@ function actualizarBarraRecompensa() {
   }
 }
 window.actualizarBarraRecompensa = actualizarBarraRecompensa;
+
+// ===================== TRAGAMONEDAS =====================
+const SLOTS_SIMBOLOS  = ['🍔','🍕','🌮','🍟','🔥'];
+const SLOTS_FICHAS_INIT = 3;
+const SLOTS_WA = '5492271415751'; // mismo número del fab de WA
+
+let slotsScore   = 0;
+let slotsFichas  = SLOTS_FICHAS_INIT;
+let slotsSpinning = false;
+let slotsClienteWA = '';
+let slotsHiScore = parseInt(localStorage.getItem('slotsHiC') || '0');
+
+function slotsCargarEstado() {
+  // Fichas guardadas en Firebase por cliente WA
+  // Las guardamos en localStorage como fallback (por sesión)
+  const saved = localStorage.getItem('slotsFichasC');
+  if (saved !== null) slotsFichas = parseInt(saved);
+  else slotsFichas = SLOTS_FICHAS_INIT;
+  slotsScore = 0;
+  slotsHiScore = parseInt(localStorage.getItem('slotsHiC') || '0');
+}
+
+function slotsActualizarUI() {
+  const fEl = document.getElementById('slotsFichas');
+  const sEl = document.getElementById('slotsScore');
+  const hEl = document.getElementById('slotsHi');
+  const btn = document.getElementById('btnGirarSlots');
+  const sinF = document.getElementById('slotsSinFichas');
+  if (fEl) fEl.textContent = slotsFichas;
+  if (sEl) sEl.textContent = slotsScore;
+  if (hEl) hEl.textContent = slotsHiScore;
+  if (sinF) sinF.style.display = slotsFichas <= 0 ? 'block' : 'none';
+  if (btn) {
+    btn.style.display  = slotsFichas > 0 ? 'inline-block' : 'none';
+    btn.disabled = slotsSpinning;
+    btn.style.opacity  = slotsSpinning ? '0.5' : '1';
+  }
+  // Link de WhatsApp con mensaje pre-cargado
+  const waLink = document.getElementById('slotsWaLink');
+  if (waLink) {
+    const wa = slotsClienteWA || '';
+    const msg = encodeURIComponent(`Hola Mordelón! 🎰 Quiero comprar fichas extra para la tragamonedas. Mi número es: ${wa}`);
+    waLink.href = `https://wa.me/${SLOTS_WA}?text=${msg}`;
+  }
+}
+
+window.slotsInit = function() {
+  try {
+    // Obtener WA del cliente si ya lo ingresó
+    const waInput = document.getElementById('whatsappCliente');
+    if (waInput && waInput.value) slotsClienteWA = waInput.value.trim();
+
+    slotsCargarEstado();
+
+    // Escuchar fichas extras del vendedor (solo si el cliente ingresó su WA)
+    if (slotsClienteWA && !window._slotsWaListener) {
+      window._slotsWaListener = onSnapshot(doc(db, 'slotsFichas', slotsClienteWA.replace(/\D/g,'')), (snap) => {
+        if (snap.exists()) {
+          const extra = snap.data().fichas || 0;
+          if (extra > 0) {
+            slotsFichas = (parseInt(localStorage.getItem('slotsFichasC') || String(SLOTS_FICHAS_INIT))) + extra;
+            localStorage.setItem('slotsFichasC', slotsFichas);
+            setDoc(doc(db, 'slotsFichas', slotsClienteWA.replace(/\D/g,'')), { fichas: 0 });
+            slotsActualizarUI();
+            const msgEl = document.getElementById('slotsMensaje');
+            if (msgEl) { msgEl.textContent = `🎉 ¡Recibiste ${extra} ficha${extra>1?'s':''}!`; msgEl.style.color = 'var(--turquesa)'; }
+          }
+        }
+      });
+    }
+
+    // Mostrar símbolos random al inicio
+    ['slotReel0','slotReel1','slotReel2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
+    });
+    const msgEl = document.getElementById('slotsMensaje');
+    if (msgEl) { msgEl.textContent = '¡Girá para ganar puntos!'; msgEl.style.color = '#555'; }
+    slotsActualizarUI();
+  } catch(e) { console.error('slotsInit error:', e); }
+};
+
+window.slotsGirar = function() {
+  if (slotsSpinning || slotsFichas <= 0) return;
+  slotsSpinning = true;
+  slotsFichas--;
+  localStorage.setItem('slotsFichasC', slotsFichas);
+  slotsActualizarUI();
+
+  const reels = ['slotReel0','slotReel1','slotReel2'];
+  const resultado = reels.map(() => Math.floor(Math.random() * SLOTS_SIMBOLOS.length));
+
+  // Animación: cambiar rápido por 600ms, luego frenar uno a uno
+  let frame = 0;
+  const spinInterval = setInterval(() => {
+    reels.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = SLOTS_SIMBOLOS[Math.floor(Math.random()*SLOTS_SIMBOLOS.length)];
+    });
+    frame++;
+    if (frame > 15) clearInterval(spinInterval);
+  }, 60);
+
+  // Revelar resultado escalonado
+  setTimeout(() => {
+    const el0 = document.getElementById('slotReel0');
+    if (el0) el0.textContent = SLOTS_SIMBOLOS[resultado[0]];
+  }, 700);
+  setTimeout(() => {
+    const el1 = document.getElementById('slotReel1');
+    if (el1) el1.textContent = SLOTS_SIMBOLOS[resultado[1]];
+  }, 950);
+  setTimeout(() => {
+    const el2 = document.getElementById('slotReel2');
+    if (el2) el2.textContent = SLOTS_SIMBOLOS[resultado[2]];
+
+    // Calcular premio
+    const s = resultado.map(i => SLOTS_SIMBOLOS[i]);
+    const msgEl = document.getElementById('slotsMensaje');
+    let puntos = 0;
+    let msg = '';
+
+    if (s[0] === s[1] && s[1] === s[2]) {
+      if (s[0] === '🔥') {
+        puntos = 1000;
+        msg = '🔥 ¡SUPER JACKPOT! +1000 pts';
+        reels.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.borderColor = '#FF4D4D'; el.style.boxShadow = '0 0 16px rgba(255,77,77,.6)'; }
+        });
+      } else {
+        puntos = 500;
+        msg = `🎉 ¡JACKPOT! +500 pts`;
+        reels.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.borderColor = '#FFD700'; el.style.boxShadow = '0 0 16px rgba(255,215,0,.5)'; }
+        });
+      }
+    } else if (s[0]===s[1] || s[1]===s[2] || s[0]===s[2]) {
+      puntos = 100;
+      msg = '✨ ¡Dos iguales! +100 pts';
+      reels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.borderColor = 'var(--turquesa)'; el.style.boxShadow = ''; }
+      });
+    } else {
+      msg = slotsFichas > 0 ? '😅 Sin suerte… ¡intentá de nuevo!' : '😢 Sin fichas';
+      msgEl.style.color = '#555';
+      reels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.borderColor = 'var(--gris-light)'; el.style.boxShadow = ''; }
+      });
+    }
+
+    if (puntos > 0) {
+      slotsScore += puntos;
+      msgEl.style.color = puntos >= 500 ? '#FFD700' : 'var(--turquesa)';
+      if (slotsScore > slotsHiScore) {
+        slotsHiScore = slotsScore;
+        localStorage.setItem('slotsHiC', slotsHiScore);
+      }
+      if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('slots', slotsScore);
+    }
+
+    if (msgEl) msgEl.textContent = msg;
+    slotsSpinning = false;
+    slotsActualizarUI();
+
+    // Quitar glow después de 1.5s
+    setTimeout(() => {
+      reels.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.style.borderColor = 'var(--gris-light)'; el.style.boxShadow = ''; }
+      });
+    }, 1500);
+
+  }, 1200);
+};
+
 
 // Llamar cuando cambia el récord en cualquier juego
 window.notificarRecordJuego = function(juego, nuevoRecord) {
@@ -2180,7 +2419,7 @@ window.minasReset     = function() { minasInit(); };
 <script>
 // ===================== SELECTOR DE JUEGO =====================
 window.elegirJuego = function(juego) {
-  const juegos = ['tetris','snake','2048','dino','minas'];
+  const juegos = ['tetris','snake','2048','dino','minas','slots'];
   juegos.forEach(j => {
     const el = document.getElementById('juego' + j.charAt(0).toUpperCase() + j.slice(1));
     if(el) el.style.display = 'none';
@@ -2196,6 +2435,7 @@ window.elegirJuego = function(juego) {
   if(juego==='2048') window.g2048Init();
   if(juego==='dino') window.dinoInit();
   if(juego==='minas') window.minasInit();
+  if(juego==='slots') window.slotsInit();
   // Actualizar sistema de recompensa para el juego seleccionado
   window.juegoActualRecompensa = juego;
   if (typeof window.actualizarBarraRecompensa === 'function') window.actualizarBarraRecompensa();
