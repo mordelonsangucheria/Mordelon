@@ -1027,7 +1027,17 @@ select.mac-field option { background:#222; }
       <input id="cuponCodigo" class="campo" placeholder="Ej: MORDELON20" style="text-transform:uppercase;letter-spacing:2px;font-weight:900;" oninput="this.value=this.value.toUpperCase()" />
     </div>
 
-    <div style="margin-bottom:14px;">
+    <!-- Toggle tipo cupón -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:8px;">TIPO DE CUPÓN</div>
+      <div style="display:flex;gap:8px;">
+        <button id="btnTipoPct" class="btn-billete sel" onclick="window.selCuponTipo('pct')" style="flex:1;padding:10px 4px;">💰 % Descuento</button>
+        <button id="btnTipoItem" class="btn-billete" onclick="window.selCuponTipo('item')" style="flex:1;padding:10px 4px;">🎁 Ítem gratis</button>
+      </div>
+    </div>
+
+    <!-- Sección % descuento -->
+    <div id="cuponSeccionPct" style="margin-bottom:14px;">
       <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:8px;">DESCUENTO</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;" id="cuponPctSelector">
         <button class="btn-billete" onclick="window.selCuponPct(10,this)">10%</button>
@@ -1039,6 +1049,27 @@ select.mac-field option { background:#222; }
         <button class="btn-billete" onclick="window.selCuponPct(50,this)">50%</button>
         <button class="btn-billete" onclick="window.selCuponPct(100,this)">100% 🎁</button>
       </div>
+    </div>
+
+    <!-- Sección ítem gratis -->
+    <div id="cuponSeccionItem" style="margin-bottom:14px;display:none;">
+      <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:8px;">ÍTEM GRATIS</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="cuponItemSelector">
+        <button class="btn-billete" onclick="window.selCuponItem('Porción de Papas',this)">🍟 Papas</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Coca-Cola',this)">🥤 Coca-Cola</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Sprite',this)">🥤 Sprite</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Salsa Besito de Ajo',this)">🧄 Salsa Ajo</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Salsa Picante de la Casa',this)">🌶️ Salsa Picante</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Mayonesa Común',this)">🥛 Mayonesa</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Tequeños — Media Docena',this)">🧀 Tequeños ½</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Aros de Cebolla — Media Docena',this)">🧅 Aros ½</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Mordelón de la Casa',this)">🔥 Mordelón Casa</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Smash Cheeseburger',this)">🍔 Smash</button>
+        <button class="btn-billete" onclick="window.selCuponItem('Arepa de Jamón y Queso',this)">🫓 Arepa</button>
+      </div>
+      <div style="font-size:0.65rem;color:#555;margin-bottom:5px;">O escribí uno personalizado:</div>
+      <input id="cuponItemCustom" class="campo" placeholder="Ej: Combo Mordelón x4" style="font-size:0.85rem;"
+        oninput="window.selCuponItemCustom(this.value)" />
     </div>
 
     <button class="btn btn-turquesa" onclick="window.crearCupon()" style="width:100%;">🎟️ Crear cupón</button>
@@ -2350,6 +2381,25 @@ onSnapshot(doc(db,'config','promos'), (snap) => {
 // ===== SISTEMA DE CUPONES =====
 let cuponesData = [];
 let cuponPctActual = null;
+let cuponTipoActual = 'pct'; // 'pct' o 'item'
+let cuponItemActual = null;
+
+window.selCuponTipo = function(tipo) {
+  cuponTipoActual = tipo;
+  cuponPctActual = null;
+  cuponItemActual = null;
+  // Toggle botones tipo
+  document.getElementById('btnTipoPct').classList.toggle('sel', tipo === 'pct');
+  document.getElementById('btnTipoItem').classList.toggle('sel', tipo === 'item');
+  // Mostrar/ocultar secciones
+  document.getElementById('cuponSeccionPct').style.display  = tipo === 'pct'  ? 'block' : 'none';
+  document.getElementById('cuponSeccionItem').style.display = tipo === 'item' ? 'block' : 'none';
+  // Limpiar selecciones
+  document.querySelectorAll('#cuponPctSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('#cuponItemSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  const customEl = document.getElementById('cuponItemCustom');
+  if (customEl) customEl.value = '';
+};
 
 window.selCuponPct = function(pct, el) {
   cuponPctActual = pct;
@@ -2357,15 +2407,37 @@ window.selCuponPct = function(pct, el) {
   el.classList.add('sel');
 };
 
+window.selCuponItem = function(item, el) {
+  cuponItemActual = item;
+  document.querySelectorAll('#cuponItemSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  const customEl = document.getElementById('cuponItemCustom');
+  if (customEl) customEl.value = '';
+};
+
+window.selCuponItemCustom = function(val) {
+  cuponItemActual = val.trim() || null;
+  document.querySelectorAll('#cuponItemSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+};
+
 window.crearCupon = async function() {
   const codigo = document.getElementById('cuponCodigo').value.trim().toUpperCase();
   if (!codigo) { showNotif('⚠️ Ingresá un código'); return; }
-  if (!cuponPctActual) { showNotif('⚠️ Elegí el % de descuento'); return; }
+
+  if (cuponTipoActual === 'pct') {
+    if (!cuponPctActual) { showNotif('⚠️ Elegí el % de descuento'); return; }
+  } else {
+    if (!cuponItemActual) { showNotif('⚠️ Elegí o escribí un ítem gratis'); return; }
+  }
+
   if (cuponesData.find(c => c.codigo === codigo)) { showNotif('⚠️ Ese código ya existe'); return; }
+
   const cupon = {
     id: Date.now(),
     codigo,
-    pct: cuponPctActual,
+    tipo: cuponTipoActual,
+    pct:  cuponTipoActual === 'pct'  ? cuponPctActual  : 0,
+    item: cuponTipoActual === 'item' ? cuponItemActual : '',
     activo: true,
     usado: false,
     usadoPor: null,
@@ -2373,10 +2445,19 @@ window.crearCupon = async function() {
   };
   cuponesData.push(cupon);
   await setDoc(doc(db,'config','cupones'), { lista: cuponesData });
-  registrarActividad('🎟️ Creó cupón: ' + codigo + ' (' + cuponPctActual + '% off)');
+  const logTxt = cuponTipoActual === 'pct'
+    ? `🎟️ Creó cupón: ${codigo} (${cuponPctActual}% off)`
+    : `🎟️ Creó cupón: ${codigo} (🎁 ${cuponItemActual})`;
+  registrarActividad(logTxt);
+
+  // Reset UI
   document.getElementById('cuponCodigo').value = '';
   document.querySelectorAll('#cuponPctSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('#cuponItemSelector .btn-billete').forEach(b => b.classList.remove('sel'));
+  const customEl = document.getElementById('cuponItemCustom');
+  if (customEl) customEl.value = '';
   cuponPctActual = null;
+  cuponItemActual = null;
   showNotif('✅ Cupón creado');
 };
 
@@ -4106,13 +4187,13 @@ window.renderSorteoPanel = function() { _actualizarUIVendedor(); };
 // ═══════════════════════════════════════════════════════
 
 const TL_PREMIOS_DEFAULT_V = [
-  { emoji:'🔥', label:'Jackpot Mordelón', premio:'Combo Mordelón x4 · 4 sánguches + papas', pct:0.1,  cupon:true,  cuponTipo:'pct',  cuponPct:100, cuponItem:'',          color:'#FFB800', esJackpot:true  },
-  { emoji:'🦙', label:'Triple Llama',     premio:'Sánguche gratis con compra de otro',       pct:0.9,  cupon:true,  cuponTipo:'item', cuponPct:50,  cuponItem:'Sánguche gratis', color:'#3DBFB8', esJackpot:false },
-  { emoji:'🥪', label:'Triple Sánguche',  premio:'Papas gratis con tu próximo pedido',        pct:3,    cupon:true,  cuponTipo:'item', cuponPct:30,  cuponItem:'Papas gratis',    color:'#2DC653', esJackpot:false },
-  { emoji:'🧀', label:'Triple Queso',     premio:'20% de descuento en tu próxima compra',    pct:6,    cupon:true,  cuponTipo:'pct',  cuponPct:20,  cuponItem:'',          color:'#D4831A', esJackpot:false },
-  { emoji:'🥤', label:'Triple Bebida',    premio:'10% de descuento en tu próxima compra',    pct:10,   cupon:true,  cuponTipo:'pct',  cuponPct:10,  cuponItem:'',          color:'#D4831A', esJackpot:false },
-  { emoji:'🍟', label:'Triple Papas',     premio:'Salsa gratis con tu próxima compra',       pct:20,   cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Salsa gratis',    color:'#3DBFB8', esJackpot:false },
-  { emoji:'💀', label:'Sin premio',       premio:'',                                          pct:60,   cupon:false, cuponTipo:'pct',  cuponPct:0,   cuponItem:'',          color:'#555',    esJackpot:false },
+  { emoji:'🔥', label:'Jackpot Mordelón', premio:'Combo Mordelón x4 · 4 sánguches + papas', pct:0.1,  cupon:true,  cuponTipo:'item', cuponPct:100, cuponItem:'Combo Mordelón x4 (4 Mordelón de la Casa + 4 porciones de papas)', color:'#FFB800', esJackpot:true  },
+  { emoji:'🦙', label:'Llama x3',         premio:'Mordelón de la Casa gratis',               pct:0.9,  cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Mordelón de la Casa',     color:'#3DBFB8', esJackpot:false },
+  { emoji:'🥪', label:'Sánguche x3',      premio:'Porción de Papas gratis',                  pct:3,    cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Porción de Papas',        color:'#2DC653', esJackpot:false },
+  { emoji:'🧀', label:'Queso x3',         premio:'Tequeños Media Docena gratis',             pct:6,    cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Tequeños — Media Docena', color:'#D4831A', esJackpot:false },
+  { emoji:'🥤', label:'Bebida x3',        premio:'10% de descuento en tu próxima compra',    pct:10,   cupon:true,  cuponTipo:'pct',  cuponPct:10,  cuponItem:'',                        color:'#D4831A', esJackpot:false },
+  { emoji:'🍟', label:'Papas x3',         premio:'Salsa Besito de Ajo gratis',               pct:20,   cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Salsa Besito de Ajo',     color:'#3DBFB8', esJackpot:false },
+  { emoji:'💀', label:'Sin premio',        premio:'',                                          pct:60,   cupon:false, cuponTipo:'pct',  cuponPct:0,   cuponItem:'',                        color:'#555',    esJackpot:false },
 ];
 
 // Paleta de emojis para el selector plegable
@@ -4198,10 +4279,21 @@ function _tlRenderPremiosEditor() {
           <span style="font-size:0.65rem;color:#555;">%</span>
         </div>` : `
         <div>
-          <div style="font-size:0.65rem;color:#555;margin-bottom:4px;">Descripción del item (ej: Papas gratis, Salsa gratis, Bebida gratis):</div>
+          <div style="font-size:0.65rem;color:#555;margin-bottom:6px;">Elegí un ítem del menú:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+            ${['🍟 Porción de Papas','🥤 Coca-Cola','🥤 Sprite','🧄 Salsa Besito de Ajo','🌶️ Salsa Picante de la Casa','🧀 Tequeños — Media Docena','🧅 Aros de Cebolla — Media Docena','🔥 Mordelón de la Casa','🍔 Smash Cheeseburger','🫓 Arepa de Jamón y Queso','🔥 Combo Mordelón x4'].map(opt => {
+              const nombre = opt.replace(/^\\S+ /,'');
+              const sel = (p.cuponItem||'') === nombre;
+              return `<button onclick="window.tlSelItemRapido(${i},'${nombre.replace(/'/g,"\\'")}')"
+                style="padding:4px 8px;border-radius:6px;border:1px solid ${sel?'var(--naranja)':'#333'};background:${sel?'rgba(212,131,26,.2)':'#0a0a0a'};color:${sel?'var(--naranja)':'#555'};font-size:0.62rem;cursor:pointer;font-family:inherit;white-space:nowrap;">
+                ${opt}
+              </button>`;
+            }).join('')}
+          </div>
+          <div style="font-size:0.65rem;color:#444;margin-bottom:4px;">O escribí uno personalizado:</div>
           <input type="text" value="${p.cuponItem||''}" data-idx="${i}" data-field="cuponItem"
             oninput="window.tlEditPremio(this)"
-            placeholder="Ej: Papas gratis"
+            placeholder="Ej: Combo Mordelón x4"
             style="width:100%;background:#111;border:1px solid ${tipo==='item'?'var(--naranja)':'#333'};border-radius:6px;color:var(--naranja);font-size:0.8rem;font-weight:800;padding:5px 8px;box-sizing:border-box;font-family:inherit;">
         </div>`}
       </div>` : '';
@@ -4268,6 +4360,10 @@ window.tlSelEmoji = function(idx, emoji) {
 };
 window.tlSetCuponTipo = function(idx, tipo) {
   _tlPremiosLocal[idx].cuponTipo = tipo;
+  _tlRenderPremiosEditor();
+};
+window.tlSelItemRapido = function(idx, item) {
+  _tlPremiosLocal[idx].cuponItem = item;
   _tlRenderPremiosEditor();
 };
 

@@ -1096,7 +1096,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
       <span class="tl-jackpot-flames">🦙🔥🦙</span>
       <div class="tl-jackpot-title">¡¡JACKPOT<br>MORDELÓN!!</div>
       <div class="tl-jackpot-premio" id="tlJackpotPremioTexto">COMBO MORDELÓN x4</div>
-      <div style="font-size:0.72rem;color:#888;margin-bottom:12px;">Tu código de premio:</div>
+      <div style="font-size:0.72rem;color:#888;margin-bottom:12px;">Tu cupón de ítem gratis:</div>
       <div class="tl-jackpot-codigo" id="tlJackpotCodigo" onclick="window.tlCopiarJackpot()">JACK-XXXX</div>
       <div style="font-size:0.62rem;color:#555;margin-bottom:16px;">Tap para copiar · Mostralo en el local</div>
       <button onclick="window.tlCerrarJackpot()" style="background:var(--turquesa);color:#0a1010;border:none;border-radius:12px;padding:12px 32px;font-family:'Righteous',cursive;font-size:0.9rem;cursor:pointer;letter-spacing:2px;">¡RECLAMAR!</button>
@@ -2591,13 +2591,13 @@ function _tlActualizarSimbolosDesdeFirebase(premios) {
 // Prob jackpot (🔥🔥🔥): ~1/113^3... pero usamos overrides para control exacto
 // Premios por defecto (se sobreescriben con los de Firebase)
 const TL_PREMIOS_DEFAULT = {
-  '🔥': { nivel:'jackpot', label:'🔥 JACKPOT MORDELÓN 🔥', premio:'Combo Mordelón x4 · 4 sánguches + papas', color:'#FFB800', pts:2000, cupon:true,  cuponPct:100, esJackpot:true  },
-  '🦙': { nivel:'grande',  label:'🦙 TRIPLE LLAMA',        premio:'Sánguche gratis con compra de otro',       color:'#3DBFB8', pts:500,  cupon:true,  cuponPct:50,  esJackpot:false },
-  '🥪': { nivel:'grande',  label:'🥪 TRIPLE SÁNGUCHE',     premio:'Papas gratis con tu próximo pedido',        color:'#2DC653', pts:300,  cupon:true,  cuponPct:30,  esJackpot:false },
-  '🧀': { nivel:'medio',   label:'🧀 TRIPLE QUESO',        premio:'20% de descuento en tu próxima compra',    color:'#D4831A', pts:150,  cupon:true,  cuponPct:20,  esJackpot:false },
-  '🥤': { nivel:'medio',   label:'🥤 TRIPLE BEBIDA',       premio:'10% de descuento en tu próxima compra',    color:'#D4831A', pts:100,  cupon:true,  cuponPct:10,  esJackpot:false },
-  '🍟': { nivel:'pequeño', label:'🍟 TRIPLE PAPAS',        premio:'Salsa gratis con tu próxima compra',       color:'#3DBFB8', pts:50,   cupon:false, cuponPct:0,   esJackpot:false },
-  '💀': { nivel:'ninguno', label:'💀 MORDELÓN SE RÍE',     premio:'',                                         color:'#555',    pts:0,    cupon:false, cuponPct:0,   esJackpot:false },
+  '🔥': { nivel:'jackpot', label:'🔥 JACKPOT MORDELÓN 🔥', premio:'Combo Mordelón x4 · 4 sánguches + papas', color:'#FFB800', pts:2000, cupon:true,  cuponTipo:'item', cuponItem:'Combo Mordelón x4 (4 Mordelón de la Casa + 4 porciones de papas)', esJackpot:true  },
+  '🦙': { nivel:'grande',  label:'🦙 LLAMA x3',            premio:'Mordelón de la Casa gratis',               color:'#3DBFB8', pts:500,  cupon:true,  cuponTipo:'item', cuponItem:'Mordelón de la Casa',  esJackpot:false },
+  '🥪': { nivel:'grande',  label:'🥪 SÁNGUCHE x3',         premio:'Porción de Papas gratis',                  color:'#2DC653', pts:300,  cupon:true,  cuponTipo:'item', cuponItem:'Porción de Papas',     esJackpot:false },
+  '🧀': { nivel:'medio',   label:'🧀 QUESO x3',            premio:'Tequeños Media Docena gratis',             color:'#D4831A', pts:150,  cupon:true,  cuponTipo:'item', cuponItem:'Tequeños — Media Docena', esJackpot:false },
+  '🥤': { nivel:'medio',   label:'🥤 BEBIDA x3',           premio:'Coca-Cola gratis',                         color:'#D4831A', pts:100,  cupon:true,  cuponTipo:'item', cuponItem:'Coca-Cola',            esJackpot:false },
+  '🍟': { nivel:'pequeño', label:'🍟 PAPAS x3',            premio:'Salsa de la casa gratis',                  color:'#3DBFB8', pts:50,   cupon:true,  cuponTipo:'item', cuponItem:'Salsa Besito de Ajo',  esJackpot:false },
+  '💀': { nivel:'ninguno', label:'💀 MORDELÓN SE RÍE',     premio:'',                                         color:'#555',    pts:0,    cupon:false, cuponTipo:'pct',  cuponItem:'',                     esJackpot:false },
 };
 let TL_PREMIOS = { ...TL_PREMIOS_DEFAULT };
 
@@ -2645,8 +2645,8 @@ function _tlEmojiPorPosicion(pos) {
 
 // ── Premios por par (solo 2 iguales en línea central) ──
 const TL_PREMIOS_PAR = {
-  '🦙': { nivel:'pequeño', label:'2x LLAMA ✨',    premio:'Salsa gratis con tu próxima compra', color:'#3DBFB8', pts:30, cupon:false },
-  '🥪': { nivel:'pequeño', label:'2x SÁNGUCHE 🥪', premio:'5% de descuento',                    color:'#2DC653', pts:20, cupon:true,  cuponPct:5 },
+  '🦙': { nivel:'pequeño', label:'2x LLAMA ✨',    premio:'Salsa Besito de Ajo gratis', color:'#3DBFB8', pts:30, cupon:true,  cuponTipo:'item', cuponItem:'Salsa Besito de Ajo' },
+  '🥪': { nivel:'pequeño', label:'2x SÁNGUCHE 🥪', premio:'Salsa Picante gratis',       color:'#2DC653', pts:20, cupon:true,  cuponTipo:'item', cuponItem:'Salsa Picante de la Casa' },
 };
 
 // ── Probabilidad controlada por tirada ──────────────
@@ -2775,7 +2775,8 @@ function tlRenderTabla() {
   const rows = emojisOrden.map(e => {
     const p = TL_PREMIOS[e];
     if (!p) return null;
-    return { e: `${e}${e}${e}`, premio: p.premio || p.label, color: p.color || '#aaa' };
+    const desc = (p.cuponTipo === 'item' && p.cuponItem) ? `🎁 ${p.cuponItem}` : (p.premio || p.label);
+    return { e: `${e}${e}${e}`, premio: desc, color: p.color || '#aaa' };
   }).filter(Boolean);
 
   el.innerHTML = `
@@ -2787,7 +2788,7 @@ function tlRenderTabla() {
         <span style="color:${r.color};">${r.e} ${r.premio}</span>
       </div>`).join('')}
     <div style="margin-top:8px;padding-top:6px;border-top:1px solid #1a2a2a;font-size:0.58rem;color:#333;">
-      ⚡ 1 tirada gratis por día · Pack: 50 fichas = $500 · Válido sólo para la próxima compra
+      ⚡ 1 tirada gratis por día · Pack: 50 fichas = $500 · Cupones válidos por 7 días · Solo 1 uso
     </div>`;
 }
 
@@ -2978,10 +2979,10 @@ window.slotsGirar = async function() {
     // Los 3 rodillos muestran el símbolo ganador
     r0 = r1 = r2 = simBoton;
   } else {
-    // Sin premio: asegurarse que no salgan 3 iguales accidentalmente
+    // Sin premio: asegurarse que los 3 rodillos sean todos distintos entre sí
     r0 = TL_POOL[Math.floor(Math.random()*TL_POOL.length)].e;
     do { r1 = TL_POOL[Math.floor(Math.random()*TL_POOL.length)].e; } while(r1===r0);
-    r2 = TL_POOL[Math.floor(Math.random()*TL_POOL.length)].e;
+    do { r2 = TL_POOL[Math.floor(Math.random()*TL_POOL.length)].e; } while(r2===r0 || r2===r1);
   }
 
   // ── Animar rodillos escalonado ──────────────────────
@@ -3056,7 +3057,7 @@ window.slotsGirar = async function() {
               document.getElementById('tlCuponCodigo').after(descEl);
             }
             descEl.textContent = esItem
-              ? `🎁 ${premio.cuponItem || premio.premio} — presentá este código`
+              ? `🎁 ${premio.cuponItem || premio.premio} — presentá este código al retirar`
               : `💰 ${premio.cuponPct}% de descuento en tu próxima compra`;
             cuponDisp.style.display = 'block';
           }
