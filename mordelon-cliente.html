@@ -1474,17 +1474,19 @@ window.irAPago = function() {
 
 function renderResumen() {
   const subtotal = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
-  const descuento = cuponAplicado ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
+  const esItem   = cuponAplicado?.tipo === 'item';
+  const descuento = (cuponAplicado && !esItem) ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
   const total = subtotal - descuento;
   const descuentoRow = cuponAplicado
-    ? `<div class="res-fila" style="color:var(--verde)"><span>🎟️ Cupón ${cuponAplicado.codigo} (-${cuponAplicado.pct}%)</span><span>-$${fN(descuento)}</span></div>`
+    ? esItem
+      ? `<div class="res-fila" style="color:var(--verde)"><span>🎁 ${cuponAplicado.item || 'Premio'} (${cuponAplicado.codigo})</span><span>Al retirar</span></div>`
+      : `<div class="res-fila" style="color:var(--verde)"><span>🎟️ Cupón ${cuponAplicado.codigo} (-${cuponAplicado.pct}%)</span><span>-$${fN(descuento)}</span></div>`
     : '';
   document.getElementById('resumenPago').innerHTML = `
     ${carrito.map(i=>`<div class="res-fila"><span>${i.emoji} ${i.nombre} x${i.qty}</span><span>$${fN(i.precio*i.qty)}</span></div>`).join('')}
     <div class="res-fila total"><span>Subtotal</span><span>$${fN(subtotal)}</span></div>
     ${descuentoRow}
-    ${cuponAplicado ? `<div class="res-fila total" style="color:var(--verde)"><span>Total con descuento</span><span>$${fN(total)}</span></div>` : ''}`;
-  // Show/hide quitar btn
+    ${(cuponAplicado && !esItem) ? `<div class="res-fila total" style="color:var(--verde)"><span>Total con descuento</span><span>$${fN(total)}</span></div>` : ''}`;
   const qBtn = document.getElementById('cuponQuitarBtn');
   if (qBtn) qBtn.style.display = cuponAplicado ? 'inline' : 'none';
 }
@@ -1500,7 +1502,8 @@ window.selMetodo = function(m) {
   document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('sel'));
   document.getElementById('mbtn-'+m).classList.add('sel');
   const subtotal = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
-  const descuento = cuponAplicado ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
+  const esItem   = cuponAplicado?.tipo === 'item';
+  const descuento = (cuponAplicado && !esItem) ? Math.round(subtotal * cuponAplicado.pct / 100) : 0;
   const total = subtotal - descuento;
   document.getElementById('pagoTransferencia').style.display = 'none';
   document.getElementById('pagoTarjeta').style.display = 'none';
@@ -1533,7 +1536,8 @@ window.confirmarPedido = async function() {
     if (num.length < 15) { showToast('⚠️ Número de tarjeta inválido'); return; }
   }
   const subtotalBase = carrito.reduce((s,i) => s+i.precio*i.qty, 0);
-  const descuentoCupon = cuponAplicado ? Math.round(subtotalBase * cuponAplicado.pct / 100) : 0;
+  const esItemCupon  = cuponAplicado?.tipo === 'item';
+  const descuentoCupon = (cuponAplicado && !esItemCupon) ? Math.round(subtotalBase * cuponAplicado.pct / 100) : 0;
   const total = subtotalBase - descuentoCupon;
   const totalFinal = metodoPago === 'Tarjeta' ? Math.round(total * 1.1) : total;
   const nota = document.getElementById('notaPedido').value;
@@ -2032,7 +2036,6 @@ window.aplicarCupon = function() {
   const input = document.getElementById('cuponInput');
   const codigo = input.value.trim().toUpperCase();
   if (!codigo) return;
-  // Verificar horario
   if (!estaAbiertoAhora()) {
     document.getElementById('cuponMsg').textContent = '🕐 ¡El local aún está cerrado! ¡Canjealo cuando abramos!';
     document.getElementById('cuponMsg').style.color = 'var(--naranja)';
@@ -2051,7 +2054,11 @@ window.aplicarCupon = function() {
     return;
   }
   cuponAplicado = cupon;
-  document.getElementById('cuponMsg').textContent = '✅ -' + cupon.pct + '% aplicado!';
+  const esItem = cupon.tipo === 'item';
+  const msgTxt = esItem
+    ? `🎁 ¡Listo! ${cupon.item || 'Premio'} al retirar`
+    : `✅ -${cupon.pct}% aplicado!`;
+  document.getElementById('cuponMsg').textContent = msgTxt;
   document.getElementById('cuponMsg').style.color = 'var(--verde)';
   actualizarResumenPago();
 };
@@ -2864,10 +2871,19 @@ function tlConfetti(cantidad = 60) {
 }
 
 // ── Generar cupón de premio ───────────────────────────
-async function tlGenerarCupon(pct, origen) {
+async function tlGenerarCupon(premio, origen) {
+  // premio puede ser el objeto completo del premio o un pct legacy
+  const esPct   = typeof premio === 'number';
+  const tipo    = esPct ? 'pct' : (premio.cuponTipo || 'pct');
+  const pct     = esPct ? premio : (premio.cuponPct || 0);
+  const item    = esPct ? '' : (premio.cuponItem || '');
+  const desc    = esPct ? premio : (tipo === 'item' ? item : pct);
+
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const rand = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-  const prefijo = origen === 'jackpot' ? 'JACK' : (pct >= 50 ? 'LLAMA' : (pct >= 20 ? 'MORDE' : 'DESC'));
+  const rand  = Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  const prefijo = origen === 'jackpot' ? 'JACK'
+    : tipo === 'item' ? 'GIFT'
+    : (pct >= 50 ? 'LLAMA' : (pct >= 20 ? 'MORDE' : 'DESC'));
   const codigo = prefijo + '-' + rand;
   const expira = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 días
 
@@ -2878,7 +2894,9 @@ async function tlGenerarCupon(pct, origen) {
     lista.push({
       id: Date.now(),
       codigo,
-      pct,
+      tipo,          // 'pct' o 'item'
+      pct:  tipo === 'pct' ? pct : 0,
+      item: tipo === 'item' ? item : '',
       activo: true,
       usado: false,
       origen: 'slots-' + origen,
@@ -3011,13 +3029,13 @@ window.slotsGirar = async function() {
       }
 
       // Generar cupón si aplica
-      if (premio.cupon && premio.cuponPct > 0) {
+      if (premio.cupon && (premio.cuponPct > 0 || premio.cuponTipo === 'item')) {
         const origen = premio.esJackpot ? 'jackpot' : simBoton;
-        const codigo = await tlGenerarCupon(premio.cuponPct, origen);
+        const codigo = await tlGenerarCupon(premio, origen);
+        const esItem = premio.cuponTipo === 'item';
 
         if (premio.esJackpot) {
           await tlMostrarJackpot(codigo);
-          // Registrar en Firebase
           try {
             await setDoc(doc(db,'config','slotsJackpot'), {
               ganador: usuarioActual.nombre,
@@ -3029,6 +3047,17 @@ window.slotsGirar = async function() {
         } else {
           if (cuponDisp) {
             document.getElementById('tlCuponCodigo').textContent = codigo;
+            // Mostrar descripción del cupón debajo del código
+            let descEl = document.getElementById('tlCuponDesc');
+            if (!descEl) {
+              descEl = document.createElement('div');
+              descEl.id = 'tlCuponDesc';
+              descEl.style.cssText = 'font-size:0.72rem;color:#aaa;margin-top:4px;text-align:center;';
+              document.getElementById('tlCuponCodigo').after(descEl);
+            }
+            descEl.textContent = esItem
+              ? `🎁 ${premio.cuponItem || premio.premio} — presentá este código`
+              : `💰 ${premio.cuponPct}% de descuento en tu próxima compra`;
             cuponDisp.style.display = 'block';
           }
           if (premio.nivel === 'grande') tlConfetti(50);

@@ -2425,7 +2425,9 @@ function renderCupones() {
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
         '<div>' +
           '<div style="font-family:Righteous,cursive;font-size:1.1rem;letter-spacing:2px;color:var(--blanco);">' + c.codigo + '</div>' +
-          '<div style="font-size:0.8rem;color:var(--turquesa);font-weight:800;">' + c.pct + '% de descuento</div>' +
+          '<div style="font-size:0.8rem;color:var(--turquesa);font-weight:800;">' +
+            (c.tipo === 'item' ? `🎁 ${c.item || 'Item gratis'}` : `${c.pct}% de descuento`) +
+          '</div>' +
           usadoPorTxt +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:6px;">' +
@@ -4104,24 +4106,40 @@ window.renderSorteoPanel = function() { _actualizarUIVendedor(); };
 // ═══════════════════════════════════════════════════════
 
 const TL_PREMIOS_DEFAULT_V = [
-  { emoji:'🔥', label:'Jackpot Mordelón', premio:'Combo Mordelón x4 · 4 sánguches + papas', pct:0.1,  cupon:true,  cuponPct:100, color:'#FFB800', esJackpot:true  },
-  { emoji:'🦙', label:'Triple Llama',     premio:'Sánguche gratis con compra de otro',       pct:0.9,  cupon:true,  cuponPct:50,  color:'#3DBFB8', esJackpot:false },
-  { emoji:'🥪', label:'Triple Sánguche',  premio:'Papas gratis con tu próximo pedido',        pct:3,    cupon:true,  cuponPct:30,  color:'#2DC653', esJackpot:false },
-  { emoji:'🧀', label:'Triple Queso',     premio:'20% de descuento en tu próxima compra',    pct:6,    cupon:true,  cuponPct:20,  color:'#D4831A', esJackpot:false },
-  { emoji:'🥤', label:'Triple Bebida',    premio:'10% de descuento en tu próxima compra',    pct:10,   cupon:true,  cuponPct:10,  color:'#D4831A', esJackpot:false },
-  { emoji:'🍟', label:'Triple Papas',     premio:'Salsa gratis con tu próxima compra',       pct:20,   cupon:false, cuponPct:0,   color:'#3DBFB8', esJackpot:false },
-  { emoji:'💀', label:'Sin premio',       premio:'',                                          pct:60,   cupon:false, cuponPct:0,   color:'#555',    esJackpot:false },
+  { emoji:'🔥', label:'Jackpot Mordelón', premio:'Combo Mordelón x4 · 4 sánguches + papas', pct:0.1,  cupon:true,  cuponTipo:'pct',  cuponPct:100, cuponItem:'',          color:'#FFB800', esJackpot:true  },
+  { emoji:'🦙', label:'Triple Llama',     premio:'Sánguche gratis con compra de otro',       pct:0.9,  cupon:true,  cuponTipo:'item', cuponPct:50,  cuponItem:'Sánguche gratis', color:'#3DBFB8', esJackpot:false },
+  { emoji:'🥪', label:'Triple Sánguche',  premio:'Papas gratis con tu próximo pedido',        pct:3,    cupon:true,  cuponTipo:'item', cuponPct:30,  cuponItem:'Papas gratis',    color:'#2DC653', esJackpot:false },
+  { emoji:'🧀', label:'Triple Queso',     premio:'20% de descuento en tu próxima compra',    pct:6,    cupon:true,  cuponTipo:'pct',  cuponPct:20,  cuponItem:'',          color:'#D4831A', esJackpot:false },
+  { emoji:'🥤', label:'Triple Bebida',    premio:'10% de descuento en tu próxima compra',    pct:10,   cupon:true,  cuponTipo:'pct',  cuponPct:10,  cuponItem:'',          color:'#D4831A', esJackpot:false },
+  { emoji:'🍟', label:'Triple Papas',     premio:'Salsa gratis con tu próxima compra',       pct:20,   cupon:true,  cuponTipo:'item', cuponPct:0,   cuponItem:'Salsa gratis',    color:'#3DBFB8', esJackpot:false },
+  { emoji:'💀', label:'Sin premio',       premio:'',                                          pct:60,   cupon:false, cuponTipo:'pct',  cuponPct:0,   cuponItem:'',          color:'#555',    esJackpot:false },
+];
+
+// Paleta de emojis para el selector plegable
+const TL_EMOJI_PALETA = [
+  ['🔥','⭐','💎','🏆','👑','🎯','🎰','🎁'],
+  ['🍔','🍕','🌮','🥪','🥗','🍟','🧀','🥩'],
+  ['🥤','🧃','☕','🍺','🍹','🧋','🫖','🍾'],
+  ['🎉','✨','💫','🌟','🏅','🎫','🎟️','🎊'],
+  ['🦙','🐮','🐔','🐷','🦊','🐺','🐻','🦁'],
+  ['💀','❌','🚫','⚠️','😅','😢','💔','🙁'],
 ];
 
 let _tlPremiosLocal = TL_PREMIOS_DEFAULT_V.map(p => ({...p}));
+let _tlEmojiPickerAbierto = -1; // índice del picker abierto (-1 = ninguno)
 
 // ── Cargar config desde Firebase ─────────────────────
 onSnapshot(doc(db,'config','tragallamaPremios'), snap => {
   if (snap.exists() && snap.data().premios) {
-    _tlPremiosLocal = snap.data().premios;
+    _tlPremiosLocal = snap.data().premios.map(p => ({
+      cuponTipo: p.cuponTipo || (p.cuponPct > 0 ? 'pct' : 'item'),
+      cuponItem: p.cuponItem || '',
+      ...p
+    }));
   } else {
     _tlPremiosLocal = TL_PREMIOS_DEFAULT_V.map(p => ({...p}));
   }
+  _tlEmojiPickerAbierto = -1;
   _tlRenderPremiosEditor();
 });
 
@@ -4140,52 +4158,118 @@ function _tlRenderPremiosEditor() {
   const editor = document.getElementById('tlPremiosEditor');
   if (!editor) return;
 
-  editor.innerHTML = _tlPremiosLocal.map((p, i) => `
+  editor.innerHTML = _tlPremiosLocal.map((p, i) => {
+    const esSinPremio = p.emoji === '💀' || (!p.cupon && p.pct >= 50);
+    const pickerAbierto = _tlEmojiPickerAbierto === i;
+    const tipo = p.cuponTipo || 'pct';
+
+    const pickerHTML = pickerAbierto ? `
+      <div style="position:absolute;top:34px;left:0;z-index:99;background:#1a1a1a;border:1.5px solid #FFB800;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.6);">
+        ${TL_EMOJI_PALETA.map(fila => `
+          <div style="display:flex;gap:4px;margin-bottom:4px;">
+            ${fila.map(e => `<button onclick="window.tlSelEmoji(${i},'${e}')"
+              style="width:30px;height:30px;background:${p.emoji===e?'rgba(255,184,0,.25)':'transparent'};border:1px solid ${p.emoji===e?'#FFB800':'#333'};border-radius:6px;font-size:1rem;cursor:pointer;transition:all .15s;"
+              onmouseover="this.style.background='rgba(255,184,0,.15)'" onmouseout="this.style.background='${p.emoji===e?'rgba(255,184,0,.25)':'transparent'}'">
+              ${e}
+            </button>`).join('')}
+          </div>`).join('')}
+        <button onclick="window.tlCerrarPicker()" style="width:100%;background:transparent;border:1px solid #333;color:#555;border-radius:6px;padding:4px;font-size:0.65rem;cursor:pointer;margin-top:2px;">✕ Cerrar</button>
+      </div>` : '';
+
+    const cuponConfigHTML = p.cupon ? `
+      <div style="margin-top:6px;background:#0d0d0d;border-radius:8px;padding:8px 10px;">
+        <div style="font-size:0.62rem;color:#555;margin-bottom:6px;font-family:'Righteous',cursive;letter-spacing:1px;">TIPO DE CUPÓN</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <button onclick="window.tlSetCuponTipo(${i},'pct')"
+            style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${tipo==='pct'?'var(--turquesa)':'#333'};background:${tipo==='pct'?'rgba(61,191,184,.15)':'transparent'};color:${tipo==='pct'?'var(--turquesa)':'#555'};font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;">
+            💰 % Descuento
+          </button>
+          <button onclick="window.tlSetCuponTipo(${i},'item')"
+            style="flex:1;padding:6px 4px;border-radius:8px;border:1.5px solid ${tipo==='item'?'var(--naranja)':'#333'};background:${tipo==='item'?'rgba(212,131,26,.15)':'transparent'};color:${tipo==='item'?'var(--naranja)':'#555'};font-size:0.7rem;font-weight:800;cursor:pointer;font-family:inherit;">
+            🎁 Item gratis
+          </button>
+        </div>
+        ${tipo === 'pct' ? `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:0.65rem;color:#555;">Descuento:</span>
+          <input type="number" value="${p.cuponPct||0}" min="1" max="100" data-idx="${i}" data-field="cuponPct"
+            oninput="window.tlEditPremio(this)"
+            style="width:50px;background:#111;border:1px solid #333;border-radius:6px;color:var(--turquesa);font-size:0.85rem;font-weight:800;padding:4px 6px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
+          <span style="font-size:0.65rem;color:#555;">%</span>
+        </div>` : `
+        <div>
+          <div style="font-size:0.65rem;color:#555;margin-bottom:4px;">Descripción del item (ej: Papas gratis, Salsa gratis, Bebida gratis):</div>
+          <input type="text" value="${p.cuponItem||''}" data-idx="${i}" data-field="cuponItem"
+            oninput="window.tlEditPremio(this)"
+            placeholder="Ej: Papas gratis"
+            style="width:100%;background:#111;border:1px solid ${tipo==='item'?'var(--naranja)':'#333'};border-radius:6px;color:var(--naranja);font-size:0.8rem;font-weight:800;padding:5px 8px;box-sizing:border-box;font-family:inherit;">
+        </div>`}
+      </div>` : '';
+
+    return `
     <div style="background:#111;border:1px solid #222;border-radius:10px;padding:10px 12px;">
-      <!-- Fila 1: emoji + nombre + % -->
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-        <input type="text" value="${p.emoji}" data-idx="${i}" data-field="emoji"
-          oninput="window.tlEditPremio(this)"
-          maxlength="4"
-          title="Icono del premio (emoji)"
-          style="width:42px;background:#0a0a0a;border:1px solid #444;border-radius:6px;color:white;font-size:1.1rem;padding:4px 5px;box-sizing:border-box;text-align:center;">
+        <!-- Botón emoji + picker -->
+        <div style="position:relative;flex-shrink:0;">
+          <button onclick="window.tlTogglePicker(${i})"
+            title="Cambiar icono"
+            style="width:38px;height:34px;background:#0a0a0a;border:1.5px solid ${pickerAbierto?'#FFB800':'#444'};border-radius:6px;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s;">
+            ${p.emoji}
+          </button>
+          ${pickerHTML}
+        </div>
+        <!-- Nombre del premio -->
         <input type="text" value="${p.label}" data-idx="${i}" data-field="label"
           oninput="window.tlEditPremio(this)"
           placeholder="Nombre del premio"
           style="flex:1;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:${p.color};font-size:0.8rem;font-weight:800;padding:5px 8px;box-sizing:border-box;font-family:inherit;">
+        <!-- Probabilidad % -->
         <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
           <input type="number" value="${p.pct}" min="0" max="100" step="0.1" data-idx="${i}" data-field="pct"
             oninput="window.tlEditPremio(this);_tlActualizarTotal()"
-            style="width:50px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#FFB800;font-size:0.8rem;font-weight:800;padding:5px 5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
+            style="width:50px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#FFB800;font-size:0.8rem;font-weight:800;padding:5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
           <span style="font-size:0.68rem;color:#555;">%</span>
         </div>
       </div>
-      <!-- Fila 2: descripción del premio -->
+      <!-- Descripción visible por el cliente -->
       <input type="text" value="${p.premio||''}" data-idx="${i}" data-field="premio"
         oninput="window.tlEditPremio(this)"
-        placeholder="Descripción que ve el cliente (ej: Papas gratis)"
-        style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:0.73rem;padding:5px 8px;box-sizing:border-box;font-family:inherit;margin-bottom:${p.emoji === '💀' ? '0' : '6px'};">
-      <!-- Fila 3: cupón (solo si no es calavera) -->
-      ${p.emoji !== '💀' ? `
-      <div style="display:flex;align-items:center;gap:8px;">
+        placeholder="Texto que ve el cliente (ej: Papas gratis con tu próximo pedido)"
+        style="width:100%;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#aaa;font-size:0.73rem;padding:5px 8px;box-sizing:border-box;font-family:inherit;margin-bottom:${esSinPremio ? '0' : '6px'};">
+      <!-- Configuración del cupón -->
+      ${!esSinPremio ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${p.cupon?'6px':'0'};">
         <label style="font-size:0.65rem;color:#555;display:flex;align-items:center;gap:5px;cursor:pointer;">
           <input type="checkbox" ${p.cupon?'checked':''} data-idx="${i}" data-field="cupon"
             onchange="window.tlEditPremioCheck(this)"
             style="accent-color:var(--turquesa);">
-          Genera cupón
+          Genera cupón al cliente
         </label>
-        ${p.cupon ? `<div style="display:flex;align-items:center;gap:4px;">
-          <span style="font-size:0.65rem;color:#555;">Desc.</span>
-          <input type="number" value="${p.cuponPct||0}" min="1" max="100" data-idx="${i}" data-field="cuponPct"
-            oninput="window.tlEditPremio(this)"
-            style="width:44px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:var(--turquesa);font-size:0.75rem;padding:4px 5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
-          <span style="font-size:0.65rem;color:#555;">%</span>
-        </div>` : ''}
-      </div>` : ''}
-    </div>`).join('');
+      </div>
+      ${cuponConfigHTML}` : ''}
+    </div>`;
+  }).join('');
 
   _tlActualizarTotal();
 }
+
+window.tlTogglePicker = function(idx) {
+  _tlEmojiPickerAbierto = _tlEmojiPickerAbierto === idx ? -1 : idx;
+  _tlRenderPremiosEditor();
+};
+window.tlCerrarPicker = function() {
+  _tlEmojiPickerAbierto = -1;
+  _tlRenderPremiosEditor();
+};
+window.tlSelEmoji = function(idx, emoji) {
+  _tlPremiosLocal[idx].emoji = emoji;
+  _tlEmojiPickerAbierto = -1;
+  _tlRenderPremiosEditor();
+};
+window.tlSetCuponTipo = function(idx, tipo) {
+  _tlPremiosLocal[idx].cuponTipo = tipo;
+  _tlRenderPremiosEditor();
+};
 
 window.tlEditPremio = function(input) {
   const idx   = parseInt(input.dataset.idx);
@@ -4220,6 +4304,7 @@ window.tlGuardarPremios = async function() {
 window.tlResetearPremios = async function() {
   if (!confirm('¿Resetear los premios del Tragallama a los valores por defecto?')) return;
   _tlPremiosLocal = TL_PREMIOS_DEFAULT_V.map(p => ({...p}));
+  _tlEmojiPickerAbierto = -1;
   await setDoc(doc(db,'config','tragallamaPremios'), { premios: _tlPremiosLocal });
   _tlRenderPremiosEditor();
   showNotif('✅ Premios Tragallama reseteados');
