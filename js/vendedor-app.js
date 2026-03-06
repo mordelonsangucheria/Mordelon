@@ -2519,7 +2519,7 @@ function _tlRenderPremiosEditor() {
         <!-- Probabilidad % -->
         <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
           <input type="number" value="${p.pct}" min="0" max="100" step="0.1" data-idx="${i}" data-field="pct"
-            oninput="window.tlEditPremio(this);_tlActualizarTotal()"
+            oninput="window.tlEditPremio(this);window.tlActualizarTotal()"
             style="width:50px;background:#0a0a0a;border:1px solid #333;border-radius:6px;color:#FFB800;font-size:0.8rem;font-weight:800;padding:5px;box-sizing:border-box;text-align:center;font-family:'Righteous',cursive;">
           <span style="font-size:0.68rem;color:#555;">%</span>
         </div>
