@@ -634,8 +634,9 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     <!-- BUSCAMINAS -->
     <div id="juegoMinas" style="display:none;">
       <div style="text-align:center;margin-bottom:8px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
-        <span>Tiempo: <strong id="minasTimer" style="color:var(--turquesa)">0s</strong></span>
+        <span>Puntos: <strong id="minasScore" style="color:var(--turquesa)">0</strong></span>
         <span>Récord: <strong id="minasHi" style="color:var(--naranja)">—</strong></span>
+        <span>⏱ <strong id="minasTimer" style="color:#888">0s</strong></span>
         <span>💣 <strong id="minasRestantes" style="color:var(--rojo)">0</strong></span>
       </div>
       <!-- Selector de dificultad -->
@@ -1923,6 +1924,7 @@ let mDif = 'facil';
 let mBoard = [], mRevealed = [], mFlagged = [], mMinas = [];
 let mCols, mRows, mTotalMinas;
 let mGameOver = false, mWon = false, mStarted = false;
+let mScore = 0;
 let mTimerVal = 0, mTimerInterval = null;
 let mHiC = {};
 try { mHiC = JSON.parse(localStorage.getItem('minasHiC') || '{}'); } catch(e) { mHiC = {}; }
@@ -1934,10 +1936,12 @@ function minasInit() {
   mRevealed = Array.from({length: mRows}, () => Array(mCols).fill(false));
   mFlagged  = Array.from({length: mRows}, () => Array(mCols).fill(false));
   mMinas    = [];
-  mGameOver = false; mWon = false; mStarted = false;
+  mGameOver = false; mWon = false; mStarted = false; mScore = 0;
   clearInterval(mTimerInterval); mTimerVal = 0;
   document.getElementById('minasTimer').textContent = '0s';
   document.getElementById('minasRestantes').textContent = mTotalMinas;
+  const scoreEl = document.getElementById('minasScore');
+  if (scoreEl) scoreEl.textContent = '0';
   actualizarHiMinas();
   minasRender();
 }
@@ -2013,30 +2017,41 @@ function minasDescubrir(r, c) {
     }
   }
 
+  // Sumar puntos por celdas reveladas
+  const ptsAntes = mRevealed.flat().filter(Boolean).length;
   // Verificar victoria
   let sin_revelar = 0;
   for (let rr=0;rr<mRows;rr++) for (let cc=0;cc<mCols;cc++)
     if (!mRevealed[rr][cc] && mBoard[rr][cc]!==-1) sin_revelar++;
 
+  // Calcular nuevas celdas reveladas y sumar puntos
+  const ptsDespues = mRevealed.flat().filter(Boolean).length;
+  const factor = {facil:1, medio:2, dificil:4}[mDif] || 1;
+  mScore += (ptsDespues - ptsAntes) * 10 * factor;
+  const scoreEl = document.getElementById('minasScore');
+  if (scoreEl) scoreEl.textContent = mScore;
+
   if (sin_revelar === 0) {
     mWon = true;
     clearInterval(mTimerInterval);
-    // Guardar récord (menor tiempo = mejor)
-    const prev = mHiC[mDif];
-    if (!prev || mTimerVal < prev) {
+    // Bonus por tiempo rápido
+    const tiempoBonus = Math.max(0, 500 - mTimerVal * 2) * factor;
+    const puntajeFinal = mScore + Math.round(tiempoBonus);
+    mScore = puntajeFinal;
+    if (scoreEl) scoreEl.textContent = mScore;
+    // Guardar récord de puntaje
+    const hiActual = parseInt(localStorage.getItem('minasHiC_score') || '0');
+    if (puntajeFinal > hiActual) {
+      localStorage.setItem('minasHiC_score', puntajeFinal);
+      if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('minas', puntajeFinal);
+    }
+    // Guardar también récord de tiempo
+    const prevTiempo = mHiC[mDif];
+    if (!prevTiempo || mTimerVal < prevTiempo) {
       mHiC[mDif] = mTimerVal;
       localStorage.setItem('minasHiC', JSON.stringify(mHiC));
-      // Guardar también en clave simple para el sistema de recompensa
-      // Recompensa basada en dificultad × tiempo inverso (puntaje = 10000 / tiempo * factor)
-      const factor = {facil:1, medio:3, dificil:6}[mDif] || 1;
-      const puntuacion = Math.round(factor * 10000 / Math.max(1, mTimerVal));
-      const hiActual = parseInt(localStorage.getItem('minasHiC_score') || '0');
-      if (puntuacion > hiActual) {
-        localStorage.setItem('minasHiC_score', puntuacion);
-        if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('minas', puntuacion);
-      }
-      actualizarHiMinas();
     }
+    actualizarHiMinas();
   }
   minasRender(null, null);
 }
@@ -2044,8 +2059,8 @@ function minasDescubrir(r, c) {
 function actualizarHiMinas() {
   const el = document.getElementById('minasHi');
   if (!el) return;
-  const rec = mHiC[mDif];
-  el.textContent = rec ? rec + 's' : '—';
+  const recScore = parseInt(localStorage.getItem('minasHiC_score') || '0');
+  el.textContent = recScore > 0 ? recScore + ' pts' : '—';
 }
 
 function minasToggleFlag(r, c) {
