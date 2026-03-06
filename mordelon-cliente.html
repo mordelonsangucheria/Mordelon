@@ -2448,7 +2448,7 @@ function _slotsRenderTabla() {
   const el = document.getElementById('slotsTablaPremiOS');
   if (!el) return;
   const combos = _slotsCombos();
-  el.innerHTML = '<div style="font-family:'Righteous',cursive;font-size:0.68rem;color:var(--naranja);margin-bottom:8px;">🏆 TABLA DE PREMIOS</div>' +
+  el.innerHTML = `<div style="font-family:'Righteous',cursive;font-size:0.68rem;color:var(--naranja);margin-bottom:8px;">🏆 TABLA DE PREMIOS</div>` +
     combos.map(c => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #1a1a1a;">
       <span style="color:${c.color};">${c.label}</span>
       <span style="color:#888;">${c.pts} pts${c.fichas?` + ${c.fichas}🎟️`:''}</span>
