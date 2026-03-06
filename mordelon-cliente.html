@@ -2302,6 +2302,18 @@ function slotsShowJuego() {
   if (el) el.style.display = 'block';
 }
 
+// ── Cargar estado desde usuarioActual ──
+function slotsCargarEstado() {
+  if (usuarioActual) {
+    slotsFichas  = usuarioActual.fichasSlots ?? SLOTS_FICHAS_INIT;
+    slotsHiScore = usuarioActual.recordSlots ?? 0;
+  } else {
+    slotsFichas  = SLOTS_FICHAS_INIT;
+    slotsHiScore = 0;
+  }
+  slotsScore = 0;
+}
+
 // ── Actualizar UI ──
 function slotsActualizarUI() {
   const fEl  = document.getElementById('slotsFichas');
