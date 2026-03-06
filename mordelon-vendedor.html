@@ -960,6 +960,56 @@ select.mac-field option { background:#222; }
     <button onclick="window.verTodosUsuariosSlots()" style="background:transparent;border:none;color:#555;font-size:0.68rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Ver todos los usuarios</button>
   </div>
 
+  <!-- 🔥 TRAGALLAMA — JACKPOT & STATS -->
+  <div style="background:var(--gris-dark);border:2px solid #FFB800;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 0 20px rgba(255,184,0,0.08);">
+    <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      🔥 TRAGALLAMA — CONTROL JACKPOT
+    </div>
+
+    <!-- Stats en tiempo real -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.55rem;color:#555;margin-bottom:3px;">TOTAL GIROS</div>
+        <div id="tlStatSpins" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--naranja);">—</div>
+      </div>
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.55rem;color:#555;margin-bottom:3px;">GANARON</div>
+        <div id="tlStatGanados" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--verde);">—</div>
+      </div>
+      <div style="background:#111;border-radius:10px;padding:10px;text-align:center;">
+        <div style="font-size:0.55rem;color:#555;margin-bottom:3px;">% VICTORIA</div>
+        <div id="tlStatPct" style="font-family:'Righteous',cursive;font-size:1.3rem;color:var(--turquesa);">—</div>
+      </div>
+    </div>
+
+    <!-- Último jackpot -->
+    <div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:12px;padding:12px;margin-bottom:14px;">
+      <div style="font-size:0.65rem;color:#888;margin-bottom:6px;font-family:'Righteous',cursive;letter-spacing:1px;">🏆 ÚLTIMO JACKPOT</div>
+      <div id="tlUltimoJackpot" style="font-size:0.78rem;color:#FFB800;">Sin jackpots registrados</div>
+    </div>
+
+    <!-- Probabilidades actuales -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:0.65rem;color:#666;font-family:'Righteous',cursive;letter-spacing:1px;margin-bottom:8px;">📊 DISTRIBUCIÓN DE PREMIOS (CON DIFICULTAD ACTUAL)</div>
+      <div style="display:flex;flex-direction:column;gap:4px;" id="tlProbDisplay">
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#FFB800;">🔥 Jackpot Mordelón</span><span style="color:#555;">~0.1%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#3DBFB8;">🦙 Sánguche gratis</span><span style="color:#555;">~0.9%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#2DC653;">🥪 Papas gratis</span><span style="color:#555;">~3%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#D4831A;">🧀 Desc. 20%</span><span style="color:#555;">~6%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#D4831A;">🥤 Desc. 10%</span><span style="color:#555;">~10%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;border-bottom:1px solid #1a1a1a;"><span style="color:#3DBFB8;">🍟 Salsa gratis</span><span style="color:#555;">~20%</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;padding:3px 0;"><span style="color:#333;">💀 Sin premio</span><span style="color:#555;">~60%</span></div>
+      </div>
+    </div>
+
+    <!-- Verificar cupones slots expirados -->
+    <button onclick="window.tlLimpiarCuponesExpirados()"
+      style="width:100%;background:transparent;border:1px solid #333;color:#666;border-radius:10px;padding:8px;font-size:0.72rem;cursor:pointer;margin-bottom:6px;">
+      🗑️ Limpiar cupones expirados de slots
+    </button>
+    <div id="tlLimpiezaMsg" style="font-size:0.68rem;min-height:14px;text-align:center;color:#555;"></div>
+  </div>
+
 
   <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
@@ -4364,6 +4414,76 @@ function _animarRuleta(lista, ganador) {
 window.cerrarRuleta = function() {
   if (_ruletaAnimando) return;
   document.getElementById('ruletaModal').style.display = 'none';
+};
+
+// ═══════════════════════════════════════════════════════
+//  TRAGALLAMA — Panel de control (Vendedor)
+// ═══════════════════════════════════════════════════════
+
+// Escuchar stats en tiempo real
+onSnapshot(doc(db, 'config', 'slotsStats'), (snap) => {
+  if (!snap.exists()) return;
+  const d = snap.data();
+  const spins   = d.totalSpins || 0;
+  const ganados = d.totalGanados || 0;
+  const pct     = spins > 0 ? Math.round(ganados / spins * 100) : 0;
+
+  const el1 = document.getElementById('tlStatSpins');
+  const el2 = document.getElementById('tlStatGanados');
+  const el3 = document.getElementById('tlStatPct');
+
+  if (el1) el1.textContent = spins.toLocaleString('es-AR');
+  if (el2) el2.textContent = ganados.toLocaleString('es-AR');
+  if (el3) el3.textContent = pct + '%';
+
+  // También actualizar el panel legacy de slotsStats
+  const ss = document.getElementById('statSlotsSpins');
+  const sg = document.getElementById('statSlotsGanados');
+  const sp = document.getElementById('statSlotsPct');
+  const sf = document.getElementById('statSlotsFichas');
+  if (ss) ss.textContent = spins.toLocaleString('es-AR');
+  if (sg) sg.textContent = ganados.toLocaleString('es-AR');
+  if (sp) sp.textContent = pct + '%';
+  if (sf) sf.textContent = (d.fichasOtorgadas || 0).toLocaleString('es-AR');
+});
+
+// Escuchar último jackpot
+onSnapshot(doc(db, 'config', 'slotsJackpot'), (snap) => {
+  const el = document.getElementById('tlUltimoJackpot');
+  if (!el) return;
+  if (!snap.exists()) { el.textContent = 'Sin jackpots registrados aún'; return; }
+  const d = snap.data();
+  const fecha = d.timestamp ? new Date(d.timestamp).toLocaleString('es-AR') : '—';
+  el.innerHTML = `<span style="color:#FFB800;font-weight:800;">🏆 ${d.ganador}</span> · <span style="color:#888;">${d.codigo}</span> · <span style="color:#555;font-size:0.68rem;">${fecha}</span>`;
+});
+
+// Limpiar cupones de slots expirados
+window.tlLimpiarCuponesExpirados = async function() {
+  const msgEl = document.getElementById('tlLimpiezaMsg');
+  if (msgEl) msgEl.textContent = '⏳ Limpiando…';
+  try {
+    const snap = await getDoc(doc(db, 'config', 'cupones'));
+    if (!snap.exists()) { if (msgEl) msgEl.textContent = 'Sin cupones'; return; }
+    const lista = snap.data().lista || [];
+    const ahora = Date.now();
+    const antes = lista.length;
+    const filtrada = lista.filter(c => {
+      if (!c.origen?.startsWith('slots-')) return true; // no tocar cupones de otros orígenes
+      if (c.usado) return false; // ya usado = eliminar
+      if (c.expira && c.expira < ahora) return false; // expirado
+      return true;
+    });
+    const eliminados = antes - filtrada.length;
+    await setDoc(doc(db, 'config', 'cupones'), { lista: filtrada });
+    if (msgEl) {
+      msgEl.style.color = 'var(--verde)';
+      msgEl.textContent = `✅ ${eliminados} cupón${eliminados !== 1 ? 'es' : ''} eliminado${eliminados !== 1 ? 's' : ''}`;
+    }
+    registrarActividad('🗑️ Limpieza cupones slots: ' + eliminados + ' eliminados');
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error: ' + e.message; }
+  }
 };
 
 </script>
