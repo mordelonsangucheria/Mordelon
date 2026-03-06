@@ -785,30 +785,12 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
     <!-- TRAGAMONEDAS -->
     <div id="juegoSlots" style="display:none;text-align:center;">
 
-      <!-- PANTALLA LOGIN -->
-      <div id="slotsLogin" style="display:block;">
-        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:6px;">🎰 TRAGAMONEDAS</div>
-        <div style="font-size:0.75rem;color:#888;margin-bottom:16px;">Ingresá tu nombre para jugar</div>
-        <div style="display:flex;flex-direction:column;gap:10px;max-width:260px;margin:0 auto;">
-          <input id="slotsNombreInput" type="text" maxlength="20" placeholder="Tu nombre (ej: Juan)"
-            style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:12px;padding:12px 16px;font-size:0.95rem;font-family:'Righteous',cursive;letter-spacing:1px;outline:none;text-align:center;text-transform:uppercase;"
-            oninput="this.value=this.value.toUpperCase()"
-            onkeydown="if(event.key==='Enter') window.slotsEntrar()"/>
-          <button onclick="window.slotsEntrar()"
-            style="background:linear-gradient(135deg,var(--turquesa),var(--verde));border:none;color:#111;border-radius:12px;padding:12px;font-family:'Righteous',cursive;font-size:0.9rem;letter-spacing:2px;cursor:pointer;">
-            ▶ ENTRAR
-          </button>
-          <div id="slotsLoginMsg" style="font-size:0.72rem;min-height:18px;color:var(--rojo);"></div>
-        </div>
-      </div>
+      <!-- PANTALLA JUEGO (directo, usa usuario del login principal) -->
+      <div id="slotsJuego" style="display:block;">
 
-      <!-- PANTALLA JUEGO -->
-      <div id="slotsJuego" style="display:none;">
-
-        <!-- Usuario + logout -->
-        <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
+        <!-- Usuario activo -->
+        <div style="text-align:center;margin-bottom:10px;">
           <div style="font-family:'Righteous',cursive;font-size:0.8rem;color:var(--turquesa);letter-spacing:1px;" id="slotsNombreDisplay">JUGADOR</div>
-          <button onclick="window.slotsCerrarSesion()" style="background:transparent;border:1px solid #444;color:#555;border-radius:8px;padding:3px 8px;font-size:0.65rem;cursor:pointer;">✕ Salir</button>
         </div>
 
         <!-- Fichas y puntaje -->
@@ -846,7 +828,7 @@ header p { font-size:0.65rem; color:#888; letter-spacing:3px; text-transform:upp
         <!-- Sin fichas -->
         <div id="slotsSinFichas" style="display:none;background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:14px;padding:14px;margin-bottom:12px;">
           <div style="font-size:0.8rem;color:#888;margin-bottom:6px;">😢 Te quedaste sin fichas</div>
-          <div style="font-size:0.72rem;color:#555;">Pedile al vendedor que te cargue más fichas con tu nombre: <strong id="slotsNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+          <div style="font-size:0.72rem;color:#555;">Pedile al vendedor que te cargue fichas. Tu usuario: <strong id="slotsNombreSinFichas" style="color:var(--turquesa)"></strong></div>
         </div>
 
         <!-- Tabla de premios -->
@@ -2321,12 +2303,13 @@ function slotsActualizarUI() {
   const sinF = document.getElementById('slotsSinFichas');
   const nEl  = document.getElementById('slotsNombreDisplay');
   const nSF  = document.getElementById('slotsNombreSinFichas');
+  const nombre = usuarioActual?.nombre || '';
 
   if (fEl)  fEl.textContent  = slotsFichas;
   if (sEl)  sEl.textContent  = slotsScore;
   if (hEl)  hEl.textContent  = slotsHiScore;
-  if (nEl)  nEl.textContent  = slotsUsuario?.nombre || '';
-  if (nSF)  nSF.textContent  = slotsUsuario?.nombre || '';
+  if (nEl)  nEl.textContent  = nombre;
+  if (nSF)  nSF.textContent  = nombre;
   if (sinF) sinF.style.display = slotsFichas <= 0 ? 'block' : 'none';
   if (btn) {
     btn.style.display = slotsFichas > 0 ? 'inline-block' : 'none';
@@ -2440,14 +2423,12 @@ window.slotsGirar = function() {
   if (slotsSpinning || slotsFichas <= 0 || !slotsUsuario) return;
   slotsSpinning = true;
   slotsFichas--;
-  // Guardar fichas en Firebase (cuenta) o localStorage (sin cuenta)
-  if (usuarioActual) {
-    usuarioActual.fichasSlots = slotsFichas;
-    updateDoc(doc(db, 'clientes', usuarioActual.nombre), { fichasSlots: slotsFichas });
-  } else {
-    localStorage.setItem('slotsFichasC', slotsFichas);
-  }
+  // Guardar fichas en Firebase
   const ref = usuarioActual ? doc(db, 'clientes', usuarioActual.nombre) : null;
+  if (ref) {
+    usuarioActual.fichasSlots = slotsFichas;
+    updateDoc(ref, { fichasSlots: slotsFichas }).catch(()=>{});
+  }
 
   slotsActualizarUI();
 

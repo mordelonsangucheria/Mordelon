@@ -3302,24 +3302,104 @@ function renderUsuarios(lista) {
     listaEl.innerHTML = '<div style="text-align:center;color:#555;padding:20px;">No hay usuarios registrados</div>';
     return;
   }
-  listaEl.innerHTML = lista.map(u => `
-    <div onclick="window.abrirUsuarioModal('${u.nombre}')"
-      style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s;"
-      onmouseover="this.style.borderColor='var(--turquesa)'" onmouseout="this.style.borderColor='var(--gris-light)'">
-      <div>
-        <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:var(--blanco);">👤 ${u.nombre}</div>
-        <div style="font-size:0.65rem;color:#555;margin-top:3px;">
-          📍 ${u.direccion || 'Sin dirección'} &nbsp;·&nbsp;
-          📦 ${u.historialPedidos?.length||0} pedidos &nbsp;·&nbsp;
-          📅 ${u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR') : '—'}
+  listaEl.innerHTML = lista.map(u => {
+    const id = 'u_' + u.nombre.replace(/[^A-Z0-9]/g,'_');
+    return `
+    <div style="background:var(--gris-dark);border:1px solid var(--gris-light);border-radius:10px;overflow:hidden;transition:border-color .2s;">
+      <!-- Header plegable -->
+      <div onclick="window.toggleUsuarioFila('${id}')"
+        style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;"
+        onmouseover="this.parentElement.style.borderColor='var(--turquesa)'"
+        onmouseout="this.parentElement.style.borderColor='var(--gris-light)'">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:0.75rem;color:#444;" id="${id}_chevron">▶</span>
+          <div>
+            <div style="font-family:'Righteous',cursive;font-size:0.88rem;color:var(--blanco);">👤 ${u.nombre}</div>
+            <div style="font-size:0.62rem;color:#555;margin-top:2px;">
+              📦 ${u.historialPedidos?.length||0} pedidos &nbsp;·&nbsp;
+              📅 ${u.creadoEn ? new Date(u.creadoEn).toLocaleDateString('es-AR') : '—'}
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right;font-size:0.68rem;">
+          <div style="color:var(--naranja);">🎰 ${u.fichasSlots??0} fichas</div>
+          <div style="color:var(--verde);">🏆 ${u.recordSlots??0} pts</div>
         </div>
       </div>
-      <div style="text-align:right;font-size:0.7rem;">
-        <div style="color:var(--naranja);">🎰 ${u.fichasSlots??0} fichas</div>
-        <div style="color:var(--verde);">🏆 ${u.recordSlots??0} pts</div>
+      <!-- Detalle plegado -->
+      <div id="${id}_detalle" style="display:none;border-top:1px solid #222;padding:12px 14px;background:rgba(0,0,0,.2);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:var(--gris-mid);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.58rem;color:#555;">CLAVE</div>
+            <div style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--blanco);letter-spacing:4px;">${u.clave||'—'}</div>
+          </div>
+          <div style="background:var(--gris-mid);border-radius:8px;padding:8px 10px;">
+            <div style="font-size:0.58rem;color:#555;">DIRECCIÓN</div>
+            <div style="font-size:0.78rem;color:#aaa;margin-top:2px;">${u.direccion||'—'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="window.abrirUsuarioModal('${u.nombre}')"
+            style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:8px;padding:7px 10px;font-family:'Righteous',cursive;font-size:0.72rem;cursor:pointer;">
+            ✏️ Ver detalle
+          </button>
+          <button onclick="window.cargarFichasRapido('${u.nombre}')"
+            style="flex:1;background:var(--naranja);border:none;color:#111;border-radius:8px;padding:7px 10px;font-family:'Righteous',cursive;font-size:0.72rem;cursor:pointer;">
+            🎰 +3 fichas
+          </button>
+          <button onclick="window.resetearClaveRapido('${u.nombre}')"
+            style="background:transparent;border:1px solid var(--rojo);color:var(--rojo);border-radius:8px;padding:7px 10px;font-size:0.72rem;cursor:pointer;">
+            🔑
+          </button>
+        </div>
+        <div id="${id}_msg" style="font-size:0.68rem;min-height:14px;margin-top:6px;text-align:center;"></div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
+
+window.toggleUsuarioFila = function(id) {
+  const det = document.getElementById(id + '_detalle');
+  const chev = document.getElementById(id + '_chevron');
+  if (!det) return;
+  const open = det.style.display === 'block';
+  det.style.display = open ? 'none' : 'block';
+  if (chev) chev.textContent = open ? '▶' : '▼';
+};
+
+window.cargarFichasRapido = async function(nombre) {
+  const id = 'u_' + nombre.replace(/[^A-Z0-9]/g,'_');
+  const msgEl = document.getElementById(id + '_msg');
+  const u = _usuariosTodos.find(x => x.nombre === nombre);
+  if (!u) return;
+  try {
+    const nuevas = (u.fichasSlots||0) + 3;
+    await updateDoc(doc(db, 'clientes', nombre), { fichasSlots: nuevas });
+    u.fichasSlots = nuevas;
+    if (msgEl) { msgEl.style.color='var(--verde)'; msgEl.textContent='✅ +3 fichas (total: ' + nuevas + ')'; }
+    registrarActividad('🎰 3 fichas cargadas a ' + nombre);
+    // Refresh stats
+    document.getElementById('usuariosFichasTotal').textContent =
+      _usuariosTodos.reduce((s,x) => s + (x.fichasSlots||0), 0);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color='var(--rojo)'; msgEl.textContent='❌ Error'; }
+  }
+};
+
+window.resetearClaveRapido = async function(nombre) {
+  if (!confirm('¿Resetear clave de ' + nombre + ' a 0000?')) return;
+  const id = 'u_' + nombre.replace(/[^A-Z0-9]/g,'_');
+  const msgEl = document.getElementById(id + '_msg');
+  const u = _usuariosTodos.find(x => x.nombre === nombre);
+  try {
+    await updateDoc(doc(db, 'clientes', nombre), { clave: '0000' });
+    if (u) u.clave = '0000';
+    if (msgEl) { msgEl.style.color='var(--turquesa)'; msgEl.textContent='🔑 Clave → 0000'; }
+    registrarActividad('🔑 Clave reseteada: ' + nombre);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color='var(--rojo)'; msgEl.textContent='❌ Error'; }
+  }
+};
 
 window.filtrarUsuarios = function(q) {
   if (!q) { renderUsuarios(_usuariosTodos); return; }
