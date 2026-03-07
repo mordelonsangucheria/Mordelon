@@ -1029,7 +1029,10 @@ function actualizarBarraRecompensa() {
   const cfg = recompensasConfig[juego];
   const wrapEl = document.getElementById('recompensaProgressWrap');
 
-  if (!cfg || cfg.activo === false || !cfg.puntos || !cfg.pct) {
+  // Mostrar barra si hay cupón O fichas configurados
+  const tieneCupon  = cfg && cfg.activo !== false && cfg.puntos && cfg.pct;
+  const tieneFichas = cfg && cfg.ptosFichas && cfg.fichas;
+  if (!tieneCupon && !tieneFichas) {
     if (wrapEl) wrapEl.style.display = 'none';
     return;
   }
@@ -1047,13 +1050,20 @@ function actualizarBarraRecompensa() {
   const puntosActuales = records[juego] || 0;
 
   if (wrapEl) wrapEl.style.display = 'block';
-  const pct = Math.min(100, Math.round((puntosActuales / cfg.puntos) * 100));
   const barEl = document.getElementById('recompensaProgressBar');
   const labelEl = document.getElementById('recompensaProgressLabel');
   const nombreEl = document.getElementById('recompensaJuegoNombre');
-  if (barEl) barEl.style.width = pct + '%';
-  if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' / ' + cfg.puntos.toLocaleString('es-AR') + ' pts';
   if (nombreEl) nombreEl.textContent = 'Récord en ' + (JUEGOS_NOMBRES[juego] || juego);
+  if (tieneCupon) {
+    const pct = Math.min(100, Math.round((puntosActuales / cfg.puntos) * 100));
+    if (barEl) barEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' / ' + cfg.puntos.toLocaleString('es-AR') + ' pts';
+  } else {
+    // Solo fichas: mostrar progreso hacia el objetivo de fichas
+    const pct = Math.min(100, Math.round((puntosActuales / cfg.ptosFichas) * 100));
+    if (barEl) barEl.style.width = pct + '%';
+    if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' pts';
+  }
   // Mostrar info de fichas si está configurado
   const fichasInfoEl = document.getElementById('recompensaFichasInfo');
   if (fichasInfoEl) {
