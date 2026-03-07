@@ -464,7 +464,32 @@
       </div>
       <div id="dinoDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
-  </div>
+
+    <!-- 👾 DIFICULTAD INVADERS -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">👾 DIFICULTAD — SPACE INVADERS</div>
+        <div id="invadersDifLabel" style="font-size:0.72rem;color:var(--verde);font-weight:800;">Normal</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px;">
+        <button onclick="window.selInvadersDif(0)" id="invDif0" style="padding:6px 2px;border-radius:8px;border:1.5px solid var(--turquesa);background:rgba(61,191,184,.15);color:var(--turquesa);font-size:0.62rem;font-weight:800;cursor:pointer;">😊<br>Fácil</button>
+        <button onclick="window.selInvadersDif(1)" id="invDif1" style="padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:transparent;color:#666;font-size:0.62rem;font-weight:800;cursor:pointer;">🙂<br>Normal</button>
+        <button onclick="window.selInvadersDif(2)" id="invDif2" style="padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:transparent;color:#666;font-size:0.62rem;font-weight:800;cursor:pointer;">😐<br>Medio</button>
+        <button onclick="window.selInvadersDif(3)" id="invDif3" style="padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:transparent;color:#666;font-size:0.62rem;font-weight:800;cursor:pointer;">😬<br>Alto</button>
+        <button onclick="window.selInvadersDif(4)" id="invDif4" style="padding:6px 2px;border-radius:8px;border:1.5px solid #444;background:transparent;color:#666;font-size:0.62rem;font-weight:800;cursor:pointer;">💀<br>Extremo</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarInvadersDif()"
+          style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">
+          💾 Guardar
+        </button>
+        <button onclick="window.resetInvadersDif()"
+          style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">
+          ↺ Reset
+        </button>
+      </div>
+      <div id="invadersDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
 
