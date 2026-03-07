@@ -343,10 +343,24 @@ function ivLoop() {
   // Screen shake decay
   if (ivShakeAmount > 0.3) ivShakeAmount *= 0.75; else ivShakeAmount = 0;
 
-  // Player bullets
+  // Player bullets — movimiento y colisión con muros
   for (let i = ivBullets.length - 1; i >= 0; i--) {
     ivBullets[i].y -= 5;
-    if (ivBullets[i].y < -10) ivBullets.splice(i, 1);
+    if (ivBullets[i].y < -10) { ivBullets.splice(i, 1); continue; }
+    const bulp = ivBullets[i];
+    if (!bulp) continue;
+    let hitWallP = false;
+    for (let wi = ivWalls.length - 1; wi >= 0; wi--) {
+      const bl = ivWalls[wi];
+      if (bl.hp <= 0) continue;
+      if (bulp.x > bl.x && bulp.x < bl.x + IV_WALL_BLOCK && bulp.y > bl.y && bulp.y < bl.y + IV_WALL_BLOCK) {
+        bl.hp--;
+        ivSpawnExplosionSmall(bulp.x, bulp.y, '#3DBFB8');
+        ivBullets.splice(i, 1);
+        hitWallP = true;
+        break;
+      }
+    }
   }
 
   // Enemy bullets
@@ -460,7 +474,22 @@ function ivPlayerHit() {
   ivSpawnExplosion(ivPlayer.x + ivPlayer.w / 2, ivPlayer.y + ivPlayer.h / 2, '#3DBFB8');
   ivScreenShake(8);
   document.getElementById('invadersLives').textContent = '🔥'.repeat(Math.max(0, ivLives));
-  if (ivLives <= 0) ivGameOver();
+  if (ivLives <= 0) {
+    // Detener loop y mostrar game over tras breve pausa para ver la explosión
+    ivRunning = false;
+    cancelAnimationFrame(ivAnimFrame);
+    setTimeout(() => {
+      ivOver = true;
+      ivDraw();
+      IVX.fillStyle = 'rgba(0,0,0,0.75)'; IVX.fillRect(0, IVH / 2 - 40, IVW, 80);
+      IVX.fillStyle = '#fff'; IVX.font = 'bold 16px Nunito'; IVX.textAlign = 'center';
+      IVX.fillText('GAME OVER', IVW / 2, IVH / 2 - 12);
+      IVX.font = '11px Nunito'; IVX.fillStyle = '#aaa';
+      IVX.fillText('Puntos: ' + ivScore + '  |  Récord: ' + ivHi + '  |  Oleada: ' + ivWave, IVW / 2, IVH / 2 + 8);
+      IVX.font = '10px Nunito'; IVX.fillStyle = '#555';
+      IVX.fillText('Tap o Espacio para reiniciar', IVW / 2, IVH / 2 + 28);
+    }, 600);
+  }
 }
 
 function ivDraw() {
