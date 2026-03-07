@@ -1309,6 +1309,10 @@ window.actualizarUIRecompensa = function actualizarUIRecompensa() {
 
   if (puntosEl) puntosEl.value = cfg.puntos || '';
   if (pctEl) pctEl.value = cfg.pct || '';
+  const ptosFichasEl = document.getElementById('recompensaPtosFichas');
+  const fichasEl = document.getElementById('recompensaFichas');
+  if (ptosFichasEl) ptosFichasEl.value = cfg.ptosFichas || '';
+  if (fichasEl) fichasEl.value = cfg.fichas || '';
   if (preview && cfg.puntos && cfg.pct) {
     preview.textContent = `Al llegar a ${cfg.puntos.toLocaleString('es-AR')} pts en ${JUEGOS_INFO[juegoSeleccionado].label}, el cliente gana ${cfg.pct}% de descuento.`;
   }
@@ -1343,7 +1347,8 @@ function renderResumenJuegos() {
     return `<div style="background:var(--gris-mid);border-radius:10px;padding:10px;border:1px solid ${activo ? 'rgba(61,191,184,.2)' : 'var(--gris-light)'};">
       <div style="font-weight:800;font-size:0.78rem;margin-bottom:4px;">${JUEGOS_INFO[j].label}</div>
       ${activo
-        ? `<div style="font-size:0.68rem;color:var(--turquesa);">✅ ${cfg.puntos.toLocaleString('es-AR')} pts → ${cfg.pct}% off</div>`
+        ? `<div style="font-size:0.68rem;color:var(--turquesa);">✅ ${cfg.puntos.toLocaleString('es-AR')} pts → ${cfg.pct}% off</div>
+           ${cfg.ptosFichas ? `<div style="font-size:0.65rem;color:var(--naranja);">🎟️ ${cfg.ptosFichas.toLocaleString('es-AR')} pts → ${cfg.fichas} fichas</div>` : ''}`
         : `<div style="font-size:0.68rem;color:#444;">— Sin configurar</div>`
       }
     </div>`;
@@ -1375,9 +1380,16 @@ window.guardarRecompensaJuego = async function() {
   if (!puntos || puntos < 50) { showNotif('⚠️ Ingresá un mínimo de 50 puntos'); return; }
   if (!pct || pct < 1 || pct > 100) { showNotif('⚠️ El descuento debe ser entre 1% y 100%'); return; }
 
+  const ptosFichas = parseInt(document.getElementById('recompensaPtosFichas')?.value) || 0;
+  const fichas     = parseInt(document.getElementById('recompensaFichas')?.value) || 0;
+  if (ptosFichas && ptosFichas < 50) { showNotif('⚠️ Los puntos para fichas deben ser al menos 50'); return; }
+  if (ptosFichas && (!fichas || fichas < 1)) { showNotif('⚠️ Ingresá la cantidad de fichas a dar'); return; }
+
   if (!recompensasData[juegoSeleccionado]) recompensasData[juegoSeleccionado] = defaultCfg();
   recompensasData[juegoSeleccionado].puntos = puntos;
   recompensasData[juegoSeleccionado].pct = pct;
+  recompensasData[juegoSeleccionado].ptosFichas = ptosFichas || null;
+  recompensasData[juegoSeleccionado].fichas = fichas || null;
 
   await setDoc(doc(db,'config','recompensaJuegos'), recompensasData);
   // Compatibilidad legacy con dino

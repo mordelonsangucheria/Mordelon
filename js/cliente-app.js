@@ -1008,13 +1008,6 @@ onSnapshot(doc(db, 'config', 'dinoDificultad'), (snap) => {
   }
 });
 
-// ── DIFICULTAD INVADERS desde Firebase ─────────────────────────────────────
-onSnapshot(doc(db, 'config', 'invadersDificultad'), (snap) => {
-  if (snap.exists()) {
-    window.setInvadersDificultad(snap.data().valor ?? 1);
-  }
-});
-
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
@@ -1078,6 +1071,15 @@ function actualizarBarraRecompensa() {
     // Ocultar banner si no llegó al umbral (o ya usó el cupón)
     const banner = document.getElementById('recompensaBanner');
     if (banner && !cuponGuardado) banner.style.display = 'none';
+  }
+
+  // ── Recompensa de fichas (independiente del cupón) ──
+  if (cfg.ptosFichas && cfg.fichas && puntosActuales >= cfg.ptosFichas) {
+    const lsFichasKey = 'mordelon-fichas-' + juego;
+    const fichasYaDadas = localStorage.getItem(lsFichasKey);
+    if (!fichasYaDadas && usuarioActual) {
+      otorgarFichasRecompensa(cfg.fichas, juego);
+    }
   }
 }
 window.actualizarBarraRecompensa = actualizarBarraRecompensa;
@@ -1889,6 +1891,26 @@ async function generarCuponRecompensa(cfg, juego) {
     mostrarBannerRecompensa(codigo, cfg.pct);
   } catch(e) {
     console.error('Error generando cupón recompensa:', e);
+  }
+}
+
+async function otorgarFichasRecompensa(cantidad, juego) {
+  if (!usuarioActual) return;
+  try {
+    const nuevas = (usuarioActual.fichasSlots ?? 0) + cantidad;
+    await updateDoc(doc(db, 'clientes', usuarioActual.nombre), { fichasSlots: nuevas });
+    usuarioActual.fichasSlots = nuevas;
+    localStorage.setItem('mordelon-fichas-' + juego, '1');
+    // Mostrar notificación al cliente
+    const banner = document.getElementById('fichasRecompensaBanner');
+    if (banner) {
+      const cantEl = document.getElementById('fichasRecompensaCant');
+      if (cantEl) cantEl.textContent = cantidad;
+      banner.style.display = 'block';
+      setTimeout(() => { banner.style.display = 'none'; }, 6000);
+    }
+  } catch(e) {
+    console.error('Error otorgando fichas recompensa:', e);
   }
 }
 
