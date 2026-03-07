@@ -34,7 +34,7 @@ function ivInitWalls() {
     const wy = IVH - 55;
     for (let r = 0; r < wallH; r++) {
       for (let c = 0; c < wallW; c++) {
-        ivWalls.push({ x: wx + c * IV_WALL_BLOCK, y: wy + r * IV_WALL_BLOCK, hp: 3 });
+        ivWalls.push({ x: wx + c * IV_WALL_BLOCK, y: wy + r * IV_WALL_BLOCK, hp: 2 });
       }
     }
   }
@@ -253,7 +253,7 @@ function ivDrawWalls() {
     const alpha = 0.3 + (bl.hp / 3) * 0.5;
     IVX.fillStyle = `rgba(61,191,184,${alpha})`;
     IVX.fillRect(bl.x, bl.y, IV_WALL_BLOCK - 1, IV_WALL_BLOCK - 1);
-    if (bl.hp === 3) {
+    if (bl.hp === 2) {
       IVX.fillStyle = 'rgba(126,238,233,0.5)';
       IVX.fillRect(bl.x, bl.y, IV_WALL_BLOCK - 1, 1);
     }
