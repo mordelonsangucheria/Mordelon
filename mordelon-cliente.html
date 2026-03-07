@@ -257,6 +257,7 @@
         <div id="recompensaProgressBar" style="height:7px;background:linear-gradient(90deg,var(--turquesa),var(--naranja));border-radius:20px;width:0%;transition:width 0.5s;"></div>
       </div>
       <div style="font-size:0.6rem;color:#444;margin-top:4px;text-align:center;" id="recompensaJuegoNombre"></div>
+      <div id="recompensaFichasInfo" style="display:none;font-size:0.62rem;color:var(--naranja);margin-top:5px;text-align:center;"></div>
     </div>
 
     <!-- BANNER RECOMPENSA GANADA (compartido) -->
@@ -407,6 +408,7 @@
   <canvas id="invadersCanvas" width="320" height="220" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
   <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
     <button onclick="window.invadersReset()" style="background:rgba(61,191,184,.1);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">↺ Reiniciar</button>
+    <button id="btnInvadersPausa" onclick="window.invadersPause && window.invadersPause()" style="background:rgba(212,131,26,.1);color:var(--naranja);border:1.5px solid rgba(212,131,26,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">⏸ Pausa</button>
   </div>
   <div style="text-align:center;margin-top:6px;font-size:0.6rem;color:#444;">
     ← → Mover · Espacio Disparar · Deslizá en el canvas para mover
