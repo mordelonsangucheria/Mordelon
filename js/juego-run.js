@@ -41,6 +41,7 @@
   window.setRunFreezeConfig = function(dur, usos) {
     FREEZE_DUR  = dur  != null ? dur  : 1500;
     FREEZE_USOS = usos != null ? usos : 0;
+    _resetFreezeUsos();
     _actualizarBtnFreeze();
   };
 
