@@ -1008,6 +1008,13 @@ onSnapshot(doc(db, 'config', 'dinoDificultad'), (snap) => {
   }
 });
 
+// ── DIFICULTAD INVADERS desde Firebase ─────────────────────────────────────
+onSnapshot(doc(db, 'config', 'invadersDificultad'), (snap) => {
+  if (snap.exists()) {
+    window.setInvadersDificultad(snap.data().valor ?? 1);
+  }
+});
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }

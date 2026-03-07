@@ -2658,6 +2658,56 @@ window.resetDinoDif = async function() {
   await window.guardarDinoDif();
 };
 
+// ── DIFICULTAD INVADERS ──────────────────────────────────────
+const _invadersDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio Alto', '😬 Alto', '💀 Extremo'];
+const _invadersDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+let _invadersDifActual = 1; // default Normal
+
+window.selInvadersDif = function(nivel) {
+  _invadersDifActual = nivel;
+  const label = document.getElementById('invadersDifLabel');
+  if (label) { label.textContent = _invadersDifLabels[nivel]; label.style.color = _invadersDifColors[nivel]; }
+  // Resaltar botón activo
+  for (let i = 0; i < 5; i++) {
+    const btn = document.getElementById('invDif' + i);
+    if (!btn) continue;
+    if (i === nivel) {
+      btn.style.borderColor = _invadersDifColors[nivel];
+      btn.style.background = _invadersDifColors[nivel].replace('var(--', 'rgba(').replace(')', ', .15)');
+      btn.style.color = _invadersDifColors[nivel];
+    } else {
+      btn.style.borderColor = '#444';
+      btn.style.background = 'transparent';
+      btn.style.color = '#666';
+    }
+  }
+};
+
+window.guardarInvadersDif = async function() {
+  const msgEl = document.getElementById('invadersDifMsg');
+  try {
+    await setDoc(doc(db, 'config', 'invadersDificultad'), { valor: _invadersDifActual });
+    if (typeof window.setInvadersDificultad === 'function') window.setInvadersDificultad(_invadersDifActual);
+    if (msgEl) { msgEl.style.color = 'var(--verde)'; msgEl.textContent = '✅ Dificultad guardada'; }
+    registrarActividad('👾 Dificultad Invaders → ' + _invadersDifLabels[_invadersDifActual]);
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 3000);
+  } catch(e) {
+    if (msgEl) { msgEl.style.color = 'var(--rojo)'; msgEl.textContent = '❌ Error al guardar'; }
+  }
+};
+
+window.resetInvadersDif = async function() {
+  window.selInvadersDif(1); // volver a Normal
+  await window.guardarInvadersDif();
+};
+
+// Cargar valor actual de Firebase al iniciar
+getDoc(doc(db, 'config', 'invadersDificultad')).then(snap => {
+  const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+  _invadersDifActual = val;
+  window.selInvadersDif(val);
+}).catch(() => {});
+
 // Cargar valor actual de Firebase al iniciar
 getDoc(doc(db, 'config', 'dinoDificultad')).then(snap => {
   const val = snap.exists() ? (snap.data().valor || 0) : 0;

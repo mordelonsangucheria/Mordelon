@@ -6,6 +6,8 @@ const IVW = 320, IVH = 220;
 
 let ivPlayer, ivBullets, ivEnemies, ivParticles, ivScore, ivHi, ivLives, ivWave;
 let ivRunning = false, ivOver = false, ivPaused = false, ivFrame = 0, ivAnimFrame;
+let ivDificultad = 0; // 0=fácil, 1=normal, 2=medio-alto, 3=alto, 4=extremo
+window.setInvadersDificultad = function(val) { ivDificultad = parseInt(val) || 0; };
 let ivEnemyDir, ivEnemySpeed, ivEnemyDropTimer, ivShootCooldown;
 let ivEnemyBullets;
 ivHi = parseInt(localStorage.getItem('invadersHiC') || '0');
@@ -24,7 +26,9 @@ function ivInit() {
   ivEnemyBullets = [];
   ivParticles = [];
   ivScore = 0;
-  ivLives = 3;
+  // Vidas según dificultad: fácil=5, normal=3, medio-alto=3, alto=2, extremo=1
+  const vidasPorDif = [5, 3, 3, 2, 1];
+  ivLives = vidasPorDif[ivDificultad] || 3;
   ivWave = 1;
   ivFrame = 0;
   ivShootCooldown = 0;
@@ -43,7 +47,10 @@ function ivInit() {
 function ivSpawnWave() {
   ivEnemies = [];
   ivEnemyDir = 1;
-  ivEnemySpeed = 0.4 + ivWave * 0.15;
+  // Velocidad base según dificultad: fácil=0.25, normal=0.4, medio-alto=0.6, alto=0.85, extremo=1.2
+  const velBasePorDif = [0.25, 0.4, 0.6, 0.85, 1.2];
+  const velBase = velBasePorDif[ivDificultad] || 0.4;
+  ivEnemySpeed = velBase + ivWave * 0.15;
   ivEnemyDropTimer = 0;
   const cols = Math.min(8, 5 + Math.floor(ivWave / 3));
   const rows = Math.min(4, 3 + Math.floor(ivWave / 4));
@@ -212,7 +219,10 @@ function ivLoop() {
   }
 
   // Enemy shooting
-  if (aliveEnemies.length > 0 && ivFrame % Math.max(20, 60 - ivWave * 5) === 0) {
+  // Frecuencia de disparo según dificultad: fácil=80, normal=60, medio-alto=45, alto=35, extremo=22
+  const shootFreqPorDif = [80, 60, 45, 35, 22];
+  const shootFreqBase = shootFreqPorDif[ivDificultad] || 60;
+  if (aliveEnemies.length > 0 && ivFrame % Math.max(14, shootFreqBase - ivWave * 5) === 0) {
     const shooter = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
     ivEnemyBullets.push({ x: shooter.x + shooter.w / 2, y: shooter.y + shooter.h, enemy: true });
   }
@@ -235,8 +245,12 @@ function ivLoop() {
           document.getElementById('invadersHi').textContent = ivHi;
           if (typeof window.notificarRecordJuego === 'function') window.notificarRecordJuego('invaders', ivHi);
         }
-        // Speed up as enemies die
-        ivEnemySpeed = (0.4 + ivWave * 0.15) * (1 + (1 - aliveEnemies.filter(x=>x.alive).length / ivEnemies.length) * 1.5);
+        // Speed up as enemies die — más agresivo en dificultades altas
+        const velBasePorDif2 = [0.25, 0.4, 0.6, 0.85, 1.2];
+        const vb = velBasePorDif2[ivDificultad] || 0.4;
+        const accelPorDif = [1.0, 1.5, 1.8, 2.2, 2.8];
+        const accel = accelPorDif[ivDificultad] || 1.5;
+        ivEnemySpeed = (vb + ivWave * 0.15) * (1 + (1 - aliveEnemies.filter(x=>x.alive).length / ivEnemies.length) * accel);
         break;
       }
     }
