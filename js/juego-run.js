@@ -31,6 +31,8 @@
   const P_SPD = 150;
   let keysDown = {}, touchSt = null;
   let animFrame = 0, animTimer = 0;
+  let freezeTimer = 0;      // ms restantes de congelamiento
+  const FREEZE_DUR = 1500;  // duración del freeze en ms
 
   // ── Helpers ─────────────────────────────────────────────────────────────
   function g(r, c)      { return (r>=0&&r<ROWS&&c>=0&&c<COLS) ? grid[r][c] : T.SUELO; }
@@ -103,7 +105,7 @@
 
     // ── Ingredientes ──────────────────────────────────────────────────────
     items = [];
-    const cant = 4 + (n-1)*2;
+    const cant = Math.min(4 + Math.floor((n-1)/2), 6);
     let intentos=0;
     while (items.length<cant && intentos++<1500) {
       const r=1+Math.floor(Math.random()*(ROWS-2));
@@ -156,39 +158,32 @@
 
     const r=P.row, c=P.col;
     const enEscalera = esEsc(r,c);
-    const pisoAbajo  = solido(r+1,c);   // suelo sólido normal debajo
-    const escAbajo   = esEsc(r+1,c);    // escalera debajo
-    const apoy       = pisoAbajo || enEscalera || escAbajo;
+    const pisoAbajo  = solido(r+1,c);        // suelo sólido debajo
+    const escSAbajo  = g(r+1,c)===T.ESC_S;  // plataforma-agujero debajo
+    const apoyoAbajo = pisoAbajo || escSAbajo;
 
     // ── GRAVEDAD ──
-    // Caer si no hay soporte
-    if (!pisoAbajo && !enEscalera) {
-      // Si hay ESC_S abajo (plataforma con agujero), el jugador puede estar encima
-      if (g(r+1,c)!==T.ESC_S) {
-        const nr=r+1;
-        if (nr<ROWS && !solido(nr,c)) { P.row=nr; return; }
-      }
+    if (!apoyoAbajo && !enEscalera) {
+      const nr=r+1;
+      if (nr<ROWS && !solido(nr,c)) { P.row=nr; return; }
     }
 
-    // ── VERTICAL ──
+    // ── VERTICAL EN ESCALERA ──
     if (dy!==0 && enEscalera) {
       const nr=r+dy;
       if (nr>=0 && nr<ROWS) {
         const tnr=g(nr,c);
-        // Puede moverse a: vacío, escalera, ESC_S (agujero en plataforma)
-        if (tnr===T.VACIO||tnr===T.ESC||tnr===T.ESC_S) {
-          P.row=nr; return;
-        }
+        if (tnr===T.VACIO||tnr===T.ESC||tnr===T.ESC_S) { P.row=nr; return; }
       }
-      return; // bloqueado verticalmente pero no cancela todo
+      return;
     }
 
-    // Entrar a escalera desde suelo: jugador parado (pisoAbajo) y hay escalera encima
-    if (dy===-1 && pisoAbajo && esEsc(r-1,c)) {
+    // Entrar a escalera subiendo: hay ESC/ESC_S encima
+    if (dy===-1 && apoyoAbajo && esEsc(r-1,c)) {
       P.row=r-1; return;
     }
-    // Entrar a escalera bajando: hay ESC_S o ESC abajo
-    if (dy===1 && pisoAbajo && esEsc(r+1,c)) {
+    // Entrar a escalera bajando: ESC_S debajo (techo de la escalera)
+    if (dy===1 && apoyoAbajo && esEsc(r+1,c)) {
       P.row=r+1; return;
     }
 
@@ -221,6 +216,7 @@
 
   // ── Enemigos ────────────────────────────────────────────────────────────
   function moverEne(dt) {
+    if (freezeTimer > 0) { freezeTimer -= dt; return; } // enemigos congelados
     enemies.forEach(e => {
       e.timer+=dt; if(e.timer<e.spd) return; e.timer=0;
       const nc=e.col+e.dir;
@@ -250,12 +246,15 @@
     });
   }
 
+  let completando = false; // evita que checkCocina dispare varias veces por frame
+
   function checkCocina() {
-    if(itemsLeft>0) return;
-    if(P.col===2&&P.row===ROWS-2){ // celda encima de cocina
+    if(itemsLeft>0 || completando) return;
+    if(P.col===2 && P.row===ROWS-2) {
+      completando = true;
       const bonus=50*nivel; score+=bonus; nivel++; hud();
       toast('🎉 Nivel completado! +'+bonus+' pts');
-      setTimeout(()=>genNivel(nivel),800);
+      setTimeout(()=>{ genNivel(nivel); completando=false; }, 800);
     }
   }
 
@@ -302,15 +301,22 @@
       ctx.fillText(ing.e,x,y);
     });
 
-    // Enemigos
+    // Enemigos (azul parpadeante si están congelados)
+    const frozen = freezeTimer > 0;
+    const frozenVis = frozen ? Math.floor(Date.now()/150)%2===0 : false;
     enemies.forEach(e=>{
       const x=e.col*TILE, y=e.row*TILE;
-      ctx.fillStyle=COL.ENE;
+      ctx.fillStyle = frozen ? (frozenVis ? '#5599ff' : '#3377dd') : COL.ENE;
       ctx.fillRect(x+3,y+1,14,12); ctx.fillRect(x+2,y+12,16,5);
       ctx.fillRect(x+3,y+16,5,4); ctx.fillRect(x+12,y+16,5,4);
-      ctx.fillStyle=COL.ENE2;
+      ctx.fillStyle = frozen ? '#224488' : COL.ENE2;
       ctx.fillRect(x+6,y+4,3,3); ctx.fillRect(x+11,y+4,3,3);
       ctx.fillRect(x+8,y+9,4,2);
+      // Icono de hielo encima
+      if (frozen) {
+        ctx.font='9px serif'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText('❄️', x+TILE/2, y);
+      }
     });
 
     // Jugador
@@ -387,8 +393,10 @@
 
   function fin() {
     estado='fin'; cancelAnimationFrame(loopId);
-    if(score>hiScore){hiScore=score;localStorage.setItem('runHiC',hiScore);}
+    if(score>hiScore){ hiScore=score; localStorage.setItem('runHiC',hiScore); }
     draw();
+    // Limpiar puntaje de sesión (no el récord)
+    score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
   }
 
@@ -408,7 +416,12 @@
   }
 
   // ── Controles ────────────────────────────────────────────────────────────
-  function onKD(e){if(estado!=='jugando')return;keysDown[e.key]=true;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))e.preventDefault();}
+  function onKD(e){
+    if(estado!=='jugando') return;
+    keysDown[e.key]=true;
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
+    if(e.key==='b'||e.key==='B') window.runFreeze();
+  }
   function onKU(e){delete keysDown[e.key];}
   function onTS(e){if(e.touches.length)touchSt={x:e.touches[0].clientX,y:e.touches[0].clientY};}
   function onTE(e){
@@ -420,6 +433,12 @@
     else{P.dx=dx>0?1:-1;P.dy=0;}
     pTimer=P_SPD;
   }
+
+  window.runFreeze = function() {
+    if(estado!=='jugando') return;
+    freezeTimer = FREEZE_DUR;
+    toast('❄️ ¡Enemigos congelados! 1.5s');
+  };
 
   window.runMoverIzq    =function(){if(estado==='jugando'){P.dx=-1;P.dy=0;pTimer=P_SPD;}};
   window.runMoverDer    =function(){if(estado==='jugando'){P.dx= 1;P.dy=0;pTimer=P_SPD;}};
@@ -435,7 +454,7 @@
 
   window.runReset=function(){
     cancelAnimationFrame(loopId); keysDown={};
-    score=0;vidas=3;nivel=1;estado='jugando';
+    score=0;vidas=3;nivel=1;estado='jugando';completando=false;freezeTimer=0;
     animFrame=0;animTimer=0;
     genNivel(nivel); hud();
     const btn=document.getElementById('btnRunPausa');
