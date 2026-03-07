@@ -1054,6 +1054,25 @@ function actualizarBarraRecompensa() {
   if (barEl) barEl.style.width = pct + '%';
   if (labelEl) labelEl.textContent = puntosActuales.toLocaleString('es-AR') + ' / ' + cfg.puntos.toLocaleString('es-AR') + ' pts';
   if (nombreEl) nombreEl.textContent = 'Récord en ' + (JUEGOS_NOMBRES[juego] || juego);
+  // Mostrar info de fichas si está configurado
+  const fichasInfoEl = document.getElementById('recompensaFichasInfo');
+  if (fichasInfoEl) {
+    if (cfg.ptosFichas && cfg.fichas) {
+      const lsFichasKey = 'mordelon-fichas-' + juego;
+      const fichasYaDadas = localStorage.getItem(lsFichasKey);
+      if (fichasYaDadas) {
+        fichasInfoEl.style.display = 'block';
+        fichasInfoEl.textContent = '🎟️ Ya recibiste ' + cfg.fichas + ' fichas por este juego';
+        fichasInfoEl.style.color = '#555';
+      } else {
+        fichasInfoEl.style.display = 'block';
+        fichasInfoEl.textContent = '🎟️ Llegá a ' + cfg.ptosFichas.toLocaleString('es-AR') + ' pts y ganá ' + cfg.fichas + ' fichas';
+        fichasInfoEl.style.color = 'var(--naranja)';
+      }
+    } else {
+      fichasInfoEl.style.display = 'none';
+    }
+  }
 
   // Verificar si ya ganó recompensa
   const lsKey = 'mordelon-recompensa-cupon-' + juego;
@@ -1887,6 +1906,13 @@ async function generarCuponRecompensa(cfg, juego) {
 
     localStorage.setItem('mordelon-recompensa-cupon-' + juego, codigo);
     localStorage.removeItem('mordelon-recompensa-usado-' + juego);
+
+    // Resetear récord para que pueda volver a intentarlo
+    const recordKeys = { tetris: 'tetrisHiC', snake: 'snakeHiC', '2048': 'g2048HiC', dino: 'dinoHiC', invaders: 'invadersHiC', slots: 'slotsHiC' };
+    if (recordKeys[juego]) localStorage.setItem(recordKeys[juego], '0');
+    // Limpiar también el flag de fichas para que pueda ganarlas de nuevo
+    localStorage.removeItem('mordelon-fichas-' + juego);
+    recompensaYaGanada[juego] = false;
 
     mostrarBannerRecompensa(codigo, cfg.pct);
   } catch(e) {
