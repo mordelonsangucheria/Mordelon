@@ -1269,13 +1269,14 @@ function updateReloj() {
 updateReloj(); setInterval(updateReloj,1000);
 
 // ── RECOMPENSA POR JUEGO (multi-juego) ───────────────────────────────────
-const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'slots'];
+const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots'];
 const JUEGOS_INFO = {
   tetris: { label: '🧱 Tetris', prefijo: 'TETRIS' },
   snake:  { label: '🐍 Snake',  prefijo: 'SNAKE'  },
   '2048': { label: '🔢 2048',   prefijo: 'DOS4K'  },
   dino:   { label: '🦕 Dino',   prefijo: 'LLAMA'  },
   minas:  { label: '💣 Minas',  prefijo: 'MINAS'  },
+  invaders: { label: '👾 Invaders', prefijo: 'INVADERS' },
   slots:  { label: '🎰 Slots',  prefijo: 'SLOTS'  }
 };
 
