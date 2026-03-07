@@ -5,7 +5,7 @@ const IVX = IVC.getContext('2d');
 const IVW = 320, IVH = 220;
 
 let ivPlayer, ivBullets, ivEnemies, ivParticles, ivScore, ivHi, ivLives, ivWave;
-let ivRunning = false, ivOver = false, ivFrame = 0, ivAnimFrame;
+let ivRunning = false, ivOver = false, ivPaused = false, ivFrame = 0, ivAnimFrame;
 let ivEnemyDir, ivEnemySpeed, ivEnemyDropTimer, ivShootCooldown;
 let ivEnemyBullets;
 ivHi = parseInt(localStorage.getItem('invadersHiC') || '0');
@@ -29,6 +29,8 @@ function ivInit() {
   ivFrame = 0;
   ivShootCooldown = 0;
   ivOver = false;
+  ivPaused = false;
+  window.ivPausedState = false;
   ivRunning = true;
   document.getElementById('invadersScore').textContent = '0';
   document.getElementById('invadersHi').textContent = ivHi;
@@ -143,8 +145,33 @@ function ivSpawnExplosion(x, y, color) {
 
 // ── Game loop ────────────────────────────────────────────────
 
+function ivDrawPaused() {
+  ivDraw();
+  IVX.fillStyle = 'rgba(0,0,0,0.6)';
+  IVX.fillRect(0, IVH / 2 - 30, IVW, 60);
+  IVX.fillStyle = '#fff';
+  IVX.font = 'bold 16px Nunito';
+  IVX.textAlign = 'center';
+  IVX.fillText('PAUSA', IVW / 2, IVH / 2 - 6);
+  IVX.font = '10px Nunito';
+  IVX.fillStyle = '#555';
+  IVX.fillText('Tap o P para continuar', IVW / 2, IVH / 2 + 14);
+}
+
+function ivTogglePause() {
+  if (!ivRunning || ivOver) return;
+  ivPaused = !ivPaused;
+  window.ivPausedState = ivPaused;
+  if (ivPaused) {
+    cancelAnimationFrame(ivAnimFrame);
+    ivDrawPaused();
+  } else {
+    ivLoop();
+  }
+}
+
 function ivLoop() {
-  if (!ivRunning) return;
+  if (!ivRunning || ivPaused) return;
   ivFrame++;
   if (ivShootCooldown > 0) ivShootCooldown--;
 
@@ -310,6 +337,7 @@ document.addEventListener('keydown', e => {
   if (document.getElementById('juegoInvaders').style.display === 'none') return;
   ivKeys[e.key] = true;
   if (e.code === 'Space') { e.preventDefault(); ivHandleAction(); }
+  if (e.key === 'p' || e.key === 'P') ivTogglePause();
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
 });
 document.addEventListener('keyup', e => { ivKeys[e.key] = false; });
@@ -397,6 +425,7 @@ setInterval(function () {
 // ── Exports ──────────────────────────────────────────────────
 
 window.invadersInit = ivInit;
+window.invadersPause = ivTogglePause;
 window.invadersReset = async function () {
   if (typeof window.juegoRequiereFichas === 'function' && window.juegoRequiereFichas('invaders')) {
     if (typeof window.juegoConsumirFicha === 'function') {
