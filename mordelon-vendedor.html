@@ -464,6 +464,94 @@
       </div>
       <div id="dinoDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
+
+    <!-- 🏃 DIFICULTAD RUN -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🏃 DIFICULTAD — MORDELÓN RUN</div>
+        <div id="runDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="runDif0" onclick="window.selRunDif(0)"
+          style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">
+          😊<br>Fácil
+        </button>
+        <button id="runDif1" onclick="window.selRunDif(1)"
+          style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">
+          🙂<br>Normal
+        </button>
+        <button id="runDif2" onclick="window.selRunDif(2)"
+          style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">
+          😐<br>Medio
+        </button>
+        <button id="runDif3" onclick="window.selRunDif(3)"
+          style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">
+          😬<br>Alto
+        </button>
+        <button id="runDif4" onclick="window.selRunDif(4)"
+          style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">
+          💀<br>Extremo
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarRunDif()"
+          style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">
+          💾 Guardar
+        </button>
+        <button onclick="window.resetRunDif()"
+          style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">
+          ↺ Reset
+        </button>
+      </div>
+      <div id="runDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+
+      <!-- ❄️ CONFIG FREEZE -->
+      <div style="margin-top:14px;border-top:1px solid #2a2a2a;padding-top:14px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.74rem;color:#5599ff;letter-spacing:1px;margin-bottom:10px;">❄️ HABILIDAD CONGELAR</div>
+
+        <!-- Duración -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:0.7rem;color:#aaa;">Duración</span>
+          <span id="freezeDurLabel" style="font-size:0.72rem;color:#5599ff;font-weight:800;">1.5 s</span>
+        </div>
+        <input type="range" id="freezeDurSlider" min="500" max="5000" step="500" value="1500"
+          oninput="window.onFreezeDurChange(this.value)"
+          style="width:100%;accent-color:#5599ff;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.58rem;color:#555;margin-top:-8px;margin-bottom:10px;">
+          <span>0.5s</span><span>2.5s</span><span>5s</span>
+        </div>
+
+        <!-- Usos por nivel -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:0.7rem;color:#aaa;">Usos por nivel</span>
+          <span id="freezeUsosLabel" style="font-size:0.72rem;color:#5599ff;font-weight:800;">∞</span>
+        </div>
+        <div style="display:flex;gap:5px;margin-bottom:10px;">
+          <button id="fuBtn0" onclick="window.selFreezeUsos(0)"
+            style="flex:1;padding:6px 2px;border-radius:8px;border:1.5px solid #5599ff;background:var(--gris-mid);color:#5599ff;font-family:'Righteous',cursive;font-size:0.65rem;cursor:pointer;">∞</button>
+          <button id="fuBtn1" onclick="window.selFreezeUsos(1)"
+            style="flex:1;padding:6px 2px;border-radius:8px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.65rem;cursor:pointer;">1×</button>
+          <button id="fuBtn2" onclick="window.selFreezeUsos(2)"
+            style="flex:1;padding:6px 2px;border-radius:8px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.65rem;cursor:pointer;">2×</button>
+          <button id="fuBtn3" onclick="window.selFreezeUsos(3)"
+            style="flex:1;padding:6px 2px;border-radius:8px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.65rem;cursor:pointer;">3×</button>
+          <button id="fuBtn5" onclick="window.selFreezeUsos(5)"
+            style="flex:1;padding:6px 2px;border-radius:8px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.65rem;cursor:pointer;">5×</button>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button onclick="window.guardarFreezeConfig()"
+            style="flex:1;background:#5599ff;border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">
+            💾 Guardar
+          </button>
+          <button onclick="window.resetFreezeConfig()"
+            style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">
+            ↺ Reset
+          </button>
+        </div>
+        <div id="freezeConfigMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+      </div>
+    </div>
   </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
