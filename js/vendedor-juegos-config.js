@@ -350,7 +350,143 @@
       _invadersDifActual = val;
       window.selInvadersDif(val);
     }).catch(() => {});
+
+    // Cargar dificultad Run actual
+    getDoc(doc(db, 'config', 'runDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _runDifActual = val;
+      window.selRunDif(val);
+    }).catch(() => {});
   });
+
+  // ── DIFICULTAD RUN ────────────────────────────────────────────────────────
+  const _runDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
+  const _runDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+  let _runDifActual = 1;
+
+  window.selRunDif = function(nivel) {
+    _runDifActual = nivel;
+    const label = document.getElementById('runDifLabel');
+    if (label) { label.textContent = _runDifLabels[nivel]; label.style.color = _runDifColors[nivel]; }
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('runDif' + i);
+      if (!btn) continue;
+      if (i === nivel) {
+        btn.style.borderColor = _runDifColors[nivel];
+        btn.style.color       = _runDifColors[nivel];
+        btn.style.background  = _runDifColors[nivel] + '22';
+      } else {
+        btn.style.borderColor = '#555';
+        btn.style.color       = '#888';
+        btn.style.background  = 'var(--gris-mid)';
+      }
+    }
+  };
+
+  window.guardarRunDif = async function() {
+    const msgEl = document.getElementById('runDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'runDificultad'), { valor: _runDifActual });
+      if (typeof window.setRunDificultad === 'function') window.setRunDificultad(_runDifActual);
+      if (typeof registrarActividad === 'function') registrarActividad('🏃 Dificultad Run → ' + _runDifLabels[_runDifActual]);
+      if (msgEl) { msgEl.textContent = '✅ Guardado'; msgEl.style.color = 'var(--verde)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error al guardar'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  window.resetRunDif = async function() {
+    _runDifActual = 1;
+    window.selRunDif(1);
+    const msgEl = document.getElementById('runDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'runDificultad'), { valor: 1 });
+      if (typeof window.setRunDificultad === 'function') window.setRunDificultad(1);
+      if (msgEl) { msgEl.textContent = '↺ Reseteado a Normal'; msgEl.style.color = 'var(--turquesa)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  // ── ❄️ CONFIG FREEZE RUN ──────────────────────────────────────────────────
+  const FREEZE_DUR_DEFAULT  = 1500;
+  const FREEZE_USOS_DEFAULT = 0; // 0 = infinito
+
+  let _freezeDur  = FREEZE_DUR_DEFAULT;
+  let _freezeUsos = FREEZE_USOS_DEFAULT;
+
+  // Cargar valores guardados de Firebase al iniciar
+  getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.duracion  != null) _freezeDur  = d.duracion;
+      if (d.usos      != null) _freezeUsos = d.usos;
+    }
+    _aplicarFreezeUI();
+  }).catch(() => _aplicarFreezeUI());
+
+  function _aplicarFreezeUI() {
+    const slider = document.getElementById('freezeDurSlider');
+    if (slider) slider.value = _freezeDur;
+    window.onFreezeDurChange(_freezeDur);
+    window.selFreezeUsos(_freezeUsos);
+    // Propagar al juego si ya está cargado
+    _propagarFreeze();
+  }
+
+  function _propagarFreeze() {
+    if (typeof window.setRunFreezeConfig === 'function') {
+      window.setRunFreezeConfig(_freezeDur, _freezeUsos);
+    }
+  }
+
+  window.onFreezeDurChange = function(val) {
+    _freezeDur = parseInt(val);
+    const label = document.getElementById('freezeDurLabel');
+    if (label) label.textContent = (_freezeDur / 1000).toFixed(1) + ' s';
+  };
+
+  window.selFreezeUsos = function(usos) {
+    _freezeUsos = usos;
+    const label = document.getElementById('freezeUsosLabel');
+    if (label) label.textContent = usos === 0 ? '∞' : usos + '×';
+    // Resaltar botón activo
+    [0,1,2,3,5].forEach(u => {
+      const btn = document.getElementById('fuBtn' + u);
+      if (!btn) return;
+      const activo = u === usos;
+      btn.style.borderColor = activo ? '#5599ff' : '#555';
+      btn.style.color        = activo ? '#5599ff' : '#888';
+    });
+  };
+
+  window.guardarFreezeConfig = async function() {
+    const msgEl = document.getElementById('freezeConfigMsg');
+    try {
+      await setDoc(doc(db, 'config', 'runFreezeConfig'), { duracion: _freezeDur, usos: _freezeUsos });
+      _propagarFreeze();
+      if (msgEl) { msgEl.textContent = '✅ Guardado'; msgEl.style.color = 'var(--verde)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error al guardar'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  window.resetFreezeConfig = async function() {
+    _freezeDur  = FREEZE_DUR_DEFAULT;
+    _freezeUsos = FREEZE_USOS_DEFAULT;
+    _aplicarFreezeUI();
+    const msgEl = document.getElementById('freezeConfigMsg');
+    try {
+      await setDoc(doc(db, 'config', 'runFreezeConfig'), { duracion: _freezeDur, usos: _freezeUsos });
+      if (msgEl) { msgEl.textContent = '↺ Reseteado'; msgEl.style.color = 'var(--turquesa)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
 
   // Render inicial con defaults (sin esperar Firebase)
   renderJuegosToggles();

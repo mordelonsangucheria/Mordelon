@@ -26,13 +26,41 @@
   let score = 0, hiScore = 0, vidas = 3, nivel = 1;
   let loopId = null, lastTs = 0;
   let grid = [], items = [], enemies = [], itemsLeft = 0;
+  let runDificultad = 1; // 0=Fácil 1=Normal 2=Difícil 3=Muy difícil 4=Extremo
   let P = { col: 5, row: 14, dx: 0, dy: 0, dead: false, deadTimer: 0 };
   let pTimer = 0;
   const P_SPD = 150;
   let keysDown = {}, touchSt = null;
   let animFrame = 0, animTimer = 0;
-  let freezeTimer = 0;      // ms restantes de congelamiento
-  const FREEZE_DUR = 1500;  // duración del freeze en ms
+  let freezeTimer = 0;
+  let FREEZE_DUR  = 1500;   // configurable por vendedor
+  let FREEZE_USOS = 0;      // 0 = infinito; >0 = límite por nivel
+  let freezeUsosRestantes = 0; // usos disponibles en el nivel actual
+
+  // Llamado por el panel vendedor para actualizar la config en caliente
+  window.setRunFreezeConfig = function(dur, usos) {
+    FREEZE_DUR  = dur  != null ? dur  : 1500;
+    FREEZE_USOS = usos != null ? usos : 0;
+    _actualizarBtnFreeze();
+  };
+
+  function _actualizarBtnFreeze() {
+    const btn = document.getElementById('btnRunFreeze');
+    if (!btn) return;
+    if (FREEZE_USOS === 0) {
+      btn.textContent = '❄️';
+      btn.title = 'Congelar enemigos (∞)';
+    } else {
+      btn.textContent = '❄️ ×' + freezeUsosRestantes;
+      btn.title = 'Congelar enemigos (' + freezeUsosRestantes + ' usos)';
+      btn.style.opacity = freezeUsosRestantes > 0 ? '1' : '0.35';
+    }
+  }
+
+  function _resetFreezeUsos() {
+    freezeUsosRestantes = FREEZE_USOS === 0 ? Infinity : FREEZE_USOS;
+    _actualizarBtnFreeze();
+  }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
   function g(r, c)      { return (r>=0&&r<ROWS&&c>=0&&c<COLS) ? grid[r][c] : T.SUELO; }
@@ -121,8 +149,10 @@
 
     // ── Enemigos ──────────────────────────────────────────────────────────
     enemies = [];
-    const nEne = Math.min(1+Math.floor((n-1)/2), 5);
-    const spd  = Math.max(380-(n-1)*22, 160);
+    // Dificultad: 0=Fácil, 1=Normal, 2=Medio, 3=Alto, 4=Extremo
+    const difMult   = [0.6, 1.0, 1.35, 1.7, 2.2][runDificultad];
+    const nEne = Math.min(Math.ceil((1 + Math.floor((n-1)/2)) * difMult), 6);
+    const spd  = Math.max((380 - (n-1)*22) / difMult, 100);
     platRows.forEach((pr,i) => {
       if (i>=nEne) return;
       const eRow = pr-1;
@@ -254,7 +284,12 @@
       completando = true;
       const bonus=50*nivel; score+=bonus; nivel++; hud();
       toast('🎉 Nivel completado! +'+bonus+' pts');
-      setTimeout(()=>{ genNivel(nivel); completando=false; }, 800);
+      setTimeout(()=>{
+        genNivel(nivel); completando=false;
+        freezeTimer=0; _resetFreezeUsos();
+        const btn=document.getElementById('btnRunFreeze');
+        if(btn){btn.style.opacity='1';btn.style.pointerEvents='';}
+      }, 800);
     }
   }
 
@@ -434,10 +469,18 @@
     pTimer=P_SPD;
   }
 
+  window.setRunDificultad = function(nivel) {
+    runDificultad = Math.max(0, Math.min(4, nivel));
+  };
+
   window.runFreeze = function() {
-    if(estado!=='jugando') return;
+    if (estado !== 'jugando') return;
+    if (freezeUsosRestantes <= 0) { toast('❄️ Sin usos disponibles'); return; }
     freezeTimer = FREEZE_DUR;
-    toast('❄️ ¡Enemigos congelados! 1.5s');
+    if (FREEZE_USOS > 0) { freezeUsosRestantes--; }
+    _actualizarBtnFreeze();
+    const seg = (FREEZE_DUR / 1000).toFixed(1);
+    toast('❄️ ¡Congelados! ' + seg + 's' + (FREEZE_USOS > 0 ? ' · ' + freezeUsosRestantes + ' restantes' : ''));
   };
 
   window.runMoverIzq    =function(){if(estado==='jugando'){P.dx=-1;P.dy=0;pTimer=P_SPD;}};
@@ -454,11 +497,13 @@
 
   window.runReset=function(){
     cancelAnimationFrame(loopId); keysDown={};
-    score=0;vidas=3;nivel=1;estado='jugando';completando=false;freezeTimer=0;
+    score=0;vidas=3;nivel=1;estado='jugando';completando=false;freezeTimer=0;_resetFreezeUsos();
     animFrame=0;animTimer=0;
     genNivel(nivel); hud();
-    const btn=document.getElementById('btnRunPausa');
-    if(btn)btn.textContent='⏸ Pausa';
+    const btnP=document.getElementById('btnRunPausa');
+    if(btnP) btnP.textContent='⏸ Pausa';
+    const btnF=document.getElementById('btnRunFreeze');
+    if(btnF){btnF.style.opacity='1';btnF.style.pointerEvents='';}
     lastTs=performance.now(); loopId=requestAnimationFrame(loop);
   };
 
@@ -467,6 +512,9 @@
     if(!canvas){console.error('[runInit] #runCanvas no encontrado');return;}
     ctx=canvas.getContext('2d');
     hiScore=parseInt(localStorage.getItem('runHiC')||'0');
+    // Cargar config freeze si fue seteada por el vendedor antes del init
+    // (window.setRunFreezeConfig ya pudo haber sido llamado por vendedor-juegos-config.js)
+    _resetFreezeUsos();
     document.removeEventListener('keydown',onKD);
     document.removeEventListener('keyup',onKU);
     canvas.removeEventListener('touchstart',onTS);
