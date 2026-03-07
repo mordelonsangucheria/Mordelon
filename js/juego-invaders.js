@@ -303,23 +303,53 @@ function ivGameOver() {
   IVX.fillText('Tap o Espacio para reiniciar', IVW / 2, IVH / 2 + 28);
 }
 
-// ── Controls ─────────────────────────────────────────────────
+// ── Controls ───────────────────────────────────────────────── (FIXEADO)
 
 let ivKeys = {};
+let ivKeyRafId = null;  // ← NUEVO: Para cancelar el RAF loop
+
 document.addEventListener('keydown', e => {
   if (document.getElementById('juegoInvaders').style.display === 'none') return;
   ivKeys[e.key] = true;
-  if (e.code === 'Space') { e.preventDefault(); ivHandleAction(); }
+  if (e.code === 'Space') { 
+    e.preventDefault(); 
+    ivHandleAction(); 
+  }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
 });
-document.addEventListener('keyup', e => { ivKeys[e.key] = false; });
 
-// Continuous movement via keys
+document.addEventListener('keyup', e => { 
+  ivKeys[e.key] = false; 
+});
+
+// Continuous movement via keys — FIJADO con start/stop
 function ivKeyMovement() {
   if (!ivRunning || ivOver) return;
-  if (ivKeys['ArrowLeft'] && ivPlayer.x > 2) ivPlayer.x -= ivPlayer.speed;
-  if (ivKeys['ArrowRight'] && ivPlayer.x + ivPlayer.w < IVW - 2) ivPlayer.x += ivPlayer.speed;
-  requestAnimationFrame(ivKeyMovement);
+  
+  if (ivKeys['ArrowLeft'] && ivPlayer.x > 2) {
+    ivPlayer.x -= ivPlayer.speed;
+  }
+  if (ivKeys['ArrowRight'] && ivPlayer.x + ivPlayer.w < IVW - 2) {
+    ivPlayer.x += ivPlayer.speed;
+  }
+  
+  ivKeyRafId = requestAnimationFrame(ivKeyMovement);  // ← RAF ID para control
+}
+
+// ← NUEVA: Función para INICIAR el loop de teclas
+function ivStartKeyMovement() {
+  if (ivKeyRafId) cancelAnimationFrame(ivKeyRafId);  // Limpia si ya corre
+  ivKeyMovement();  // Kickstart
+}
+
+// ← NUEVA: Función para PARAR el loop
+function ivStopKeyMovement() {
+  if (ivKeyRafId) {
+    cancelAnimationFrame(ivKeyRafId);
+    ivKeyRafId = null;
+  }
+  // Reset keys por seguridad
+  ivKeys = {};
 }
 
 function ivShoot() {
