@@ -82,6 +82,8 @@
     btnTodos.style.color       = algunoActivo ? 'var(--rojo)' : 'var(--verde)';
   }
 
+  window.renderJuegosToggles = renderJuegosToggles;
+
   window.toggleJuegoIndividual = async function(id) {
     const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     juegosEstado[id] = juegosEstado[id] === false ? true : false;

@@ -428,7 +428,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
-  if (tab === 'descuentos') window.renderCupones?.();
+  if (tab === 'descuentos') { if (typeof window.renderCupones === 'function') window.renderCupones(); else setTimeout(() => window.renderCupones?.(), 300); }
   if (tab === 'sorteos') window.renderSorteoPanel?.();
 };
 
@@ -1705,8 +1705,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(t => {
     const tab = t.getAttribute('data-tab');
     window.cambiarTab(tab);
     if (tab === 'descuentos') {
-      renderJuegosToggles();
-      actualizarUIRecompensa();
+      window.renderJuegosToggles?.();
+      window.actualizarUIRecompensa?.();
     }
     if (tab === 'usuarios' && _usuariosTodos.length === 0) {
       window.cargarUsuarios();
