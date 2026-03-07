@@ -1,6 +1,6 @@
 // ===== SISTEMA DE CUPONES =====
 // Depende de: window._fbDB, window._fbDoc, window._fbSetDoc, window._fbOnSnapshot
-// Usa: showNotif(), registrarActividad() — definidas en vendedor-app.js
+// Usa: window.showNotif(), registrarActividad() — definidas en vendedor-app.js
 
 (function() {
   // Esperar a que Firebase esté listo
@@ -53,15 +53,15 @@
   window.crearCupon = async function() {
     const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const codigo = document.getElementById('cuponCodigo').value.trim().toUpperCase();
-    if (!codigo) { showNotif('⚠️ Ingresá un código'); return; }
+    if (!codigo) { window.showNotif('⚠️ Ingresá un código'); return; }
 
     if (cuponTipoActual === 'pct') {
-      if (!cuponPctActual) { showNotif('⚠️ Elegí el % de descuento'); return; }
+      if (!cuponPctActual) { window.showNotif('⚠️ Elegí el % de descuento'); return; }
     } else {
-      if (!cuponItemActual) { showNotif('⚠️ Elegí o escribí un ítem gratis'); return; }
+      if (!cuponItemActual) { window.showNotif('⚠️ Elegí o escribí un ítem gratis'); return; }
     }
 
-    if (cuponesData.find(c => c.codigo === codigo)) { showNotif('⚠️ Ese código ya existe'); return; }
+    if (cuponesData.find(c => c.codigo === codigo)) { window.showNotif('⚠️ Ese código ya existe'); return; }
 
     const cupon = {
       id: Date.now(),
@@ -89,7 +89,7 @@
     if (customEl) customEl.value = '';
     cuponPctActual = null;
     cuponItemActual = null;
-    showNotif('✅ Cupón creado');
+    window.showNotif('✅ Cupón creado');
   };
 
   window.toggleCupon = async function(id) {
@@ -98,7 +98,7 @@
     if (!c || c.usado) return;
     c.activo = !c.activo;
     await setDoc(doc(db, 'config', 'cupones'), { lista: cuponesData });
-    showNotif(c.activo ? '✅ Cupón activado' : '⏸ Cupón pausado');
+    window.showNotif(c.activo ? '✅ Cupón activado' : '⏸ Cupón pausado');
   };
 
   window.eliminarCupon = async function(id) {
@@ -107,7 +107,7 @@
     if (!confirm('¿Eliminar cupón "' + (c ? c.codigo : '') + '"?')) return;
     cuponesData = cuponesData.filter(x => x.id !== id);
     await setDoc(doc(db, 'config', 'cupones'), { lista: cuponesData });
-    showNotif('✅ Cupón eliminado');
+    window.showNotif('✅ Cupón eliminado');
   };
 
   function renderCupones() {
@@ -163,7 +163,7 @@
       nueva.forEach(c => {
         const anterior = cuponesData.find(x => x.id === c.id || x.codigo === c.codigo);
         if (anterior && !anterior.usado && c.usado) {
-          showNotif('🎟️ Cupón ' + c.codigo + ' canjeado por ' + (c.usadoPor || 'un cliente'));
+          window.showNotif('🎟️ Cupón ' + c.codigo + ' canjeado por ' + (c.usadoPor || 'un cliente'));
         }
       });
       cuponesData = nueva;

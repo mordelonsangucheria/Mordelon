@@ -413,6 +413,7 @@ function showNotif(msg, conSonido = false) {
   }, 3000);
   if (conSonido) playBeep();
 }
+window.showNotif = showNotif;
 
 window.cambiarTab = function(tab) {
   document.querySelectorAll('.tab').forEach(t => {

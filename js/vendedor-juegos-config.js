@@ -1,6 +1,6 @@
 // ===== CONFIGURACIÓN DE JUEGOS =====
 // Depende de: window._fbDB, window._fbDoc, window._fbSetDoc, window._fbGetDoc, window._fbOnSnapshot, window._fbUpdateDoc, window._fbGetDocs, window._fbCollection
-// Usa: showNotif(), registrarActividad() — definidas en vendedor-app.js
+// Usa: window.showNotif(), registrarActividad() — definidas en vendedor-app.js
 
 (function() {
   // Esperar a que Firebase esté listo
@@ -88,7 +88,7 @@
     await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
     const info   = JUEGOS_TOGGLE_INFO.find(j => j.id === id);
     const activo = juegosEstado[id] !== false;
-    showNotif(`${info.emoji} ${info.label} ${activo ? 'activado' : 'desactivado'}`);
+    window.showNotif(`${info.emoji} ${info.label} ${activo ? 'activado' : 'desactivado'}`);
     if (typeof registrarActividad === 'function') registrarActividad(`🕹️ ${info.label} ${activo ? 'activado' : 'desactivado'}`);
     renderJuegosToggles();
   };
@@ -98,7 +98,7 @@
     const algunoActivo = JUEGOS_TOGGLE_INFO.some(j => juegosEstado[j.id] !== false);
     JUEGOS_TOGGLE_INFO.forEach(j => { juegosEstado[j.id] = algunoActivo ? false : true; });
     await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
-    showNotif(algunoActivo ? '🔴 Todos los juegos desactivados' : '🟢 Todos los juegos activados');
+    window.showNotif(algunoActivo ? '🔴 Todos los juegos desactivados' : '🟢 Todos los juegos activados');
     if (typeof registrarActividad === 'function') registrarActividad(`🕹️ Todos los juegos ${algunoActivo ? 'desactivados' : 'activados'}`);
     renderJuegosToggles();
   };
@@ -112,7 +112,7 @@
     await setDoc(doc(db, 'config', 'juegos'), juegosEstado);
     const info   = JUEGOS_TOGGLE_INFO.find(j => j.id === id);
     const activo = juegosEstado[key] === true;
-    showNotif(`🎟️ Fichas en ${info.emoji} ${info.label}: ${activo ? 'ACTIVADAS' : 'DESACTIVADAS'}`);
+    window.showNotif(`🎟️ Fichas en ${info.emoji} ${info.label}: ${activo ? 'ACTIVADAS' : 'DESACTIVADAS'}`);
     if (typeof registrarActividad === 'function') registrarActividad(`🎟️ Fichas ${info.label} ${activo ? 'activadas' : 'desactivadas'}`);
     renderJuegosToggles();
   };
