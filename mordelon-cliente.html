@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Mordelón — Pedidos</title>
-<link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/cliente-base.css">
 </head>
@@ -269,6 +268,13 @@
       <div style="font-size:0.65rem;color:#555;">Tap para copiar · Usalo en tu próximo pedido</div>
     </div>
 
+    <!-- BANNER FICHAS RECOMPENSA -->
+    <div id="fichasRecompensaBanner" style="display:none;margin:0 4px 12px;background:linear-gradient(135deg,rgba(255,152,0,.15),rgba(212,131,26,.1));border:1.5px solid var(--naranja);border-radius:16px;padding:16px;text-align:center;">
+      <div style="font-size:1.5rem;margin-bottom:4px;">🎟️</div>
+      <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:var(--naranja);letter-spacing:1px;margin-bottom:6px;">¡GANASTE FICHAS!</div>
+      <div style="font-size:0.85rem;color:#aaa;">Se te acreditaron <strong id="fichasRecompensaCant" style="color:var(--naranja);font-size:1.1rem;">0</strong> fichas de slots por tu récord 🎰</div>
+    </div>
+
     <!-- TETRIS -->
     <div id="juegoTetris" style="display:block;">
       <div style="text-align:center;margin-bottom:6px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
@@ -401,10 +407,9 @@
   <canvas id="invadersCanvas" width="320" height="220" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
   <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
     <button onclick="window.invadersReset()" style="background:rgba(61,191,184,.1);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">↺ Reiniciar</button>
-    <button id="btnInvadersPausa" onclick="window.invadersPause();this.textContent=window.ivPausedState?'▶ Continuar':'⏸ Pausa';" style="background:rgba(255,184,0,.1);color:var(--naranja);border:1.5px solid rgba(255,184,0,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">⏸ Pausa</button>
   </div>
   <div style="text-align:center;margin-top:6px;font-size:0.6rem;color:#444;">
-    ← → Mover · Espacio Disparar · P Pausa · Deslizá en el canvas para mover
+    ← → Mover · Espacio Disparar · Deslizá en el canvas para mover
   </div>
 </div>
 <div id="juegoSlots" style="display:none;">
