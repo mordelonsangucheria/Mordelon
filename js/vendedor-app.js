@@ -1315,7 +1315,10 @@ window.actualizarUIRecompensa = function actualizarUIRecompensa() {
   if (ptosFichasEl) ptosFichasEl.value = cfg.ptosFichas || '';
   if (fichasEl) fichasEl.value = cfg.fichas || '';
   if (preview && cfg.puntos && cfg.pct) {
-    preview.textContent = `Al llegar a ${cfg.puntos.toLocaleString('es-AR')} pts en ${JUEGOS_INFO[juegoSeleccionado].label}, el cliente gana ${cfg.pct}% de descuento.`;
+    const infoJuego = JUEGOS_INFO[juegoSeleccionado];
+    if (infoJuego) {
+      preview.textContent = `Al llegar a ${cfg.puntos.toLocaleString('es-AR')} pts en ${infoJuego.label}, el cliente gana ${cfg.pct}% de descuento.`;
+    }
   }
   if (btnToggleJuego) {
     const act = cfg.activo !== false;
@@ -1363,7 +1366,10 @@ document.addEventListener('input', e => {
     const pct = parseInt(document.getElementById('recompensaPct').value);
     const preview = document.getElementById('recompensaPreview');
     if (preview && pts && pct) {
-      preview.textContent = `Al llegar a ${pts.toLocaleString('es-AR')} pts en ${JUEGOS_INFO[juegoSeleccionado].label}, el cliente gana ${pct}% de descuento.`;
+    const infoPreview = JUEGOS_INFO[juegoSeleccionado];
+    if (infoPreview) {
+      preview.textContent = `Al llegar a ${pts.toLocaleString('es-AR')} pts en ${infoPreview.label}, el cliente gana ${pct}% de descuento.`;
+    }
     }
   }
 });
