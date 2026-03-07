@@ -76,36 +76,71 @@
       grid[r][COLS - 1] = T.SUELO;
     }
 
-    // Plataformas intermedias
+    // ── Plataformas con diseño garantizado ──────────────────────────────
+    // Cada plataforma ocupa MEDIO ancho y alterna lado izq/der.
+    // Esto garantiza que siempre hay un pasaje abierto en el lado opuesto.
+    // Layout de columnas jugables: 1..COLS-2 (18 cols)
+    // Mitad izquierda:  cols 1..10   Mitad derecha: cols 9..18
+    // El hueco de paso queda en cols 11-18 (izq) o cols 1-8 (der)
     const filasPlataforma = [];
     for (let r = ROWS - 4; r >= 3; r -= 3) filasPlataforma.push(r);
 
-    filasPlataforma.forEach(r => {
-      const ini = 1 + Math.floor(Math.random() * 3);
-      const fin = COLS - 2 - Math.floor(Math.random() * 3);
-      const huecoPos = ini + 1 + Math.floor(Math.random() * Math.max(1, fin - ini - 3));
-      for (let c = ini; c <= fin; c++) {
-        if (c !== huecoPos && c !== huecoPos + 1) {
-          grid[r][c] = T.SUELO;
-        }
+    filasPlataforma.forEach((r, i) => {
+      const ladoIzq = (i % 2 === 0); // alternar lado cada fila
+      // La plataforma va de un extremo hasta ~60% del ancho, dejando ~40% libre
+      const anchoPlat = 10 + Math.floor(Math.random() * 3); // 10-12 celdas
+      if (ladoIzq) {
+        // Plataforma pegada a la pared izquierda, hueco a la derecha
+        for (let c = 1; c <= anchoPlat; c++) grid[r][c] = T.SUELO;
+      } else {
+        // Plataforma pegada a la pared derecha, hueco a la izquierda
+        for (let c = COLS - 1 - anchoPlat; c <= COLS - 2; c++) grid[r][c] = T.SUELO;
       }
     });
 
-    // Escaleras entre pisos
+    // ── Escaleras garantizadas ───────────────────────────────────────────
+    // Entre cada par de pisos adyacentes colocamos UNA escalera en el extremo
+    // de la plataforma (donde termina), garantizando siempre acceso.
     const todasFilas = [ROWS - 1, ...filasPlataforma].sort((a, b) => b - a);
+
     for (let i = 0; i < todasFilas.length - 1; i++) {
       const rAbajo  = todasFilas[i];
       const rArriba = todasFilas[i + 1];
-      const cols = [];
-      for (let c = 2; c < COLS - 2; c++) {
-        if (grid[rAbajo][c] === T.SUELO && grid[rArriba][c] !== T.SUELO) cols.push(c);
+      const ladoIzq = ((filasPlataforma.indexOf(rArriba)) % 2 === 0);
+
+      // La escalera va en el extremo libre de la plataforma superior
+      // (donde NO está la pared) para no obstruir el paso horizontal
+      let escCol;
+      if (ladoIzq) {
+        // Plataforma izq → escalera en el borde derecho de la plataforma (col ~anchoPlat)
+        // Buscar la última col de suelo en rArriba
+        let lastSuelo = 1;
+        for (let c = 1; c < COLS - 1; c++) { if (grid[rArriba][c] === T.SUELO) lastSuelo = c; }
+        escCol = Math.max(2, lastSuelo - 1 - Math.floor(Math.random() * 2));
+      } else {
+        // Plataforma der → escalera en el borde izquierdo de la plataforma
+        let firstSuelo = COLS - 2;
+        for (let c = COLS - 2; c >= 1; c--) { if (grid[rArriba][c] === T.SUELO) firstSuelo = c; }
+        escCol = Math.min(COLS - 3, firstSuelo + 1 + Math.floor(Math.random() * 2));
       }
-      if (cols.length === 0) continue;
-      const col = cols[Math.floor(Math.random() * cols.length)];
-      for (let r = rArriba + 1; r < rAbajo; r++) {
-        if (grid[r][col] === T.VACIO) grid[r][col] = T.ESCALERA;
+
+      // Asegurar que escCol tenga suelo en rAbajo (para que la escalera llegue al piso inferior)
+      if (grid[rAbajo][escCol] !== T.SUELO) {
+        // Buscar la col de suelo más cercana en rAbajo
+        let mejor = escCol, menorDist = 999;
+        for (let c = 1; c < COLS - 1; c++) {
+          if (grid[rAbajo][c] === T.SUELO && Math.abs(c - escCol) < menorDist) {
+            menorDist = Math.abs(c - escCol);
+            mejor = c;
+          }
+        }
+        escCol = mejor;
       }
-      if (grid[rArriba][col] === T.VACIO) grid[rArriba][col] = T.ESCALERA;
+
+      // Trazar escalera desde justo encima de rAbajo hasta rArriba (inclusive)
+      for (let r = rArriba; r < rAbajo; r++) {
+        if (grid[r][escCol] === T.VACIO) grid[r][escCol] = T.ESCALERA;
+      }
     }
 
     // Cocina en suelo inferior col 2
