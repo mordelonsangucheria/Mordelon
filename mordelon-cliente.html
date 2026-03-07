@@ -449,14 +449,15 @@
   <!-- Controles on-screen táctil -->
   <div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:10px;">
     <button ontouchstart="window.runMoverArriba()" onclick="window.runMoverArriba()" style="background:rgba(61,191,184,.12);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.25);border-radius:8px;padding:8px 24px;font-size:1rem;cursor:pointer;">▲</button>
-    <div style="display:flex;gap:32px;">
+    <div style="display:flex;gap:8px;align-items:center;">
       <button ontouchstart="window.runMoverIzq()" onclick="window.runMoverIzq()" style="background:rgba(61,191,184,.12);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.25);border-radius:8px;padding:8px 20px;font-size:1rem;cursor:pointer;">◀</button>
       <button ontouchstart="window.runMoverAbajo()" onclick="window.runMoverAbajo()" style="background:rgba(61,191,184,.12);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.25);border-radius:8px;padding:8px 20px;font-size:1rem;cursor:pointer;">▼</button>
       <button ontouchstart="window.runMoverDer()" onclick="window.runMoverDer()" style="background:rgba(61,191,184,.12);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.25);border-radius:8px;padding:8px 20px;font-size:1rem;cursor:pointer;">▶</button>
+      <button ontouchstart="window.runFreeze()" onclick="window.runFreeze()" style="background:rgba(85,153,255,.15);color:#5599ff;border:1.5px solid rgba(85,153,255,.35);border-radius:8px;padding:8px 14px;font-size:1rem;cursor:pointer;" title="Congelar enemigos">❄️</button>
     </div>
   </div>
   <div style="text-align:center;margin-top:6px;font-size:0.6rem;color:#444;">
-    ← → ↑ ↓ / WASD · Recogé ingredientes 🍞🥩🍅🥬 · Lleválos a la cocina 🍔
+    ← → ↑ ↓ / WASD · ❄️ B = congelar enemigos · Lleválos a la cocina 🍔
   </div>
 </div>
 
