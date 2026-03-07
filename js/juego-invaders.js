@@ -316,9 +316,10 @@ document.addEventListener('keyup', e => { ivKeys[e.key] = false; });
 
 // Continuous movement via keys
 function ivKeyMovement() {
-  if (!ivRunning || ivOver) return;
-  if (ivKeys['ArrowLeft'] && ivPlayer.x > 2) ivPlayer.x -= ivPlayer.speed;
-  if (ivKeys['ArrowRight'] && ivPlayer.x + ivPlayer.w < IVW - 2) ivPlayer.x += ivPlayer.speed;
+  if (ivRunning && !ivOver) {
+    if (ivKeys['ArrowLeft'] && ivPlayer.x > 2) ivPlayer.x -= ivPlayer.speed;
+    if (ivKeys['ArrowRight'] && ivPlayer.x + ivPlayer.w < IVW - 2) ivPlayer.x += ivPlayer.speed;
+  }
   requestAnimationFrame(ivKeyMovement);
 }
 
