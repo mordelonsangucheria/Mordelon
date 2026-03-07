@@ -24,6 +24,7 @@
     { id: 'minas',    label: 'Minas',    emoji: '💣' },
     { id: 'invaders', label: 'Invaders', emoji: '👾' },
     { id: 'slots',    label: 'Slots',    emoji: '🎰' },
+    { id: 'run',      label: 'Mordelón Run', emoji: '🏃' },
   ];
 
   let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }

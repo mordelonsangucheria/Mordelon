@@ -1269,7 +1269,7 @@ function updateReloj() {
 updateReloj(); setInterval(updateReloj,1000);
 
 // ── RECOMPENSA POR JUEGO (multi-juego) ───────────────────────────────────
-const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots'];
+const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
 const JUEGOS_INFO = {
   tetris: { label: '🧱 Tetris', prefijo: 'TETRIS' },
   snake:  { label: '🐍 Snake',  prefijo: 'SNAKE'  },
@@ -1277,7 +1277,8 @@ const JUEGOS_INFO = {
   dino:   { label: '🦕 Dino',   prefijo: 'LLAMA'  },
   minas:  { label: '💣 Minas',  prefijo: 'MINAS'  },
   invaders: { label: '👾 Invaders', prefijo: 'INVADERS' },
-  slots:  { label: '🎰 Slots',  prefijo: 'SLOTS'  }
+  slots:  { label: '🎰 Slots',  prefijo: 'SLOTS'  },
+  run:    { label: '🏃 Mordelón Run', prefijo: 'MRUN' }
 };
 
 // Estado global: objeto { tetris:{puntos,pct,activo}, snake:{...}, ... }
