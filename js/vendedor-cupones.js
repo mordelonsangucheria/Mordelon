@@ -155,6 +155,8 @@
     });
   }
 
+  window.renderCupones = renderCupones;
+
   // Escuchar cupones en tiempo real desde Firebase
   _ready(function() {
     const db = window._fbDB, doc = window._fbDoc, onSnapshot = window._fbOnSnapshot;

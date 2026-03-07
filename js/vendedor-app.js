@@ -428,7 +428,7 @@ window.cambiarTab = function(tab) {
   if (tab === 'calculadora') limpiarCalc();
   if (tab === 'cronometro') renderTimers();
   if (tab === 'promos') renderPromos();
-  if (tab === 'descuentos') renderCupones();
+  if (tab === 'descuentos') window.renderCupones?.();
   if (tab === 'sorteos') window.renderSorteoPanel?.();
 };
 
@@ -1286,7 +1286,7 @@ let juegoSeleccionado = 'tetris';
 // Default por juego si no existe config
 function defaultCfg() { return { puntos: 500, pct: 10, activo: true }; }
 
-function actualizarUIRecompensa() {
+window.actualizarUIRecompensa = function actualizarUIRecompensa() {
   // Actualizar badge global (activo si al menos uno activo)
   const badge = document.getElementById('recompensaEstadoBadge');
   const btnToggle = document.getElementById('btnToggleRecompensa');
