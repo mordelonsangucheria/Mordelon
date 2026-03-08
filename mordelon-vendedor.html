@@ -428,16 +428,17 @@
 
   <!-- 🕹️ ACTIVAR / DESACTIVAR JUEGOS INDIVIDUALES -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div class="sec-header" onclick="toggleSec('sec-juegos')" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;cursor:pointer;">
       <div>
-        <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ</div>
+        <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ <span class="sec-arrow" id="arr-sec-juegos">▾</span></div>
         <div style="font-size:0.72rem;color:#666;">Activá o desactivá cada juego individualmente.</div>
       </div>
-      <button onclick="window.toggleTodosJuegos()" id="btnToggleTodosJuegos"
+      <button onclick="event.stopPropagation();window.toggleTodosJuegos()" id="btnToggleTodosJuegos"
         style="padding:6px 14px;border-radius:20px;border:1.5px solid #444;background:transparent;color:#888;cursor:pointer;font-family:'Righteous',cursive;font-size:0.7rem;letter-spacing:1px;transition:all .2s;">
         APAGAR TODOS
       </button>
     </div>
+    <div id="sec-juegos">
     <div id="juegosToggleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
 
     <!-- 🦕 DIFICULTAD DINO -->
@@ -592,15 +593,43 @@
       </div>
       <div id="battleDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
+    </div><!-- /sec-juegos -->
   </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
 
 
 
-  <!-- 🎰 FICHAS DE SLOTS -->
+  
+  <!-- 🏆 LEADERBOARD -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
+    <div class="sec-header" onclick="toggleSec('sec-leaderboard')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div>
+        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);">🏆 LEADERBOARD <span class="sec-arrow" id="arr-sec-leaderboard">▾</span></div>
+        <p style="font-size:0.72rem;color:#666;margin:4px 0 0;">Reseteá el ranking de cada juego individualmente.</p>
+      </div>
+    </div>
+    <div id="sec-leaderboard" class="sec-collapsible">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button onclick="window.resetLeaderboard('tetris')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🧱 Tetris</button>
+      <button onclick="window.resetLeaderboard('snake')"    style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🐍 Snake</button>
+      <button onclick="window.resetLeaderboard('2048')"     style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🔢 2048</button>
+      <button onclick="window.resetLeaderboard('dino')"     style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🦕 Dino</button>
+      <button onclick="window.resetLeaderboard('minas')"    style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">💣 Minas</button>
+      <button onclick="window.resetLeaderboard('invaders')" style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">👾 Invaders</button>
+      <button onclick="window.resetLeaderboard('slots')"    style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🎰 Slots</button>
+      <button onclick="window.resetLeaderboard('run')"      style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏃 Run</button>
+      <button onclick="window.resetLeaderboard('impact')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🚀 Impact</button>
+      <button onclick="window.resetLeaderboard('battle')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏰 Battle</button>
+    </div>
+    <div id="lbResetMsg" style="font-size:0.7rem;min-height:14px;text-align:center;"></div>
+    </div><!-- /sec-leaderboard -->
+  </div>
+
+<!-- 🎰 FICHAS DE SLOTS -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
-    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
+    <div class="sec-header" onclick="toggleSec('sec-fichas')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS <span class="sec-arrow" id="arr-sec-fichas">▾</span></div>
+    <div id="sec-fichas">
     <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Buscá un usuario por nombre y cargale fichas. Los nombres están en mayúsculas.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;">
@@ -632,13 +661,15 @@
     </div>
     <div id="fichasMensaje" style="font-size:0.75rem;margin-top:10px;min-height:18px;"></div>
     <button onclick="window.verTodosUsuariosSlots()" style="background:transparent;border:none;color:#555;font-size:0.68rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Ver todos los usuarios</button>
+    </div><!-- /sec-fichas -->
   </div>
 
   <!-- 🔥 TRAGALLAMA — JACKPOT & STATS -->
   <div style="background:var(--gris-dark);border:2px solid #FFB800;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 0 20px rgba(255,184,0,0.08);">
-    <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-      🔥 TRAGALLAMA — CONTROL JACKPOT
+    <div class="sec-header" onclick="toggleSec('sec-tragallama')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      🔥 TRAGALLAMA — CONTROL JACKPOT <span class="sec-arrow" id="arr-sec-tragallama">▾</span>
     </div>
+    <div id="sec-tragallama">
 
     <!-- Stats en tiempo real -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
@@ -690,17 +721,19 @@
       </button>
       <div id="tlLimpiezaMsg" style="font-size:0.68rem;min-height:14px;text-align:center;color:#555;"></div>
     </div>
+    </div><!-- /sec-tragallama -->
   </div>
 
 
   <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO</div>
+      <div class="sec-header" onclick="toggleSec('sec-recompensa')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO <span class="sec-arrow" id="arr-sec-recompensa">▾</span></div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span id="recompensaEstadoBadge" style="font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(61,191,184,.15);color:var(--turquesa);border:1px solid var(--turquesa);">ACTIVO</span>
         <button onclick="window.toggleRecompensa()" id="btnToggleRecompensa" style="background:transparent;border:1.5px solid #444;color:#aaa;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:0.75rem;">⏸ Pausar</button>
       </div>
     </div>
+    <div id="sec-recompensa">
     <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Configurá la recompensa para cada juego. El cliente recibe un cupón único al superar el puntaje.</p>
 
     <!-- SELECTOR DE JUEGO -->
@@ -761,6 +794,7 @@
       <div style="font-size:0.68rem;color:#555;font-weight:800;letter-spacing:1px;margin-bottom:10px;">ESTADO DE TODOS LOS JUEGOS</div>
       <div id="recompensaResumenJuegos" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
     </div>
+    </div><!-- /sec-recompensa -->
   </div>
 
   <!-- CUPONES ACTIVOS -->
@@ -768,7 +802,8 @@
 
   <!-- CREAR CUPÓN -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
-    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN</div>
+    <div class="sec-header" onclick="toggleSec('sec-cupon')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN <span class="sec-arrow" id="arr-sec-cupon">▾</span></div>
+    <div id="sec-cupon">
 
     <div style="margin-bottom:10px;">
       <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">CÓDIGO</div>
@@ -821,6 +856,7 @@
     </div>
 
     <button class="btn btn-turquesa" onclick="window.crearCupon()" style="width:100%;">🎟️ Crear cupón</button>
+    </div><!-- /sec-cupon -->
   </div>
 </div>
 
@@ -1070,6 +1106,32 @@
 <script src="js/vendedor-cupones.js"></script>
 <script src="js/vendedor-juegos-config.js"></script>
 <script src="js/vendedor-sw-register.js"></script>
+
+
+<style>
+.sec-arrow { font-size:0.8rem; margin-left:6px; transition: transform .25s; display:inline-block; }
+.sec-arrow.collapsed { transform: rotate(-90deg); }
+.sec-collapsible { overflow:hidden; transition: max-height .3s ease, opacity .2s ease; max-height:4000px; opacity:1; }
+.sec-collapsible.collapsed { max-height:0 !important; opacity:0; }
+</style>
+<script>
+(function(){
+  // Añadir clase a todos los contenidos colapsables
+  ['sec-juegos','sec-leaderboard','sec-fichas','sec-tragallama','sec-recompensa','sec-cupon'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.add('sec-collapsible','collapsed');
+    var arr = document.getElementById('arr-' + id);
+    if(arr) arr.classList.add('collapsed');
+  });
+})();
+window.toggleSec = function(id) {
+  var el = document.getElementById(id);
+  var arr = document.getElementById('arr-' + id);
+  if(!el) return;
+  var collapsed = el.classList.toggle('collapsed');
+  if(arr) arr.classList.toggle('collapsed', collapsed);
+};
+</script>
 
 </body>
 </html>
