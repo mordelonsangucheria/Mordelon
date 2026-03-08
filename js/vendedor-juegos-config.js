@@ -373,6 +373,16 @@
       _runDifActual = val;
       window.selRunDif(val);
     }).catch(() => {});
+
+    // Cargar config Freeze Run (carga inicial)
+    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.duracion != null) _freezeDur  = d.duracion;
+        if (d.usos     != null) _freezeUsos = d.usos;
+      }
+      _aplicarFreezeUI();
+    }).catch(() => _aplicarFreezeUI());
   });
 
   // ── DIFICULTAD RUN ────────────────────────────────────────────────────────
@@ -459,7 +469,6 @@
   };
 
   window.selFreezeUsos = function(usos) {
-    const db = window._fbDB, doc = window._fbDoc, getDoc = window._fbGetDoc;
     _freezeUsos = usos;
     const label = document.getElementById('freezeUsosLabel');
     if (label) label.textContent = usos === 0 ? '∞' : usos + '×';
@@ -471,16 +480,6 @@
       btn.style.borderColor = activo ? '#5599ff' : '#555';
       btn.style.color        = activo ? '#5599ff' : '#888';
     });
-
-    // Cargar config Freeze Run
-    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.duracion != null) _freezeDur  = d.duracion;
-        if (d.usos     != null) _freezeUsos = d.usos;
-      }
-      _aplicarFreezeUI();
-    }).catch(() => _aplicarFreezeUI());
   };
 
   window.guardarFreezeConfig = async function() {
