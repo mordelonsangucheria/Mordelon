@@ -779,5 +779,21 @@
 <script src="js/juego-invaders.js"></script>
 <script src="js/juego-run.js"></script>
 <script src="js/juego-selector.js"></script>
+<script>
+// Carga config freeze de Firebase y la inyecta en juego-run apenas esté disponible
+(function _initFreezeConfig() {
+  var db = window._fbDB, doc = window._fbDoc, getDoc = window._fbGetDoc;
+  if (!db || !doc || !getDoc) { setTimeout(_initFreezeConfig, 100); return; }
+  getDoc(doc(db, 'config', 'runFreezeConfig')).then(function(snap) {
+    if (snap.exists() && typeof window.setRunFreezeConfig === 'function') {
+      var d = snap.data();
+      window.setRunFreezeConfig(
+        d.duracion != null ? d.duracion : 1500,
+        d.usos     != null ? d.usos     : 0
+      );
+    }
+  }).catch(function() {});
+})();
+</script>
 </body>
 </html>
