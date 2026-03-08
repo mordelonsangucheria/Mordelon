@@ -368,7 +368,13 @@ window.rechazarPedido = async function(id, num) {
 };
 
 let audioCtx = null;
-let sonidoActivado = false;
+let sonidoActivado = localStorage.getItem('mordelon-sonido-activado') === '1';
+
+// Si ya fue activado antes, ocultar el banner inmediatamente
+if (sonidoActivado) {
+  const _bannerEl = document.getElementById('audioActivar');
+  if (_bannerEl) _bannerEl.style.display = 'none';
+}
 
 window.activarSonido = function() {
   try {
@@ -380,6 +386,7 @@ window.activarSonido = function() {
     gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
     osc.start(); osc.stop(audioCtx.currentTime + 0.01);
     sonidoActivado = true;
+    localStorage.setItem('mordelon-sonido-activado', '1');
     document.getElementById('audioActivar').style.display = 'none';
     showNotif('🔔 Sonido activado');
   } catch(e) { console.error(e); }
@@ -1269,7 +1276,7 @@ function updateReloj() {
 updateReloj(); setInterval(updateReloj,1000);
 
 // ── RECOMPENSA POR JUEGO (multi-juego) ───────────────────────────────────
-const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run', 'impact', 'battle'];
+const JUEGOS_LIST = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
 const JUEGOS_INFO = {
   tetris: { label: '🧱 Tetris', prefijo: 'TETRIS' },
   snake:  { label: '🐍 Snake',  prefijo: 'SNAKE'  },
@@ -1278,9 +1285,7 @@ const JUEGOS_INFO = {
   minas:  { label: '💣 Minas',  prefijo: 'MINAS'  },
   invaders: { label: '👾 Invaders', prefijo: 'INVADERS' },
   slots:  { label: '🎰 Slots',  prefijo: 'SLOTS'  },
-  run:    { label: '🏃 Mordelón Run', prefijo: 'MRUN'   },
-  impact: { label: '🚀 Impact',        prefijo: 'IMPACT' },
-  battle: { label: '🏰 Battle City',   prefijo: 'BATTLE' }
+  run:    { label: '🏃 Mordelón Run', prefijo: 'MRUN' }
 };
 
 // Estado global: objeto { tetris:{puntos,pct,activo}, snake:{...}, ... }
