@@ -365,6 +365,16 @@
       _runDifActual = val;
       window.selRunDif(val);
     }).catch(() => {});
+
+    // Cargar config Freeze Run
+    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.duracion != null) _freezeDur  = d.duracion;
+        if (d.usos     != null) _freezeUsos = d.usos;
+      }
+      _aplicarFreezeUI();
+    }).catch(() => _aplicarFreezeUI());
   });
 
   // ── DIFICULTAD RUN ────────────────────────────────────────────────────────
@@ -425,15 +435,7 @@
   let _freezeDur  = FREEZE_DUR_DEFAULT;
   let _freezeUsos = FREEZE_USOS_DEFAULT;
 
-  // Cargar valores guardados de Firebase al iniciar
-  window._fbGetDoc(window._fbDoc(window._fbDB, 'config', 'runFreezeConfig')).then(snap => {
-    if (snap.exists()) {
-      const d = snap.data();
-      if (d.duracion  != null) _freezeDur  = d.duracion;
-      if (d.usos      != null) _freezeUsos = d.usos;
-    }
-    _aplicarFreezeUI();
-  }).catch(() => _aplicarFreezeUI());
+  // (carga de freeze movida a _ready)
 
   function _aplicarFreezeUI() {
     const slider = document.getElementById('freezeDurSlider');
