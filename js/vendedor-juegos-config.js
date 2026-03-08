@@ -400,6 +400,7 @@
   };
 
   window.guardarRunDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const msgEl = document.getElementById('runDifMsg');
     try {
       await setDoc(doc(db, 'config', 'runDificultad'), { valor: _runDifActual });
@@ -413,6 +414,7 @@
   };
 
   window.resetRunDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     _runDifActual = 1;
     window.selRunDif(1);
     const msgEl = document.getElementById('runDifMsg');
@@ -482,6 +484,7 @@
   };
 
   window.guardarFreezeConfig = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const msgEl = document.getElementById('freezeConfigMsg');
     try {
       await setDoc(doc(db, 'config', 'runFreezeConfig'), { duracion: _freezeDur, usos: _freezeUsos });
@@ -494,6 +497,7 @@
   };
 
   window.resetFreezeConfig = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     _freezeDur  = FREEZE_DUR_DEFAULT;
     _freezeUsos = FREEZE_USOS_DEFAULT;
     _aplicarFreezeUI();
