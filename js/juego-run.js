@@ -512,7 +512,15 @@
     if(!canvas){console.error('[runInit] #runCanvas no encontrado');return;}
     ctx=canvas.getContext('2d');
     hiScore=parseInt(localStorage.getItem('runHiC')||'0');
-    // Leer config freeze desde Firebase directamente
+    document.removeEventListener('keydown',onKD);
+    document.removeEventListener('keyup',onKU);
+    canvas.removeEventListener('touchstart',onTS);
+    canvas.removeEventListener('touchend',onTE);
+    document.addEventListener('keydown',onKD);
+    document.addEventListener('keyup',onKU);
+    canvas.addEventListener('touchstart',onTS,{passive:true});
+    canvas.addEventListener('touchend',onTE);
+    // Leer config freeze desde Firebase ANTES de iniciar el juego
     (function _cargarFreezeDeFirebase() {
       const db=window._fbDB, doc=window._fbDoc, getDoc=window._fbGetDoc;
       if (!db || !doc || !getDoc) { setTimeout(_cargarFreezeDeFirebase, 100); return; }
@@ -524,17 +532,12 @@
         }
         _resetFreezeUsos();
         _actualizarBtnFreeze();
-      }).catch(() => { _resetFreezeUsos(); });
+        window.runReset();
+      }).catch(() => {
+        _resetFreezeUsos();
+        window.runReset();
+      });
     })();
-    document.removeEventListener('keydown',onKD);
-    document.removeEventListener('keyup',onKU);
-    canvas.removeEventListener('touchstart',onTS);
-    canvas.removeEventListener('touchend',onTE);
-    document.addEventListener('keydown',onKD);
-    document.addEventListener('keyup',onKU);
-    canvas.addEventListener('touchstart',onTS,{passive:true});
-    canvas.addEventListener('touchend',onTE);
-    window.runReset();
   };
 
   Object.defineProperty(window,'runRunning',{get:()=>estado==='jugando',configurable:true,enumerable:true});
