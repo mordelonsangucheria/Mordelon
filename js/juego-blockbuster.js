@@ -74,6 +74,7 @@ function bbRandPU() {
 let bbPUActive = {};
 let bbLasers   = [];
 let bbStickyBall = null; // bola pegada a paleta esperando lanzamiento
+let bbSpeedAntesSlow = 0; // guarda speed base antes de aplicar slow/fast
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 function bbInit() {
@@ -82,6 +83,7 @@ function bbInit() {
   bbPUActive = {};
   bbLasers   = [];
   bbStickyBall = null;
+  bbSpeedAntesSlow = 0;
   document.getElementById('bbScore').textContent  = 0;
   document.getElementById('bbHi').textContent     = bbHi;
   document.getElementById('bbLevel').textContent  = 1;
@@ -172,8 +174,8 @@ function bbUpdate() {
   if (bbKeys['ArrowRight']) bbMovePaddle(bbPaddle.x + bbPaddle.w/2 + KSPD);
 
   // Timers de power-ups
-  if (bbPUActive.slow)   { bbPUActive.slow--;   if (!bbPUActive.slow)   bbAdjustSpeed(1); }
-  if (bbPUActive.fast)   { bbPUActive.fast--;   if (!bbPUActive.fast)   bbAdjustSpeed(1); }
+  if (bbPUActive.slow)   { bbPUActive.slow--;   if (!bbPUActive.slow)   bbRestoreSpeed(); }
+  if (bbPUActive.fast)   { bbPUActive.fast--;   if (!bbPUActive.fast)   bbRestoreSpeed(); }
   if (bbPUActive.fire)   { bbPUActive.fire--;   if (!bbPUActive.fire)   bbBalls.forEach(b => b.fire = false); }
   if (bbPUActive.sticky) { bbPUActive.sticky--; }
   if (bbPUActive.laser)  { bbPUActive.laser--;  }
@@ -311,11 +313,13 @@ function bbApplyPU(tipo) {
       for (let i=0; i<2; i++) bbSpawnExtraBall();
       break;
     case 'slow':
+      if (!bbPUActive.slow && !bbPUActive.fast) bbSpeedAntesSlow = _bbGetSpeed();
       bbPUActive.fast = 0;
       bbPUActive.slow = DUR;
       bbAdjustSpeed(0.55);
       break;
     case 'fast':
+      if (!bbPUActive.slow && !bbPUActive.fast) bbSpeedAntesSlow = _bbGetSpeed();
       bbPUActive.slow = 0;
       bbPUActive.fast = DUR;
       bbAdjustSpeed(1.55);
@@ -337,6 +341,23 @@ function bbApplyPU(tipo) {
   }
 }
 
+function _bbGetSpeed() {
+  const b = bbBalls && bbBalls.find(b => !b.stuck);
+  return b ? Math.sqrt(b.vx*b.vx + b.vy*b.vy) : BB_SPEEDS[bbDificultad];
+}
+
+function bbRestoreSpeed() {
+  const target = bbSpeedAntesSlow > 0 ? bbSpeedAntesSlow : BB_SPEEDS[bbDificultad];
+  bbBalls && bbBalls.forEach(b => {
+    if (b.stuck) return;
+    const cur = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+    if (cur < 0.1) return;
+    b.vx = (b.vx / cur) * target;
+    b.vy = (b.vy / cur) * target;
+  });
+  bbSpeedAntesSlow = 0;
+}
+
 function bbAdjustSpeed(factor) {
   bbBalls.forEach(b => {
     if (b.stuck) return;
@@ -354,6 +375,7 @@ function bbLoseLife() {
   bbPUActive = {};
   bbLasers   = [];
   bbStickyBall = null;
+  bbSpeedAntesSlow = 0;
   bbMakePaddle();
   bbBalls = [];
   bbMakeBall(true);
@@ -367,6 +389,7 @@ function bbNextLevel() {
   bbPUActive = {};
   bbLasers   = [];
   bbStickyBall = null;
+  bbSpeedAntesSlow = 0;
   bbBalls = [];
   bbMakePaddle();
   bbMakeBall(true);
@@ -589,7 +612,22 @@ document.addEventListener('keydown', e => {
 document.addEventListener('keyup', e => { bbKeys[e.key] = false; });
 
 // ── API pública ───────────────────────────────────────────────────────────────
-window.blockbusterInit = bbInit;
+let _bbFichaOk = false; // true solo cuando el selector ya consumió la ficha
+
+window.blockbusterInit = function() {
+  // Llamado desde el selector (ficha ya consumida) — muestra pantalla de inicio
+  _bbFichaOk = true;
+  bbEnEspera = true;
+  cancelAnimationFrame(bbAnimFrame);
+  bbOver = false; bbRunning = false;
+  bbBalls = []; bbBlocks = []; bbPowerUps = []; bbLasers = [];
+  bbPUActive = {}; bbSpeedAntesSlow = 0;
+  document.getElementById('bbScore').textContent = 0;
+  document.getElementById('bbHi').textContent    = bbHi;
+  document.getElementById('bbLevel').textContent = 1;
+  document.getElementById('bbLives').textContent = '❤️❤️❤️';
+  bbDrawStart();
+};
 
 window.blockbusterReset = async function() {
   if (typeof window.juegoRequiereFichas === 'function' && window.juegoRequiereFichas('blockbuster')) {
@@ -598,6 +636,7 @@ window.blockbusterReset = async function() {
       if (!ok) { if (typeof showToast === 'function') showToast('🎟️ Sin fichas para Blockbuster'); return; }
     }
   }
+  _bbFichaOk = false; // reset directo, no pasa por pantalla inicio
   cancelAnimationFrame(bbAnimFrame);
   bbInit();
 };
@@ -652,8 +691,10 @@ function bbDrawStart() {
 }
 
 function _bbArrancar() {
-  if (!bbEnEspera) return;
-  bbEnEspera = false;
+  if (!bbEnEspera || !_bbFichaOk) return;
+  _bbFichaOk  = false;
+  bbEnEspera  = false;
+  cancelAnimationFrame(bbAnimFrame);
   bbInit();
 }
 
