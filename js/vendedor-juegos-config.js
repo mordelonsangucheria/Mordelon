@@ -360,29 +360,19 @@
       window.selImpactDif(val);
     }).catch(() => {});
 
-    // Cargar dificultad Run actual
-    getDoc(doc(db, 'config', 'runDificultad')).then(snap => {
-      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
-      _runDifActual = val;
-      window.selRunDif(val);
-    }).catch(() => {});
-
-    // Cargar dificultad Battle
+    // Cargar dificultad Battle actual
     getDoc(doc(db, 'config', 'battleDificultad')).then(snap => {
       const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
       _battleDifActual = val;
       window.selBattleDif(val);
     }).catch(() => {});
 
-    // Cargar config Freeze Run
-    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.duracion != null) _freezeDur  = d.duracion;
-        if (d.usos     != null) _freezeUsos = d.usos;
-      }
-      _aplicarFreezeUI();
-    }).catch(() => _aplicarFreezeUI());
+    // Cargar dificultad Run actual
+    getDoc(doc(db, 'config', 'runDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _runDifActual = val;
+      window.selRunDif(val);
+    }).catch(() => {});
   });
 
   // ── DIFICULTAD RUN ────────────────────────────────────────────────────────
@@ -443,7 +433,15 @@
   let _freezeDur  = FREEZE_DUR_DEFAULT;
   let _freezeUsos = FREEZE_USOS_DEFAULT;
 
-  // (carga de freeze movida a _ready)
+  // Cargar valores guardados de Firebase al iniciar
+  getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.duracion  != null) _freezeDur  = d.duracion;
+      if (d.usos      != null) _freezeUsos = d.usos;
+    }
+    _aplicarFreezeUI();
+  }).catch(() => _aplicarFreezeUI());
 
   function _aplicarFreezeUI() {
     const slider = document.getElementById('freezeDurSlider');
@@ -578,7 +576,6 @@
       await setDoc(doc(db,'config','battleDificultad'),{valor:_battleDifActual});
       if(typeof window.setBattleDificultad==='function') window.setBattleDificultad(_battleDifActual);
       if(msgEl){msgEl.style.color='var(--verde)';msgEl.textContent='✅ Dificultad guardada';}
-      if(typeof registrarActividad==='function') registrarActividad('🏰 Dificultad Battle → '+_battleDifLabels[_battleDifActual]);
       setTimeout(()=>{if(msgEl)msgEl.textContent='';},3000);
     } catch(e){if(msgEl){msgEl.style.color='var(--rojo)';msgEl.textContent='❌ Error al guardar';}}
   };
