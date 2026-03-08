@@ -433,15 +433,7 @@
   let _freezeDur  = FREEZE_DUR_DEFAULT;
   let _freezeUsos = FREEZE_USOS_DEFAULT;
 
-  // Cargar valores guardados de Firebase al iniciar
-  getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
-    if (snap.exists()) {
-      const d = snap.data();
-      if (d.duracion  != null) _freezeDur  = d.duracion;
-      if (d.usos      != null) _freezeUsos = d.usos;
-    }
-    _aplicarFreezeUI();
-  }).catch(() => _aplicarFreezeUI());
+  // (freeze config cargado en _ready)
 
   function _aplicarFreezeUI() {
     const slider = document.getElementById('freezeDurSlider');
@@ -476,6 +468,16 @@
       btn.style.borderColor = activo ? '#5599ff' : '#555';
       btn.style.color        = activo ? '#5599ff' : '#888';
     });
+
+    // Cargar config Freeze Run
+    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.duracion != null) _freezeDur  = d.duracion;
+        if (d.usos     != null) _freezeUsos = d.usos;
+      }
+      _aplicarFreezeUI();
+    }).catch(() => _aplicarFreezeUI());
   };
 
   window.guardarFreezeConfig = async function() {
