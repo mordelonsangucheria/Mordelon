@@ -426,14 +426,17 @@
   let _freezeUsos = FREEZE_USOS_DEFAULT;
 
   // Cargar valores guardados de Firebase al iniciar
-  getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+  {
+    const getDoc = window._fbGetDoc, doc = window._fbDoc, db = window._fbDB;
+    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
     if (snap.exists()) {
       const d = snap.data();
       if (d.duracion  != null) _freezeDur  = d.duracion;
       if (d.usos      != null) _freezeUsos = d.usos;
     }
     _aplicarFreezeUI();
-  }).catch(() => _aplicarFreezeUI());
+    }).catch(() => _aplicarFreezeUI());
+  }
 
   function _aplicarFreezeUI() {
     const slider = document.getElementById('freezeDurSlider');
