@@ -288,7 +288,15 @@
         <span>Récord: <strong id="tetrisHi" style="color:var(--naranja)">0</strong></span>
         <span>Nivel: <strong id="tetrisLevel" style="color:var(--verde)">1</strong></span>
       </div>
-      <canvas id="tetrisCanvas" width="200" height="400" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
+      
+  <!-- Sin fichas -->
+  <div id="tetrisSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="tetrisNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
+  <canvas id="tetrisCanvas" width="200" height="400" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
       <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
         <button onclick="window.tetrisPause()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 16px;font-size:1rem;cursor:pointer;">⏸</button>
         <button onclick="window.tetrisReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 16px;font-size:1rem;cursor:pointer;">↺</button>
@@ -311,7 +319,15 @@
         <span>Puntos: <strong id="snakeScore" style="color:var(--turquesa)">0</strong></span>
         <span>Récord: <strong id="snakeHi" style="color:var(--naranja)">0</strong></span>
       </div>
-      <canvas id="snakeCanvas" width="280" height="280" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
+      
+  <!-- Sin fichas -->
+  <div id="snakeSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="snakeNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
+  <canvas id="snakeCanvas" width="280" height="280" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
       <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
         <button onclick="window.snakeReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 16px;font-size:1rem;cursor:pointer;">↺</button>
       </div>
@@ -352,7 +368,15 @@
         <span>Puntos: <strong id="dinoScore" style="color:var(--turquesa)">0</strong></span>
         <span>Récord: <strong id="dinoHi" style="color:var(--naranja)">0</strong></span>
       </div>
-      <canvas id="dinoCanvas" width="320" height="160" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
+      
+  <!-- Sin fichas -->
+  <div id="dinoSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="dinoNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
+  <canvas id="dinoCanvas" width="320" height="160" style="display:block;margin:0 auto;border:2px solid var(--gris-light);border-radius:8px;background:#0a0a0a;touch-action:none;"></canvas>
       <div style="display:flex;justify-content:center;gap:10px;margin-top:10px;">
         <button onpointerdown="window.dinoJump()" style="background:var(--turquesa);border:none;color:#111;border-radius:14px;padding:12px 40px;font-family:'Righteous',cursive;font-size:1rem;letter-spacing:1px;cursor:pointer;">▲ SALTAR</button>
         <button onclick="window.dinoReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:12px 16px;font-size:1rem;cursor:pointer;">↺</button>
@@ -410,6 +434,14 @@
       </div>
     </div>
   </div>
+  
+  <!-- Sin fichas -->
+  <div id="invadersSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="invadersNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
   <canvas id="invadersCanvas" width="320" height="220" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
   <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
     <button onclick="window.invadersReset()" style="background:rgba(61,191,184,.1);color:var(--turquesa);border:1.5px solid rgba(61,191,184,.3);border-radius:8px;padding:6px 14px;font-size:0.72rem;font-weight:800;cursor:pointer;">↺ Reiniciar</button>
@@ -442,6 +474,14 @@
       </div>
     </div>
   </div>
+  
+  <!-- Sin fichas -->
+  <div id="runSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="runNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
   <canvas id="runCanvas" width="400" height="320" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
   <!-- Toast interno si no hay showToast global -->
   <div id="runToast" style="text-align:center;font-size:0.72rem;color:var(--turquesa);min-height:18px;margin-top:4px;opacity:0;transition:opacity .3s;"></div>
@@ -473,6 +513,14 @@
       <div><div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Nivel</div><div id="impactLevel" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--turquesa);">1</div></div>
     </div>
   </div>
+  
+  <!-- Sin fichas -->
+  <div id="impactSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="impactNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
+  </div>
   <canvas id="impactCanvas" width="320" height="220" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#0a0a0a;max-width:100%;touch-action:none;"></canvas>
   <div id="impactToast" style="text-align:center;font-size:0.72rem;color:var(--turquesa);min-height:18px;margin-top:4px;opacity:0;transition:opacity .3s;"></div>
   <div style="display:flex;justify-content:center;gap:8px;margin-top:8px;">
@@ -494,6 +542,14 @@
       <div><div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Vidas</div><div id="battleLives" style="font-size:0.9rem;">❤️❤️❤️</div></div>
       <div><div style="font-size:0.58rem;color:#555;text-transform:uppercase;">Nivel</div><div id="battleLevel" style="font-family:'Righteous',cursive;font-size:1.1rem;color:var(--turquesa);">1</div></div>
     </div>
+  </div>
+  
+  <!-- Sin fichas -->
+  <div id="battleSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="battleNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
   </div>
   <canvas id="battleCanvas" width="320" height="240" style="display:block;margin:0 auto;border-radius:10px;border:1.5px solid #222;background:#1a1a1a;max-width:100%;touch-action:none;"></canvas>
   <div id="battleToast" style="text-align:center;font-size:0.72rem;color:var(--turquesa);min-height:18px;margin-top:4px;opacity:0;transition:opacity .3s;"></div>
@@ -521,6 +577,14 @@
     <span>Récord: <strong id="bbHi" style="color:var(--naranja)">0</strong></span>
     <span>Nivel: <strong id="bbLevel" style="color:var(--verde)">1</strong></span>
     <span id="bbLives" style="color:var(--rojo)">❤️❤️❤️</span>
+  </div>
+  
+  <!-- Sin fichas -->
+  <div id="blockbusterSinFichas" style="display:none;text-align:center;padding:20px 16px;background:var(--gris-dark);border-radius:12px;margin:8px 0;">
+    <div style="font-size:1.4rem;margin-bottom:4px;">🎟️</div>
+    <div style="font-size:0.82rem;color:#aaa;font-weight:800;margin-bottom:4px;">Sin fichas</div>
+    <div style="font-size:0.68rem;color:#555;margin-bottom:8px;">Pedile fichas a Mordelón. Usuario: <strong id="blockbusterNombreSinFichas" style="color:var(--turquesa)"></strong></div>
+    <div style="font-size:0.62rem;color:#3a3a3a;">Pack: 5 fichas = $500</div>
   </div>
   <canvas id="blockCanvas" width="320" height="420" style="display:block;margin:0 auto;border:1.5px solid var(--gris-light);border-radius:10px;background:#0a0a0a;touch-action:none;max-width:100%;"></canvas>
   <div style="display:flex;justify-content:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
