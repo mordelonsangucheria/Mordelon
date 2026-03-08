@@ -428,17 +428,16 @@
 
   <!-- 🕹️ ACTIVAR / DESACTIVAR JUEGOS INDIVIDUALES -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
-    <div class="sec-header" onclick="toggleSec('sec-juegos')" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;cursor:pointer;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
       <div>
-        <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ <span class="sec-arrow" id="arr-sec-juegos">▾</span></div>
+        <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ</div>
         <div style="font-size:0.72rem;color:#666;">Activá o desactivá cada juego individualmente.</div>
       </div>
-      <button onclick="event.stopPropagation();window.toggleTodosJuegos()" id="btnToggleTodosJuegos"
+      <button onclick="window.toggleTodosJuegos()" id="btnToggleTodosJuegos"
         style="padding:6px 14px;border-radius:20px;border:1.5px solid #444;background:transparent;color:#888;cursor:pointer;font-family:'Righteous',cursive;font-size:0.7rem;letter-spacing:1px;transition:all .2s;">
         APAGAR TODOS
       </button>
     </div>
-    <div id="sec-juegos">
     <div id="juegosToggleGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
 
     <!-- 🦕 DIFICULTAD DINO -->
@@ -593,47 +592,6 @@
       </div>
       <div id="battleDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
-
-    <!-- 🐍 DIFICULTAD SNAKE -->
-    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🐍 DIFICULTAD — SNAKE</div>
-        <div id="snakeDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button id="snkDif0" onclick="window.selSnakeDif(0)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😊<br>Fácil</button>
-        <button id="snkDif1" onclick="window.selSnakeDif(1)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">🙂<br>Normal</button>
-        <button id="snkDif2" onclick="window.selSnakeDif(2)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😐<br>Medio</button>
-        <button id="snkDif3" onclick="window.selSnakeDif(3)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😬<br>Alto</button>
-        <button id="snkDif4" onclick="window.selSnakeDif(4)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">💀<br>Extremo</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="window.guardarSnakeDif()" style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">💾 Guardar</button>
-        <button onclick="window.resetSnakeDif()" style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">↺ Reset</button>
-      </div>
-      <div id="snakeDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
-    </div>
-
-    <!-- 🥪 DIFICULTAD BLOCKBURGUER -->
-    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🥪 DIFICULTAD — BLOCKBURGUER</div>
-        <div id="bbDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;">
-        <button id="bbkDif0" onclick="window.selBlockbusterDif(0)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😊<br>Fácil</button>
-        <button id="bbkDif1" onclick="window.selBlockbusterDif(1)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">🙂<br>Normal</button>
-        <button id="bbkDif2" onclick="window.selBlockbusterDif(2)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😐<br>Medio</button>
-        <button id="bbkDif3" onclick="window.selBlockbusterDif(3)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😬<br>Alto</button>
-        <button id="bbkDif4" onclick="window.selBlockbusterDif(4)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">💀<br>Extremo</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="window.guardarBlockbusterDif()" style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">💾 Guardar</button>
-        <button onclick="window.resetBlockbusterDif()" style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">↺ Reset</button>
-      </div>
-      <div id="bbDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
-    </div>
-    </div><!-- /sec-juegos -->
   </div>
 
   <!-- 🎮 RECOMPENSA POR JUEGO -->
@@ -643,13 +601,12 @@
   
   <!-- 🏆 LEADERBOARD -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
-    <div class="sec-header" onclick="toggleSec('sec-leaderboard')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div>
-        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);">🏆 LEADERBOARD <span class="sec-arrow" id="arr-sec-leaderboard">▾</span></div>
+        <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);">🏆 LEADERBOARD</div>
         <p style="font-size:0.72rem;color:#666;margin:4px 0 0;">Reseteá el ranking de cada juego individualmente.</p>
       </div>
     </div>
-    <div id="sec-leaderboard" class="sec-collapsible">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
       <button onclick="window.resetLeaderboard('tetris')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🧱 Tetris</button>
       <button onclick="window.resetLeaderboard('snake')"    style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🐍 Snake</button>
@@ -661,16 +618,13 @@
       <button onclick="window.resetLeaderboard('run')"      style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏃 Run</button>
       <button onclick="window.resetLeaderboard('impact')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🚀 Impact</button>
       <button onclick="window.resetLeaderboard('battle')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏰 Battle</button>
-      <button onclick="window.resetLeaderboard('blockbuster')" style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🥪 BlockBurguer</button>
     </div>
     <div id="lbResetMsg" style="font-size:0.7rem;min-height:14px;text-align:center;"></div>
-    </div><!-- /sec-leaderboard -->
   </div>
 
 <!-- 🎰 FICHAS DE SLOTS -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
-    <div class="sec-header" onclick="toggleSec('sec-fichas')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS <span class="sec-arrow" id="arr-sec-fichas">▾</span></div>
-    <div id="sec-fichas">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
     <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Buscá un usuario por nombre y cargale fichas. Los nombres están en mayúsculas.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;">
@@ -702,15 +656,13 @@
     </div>
     <div id="fichasMensaje" style="font-size:0.75rem;margin-top:10px;min-height:18px;"></div>
     <button onclick="window.verTodosUsuariosSlots()" style="background:transparent;border:none;color:#555;font-size:0.68rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Ver todos los usuarios</button>
-    </div><!-- /sec-fichas -->
   </div>
 
   <!-- 🔥 TRAGALLAMA — JACKPOT & STATS -->
   <div style="background:var(--gris-dark);border:2px solid #FFB800;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 0 20px rgba(255,184,0,0.08);">
-    <div class="sec-header" onclick="toggleSec('sec-tragallama')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-      🔥 TRAGALLAMA — CONTROL JACKPOT <span class="sec-arrow" id="arr-sec-tragallama">▾</span>
+    <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      🔥 TRAGALLAMA — CONTROL JACKPOT
     </div>
-    <div id="sec-tragallama">
 
     <!-- Stats en tiempo real -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
@@ -762,19 +714,17 @@
       </button>
       <div id="tlLimpiezaMsg" style="font-size:0.68rem;min-height:14px;text-align:center;color:#555;"></div>
     </div>
-    </div><!-- /sec-tragallama -->
   </div>
 
 
   <div id="recompensaJuegoPanel" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <div class="sec-header" onclick="toggleSec('sec-recompensa')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO <span class="sec-arrow" id="arr-sec-recompensa">▾</span></div>
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;">🔥 RECOMPENSA POR JUEGO</div>
       <div style="display:flex;align-items:center;gap:8px;">
         <span id="recompensaEstadoBadge" style="font-size:0.7rem;font-weight:800;padding:3px 10px;border-radius:20px;background:rgba(61,191,184,.15);color:var(--turquesa);border:1px solid var(--turquesa);">ACTIVO</span>
         <button onclick="window.toggleRecompensa()" id="btnToggleRecompensa" style="background:transparent;border:1.5px solid #444;color:#aaa;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:0.75rem;">⏸ Pausar</button>
       </div>
     </div>
-    <div id="sec-recompensa">
     <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Configurá la recompensa para cada juego. El cliente recibe un cupón único al superar el puntaje.</p>
 
     <!-- SELECTOR DE JUEGO -->
@@ -789,7 +739,6 @@
       <button onclick="window.selJuegoRecompensa('run')" id="rtab-run" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🏃 Run</button>
       <button onclick="window.selJuegoRecompensa('impact')" id="rtab-impact" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🚀 Impact</button>
       <button onclick="window.selJuegoRecompensa('battle')" id="rtab-battle" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🏰 Battle</button>
-      <button onclick="window.selJuegoRecompensa('blockbuster')" id="rtab-blockbuster" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🥪 BlockBurguer</button>
     </div>
 
     <!-- CONFIG DEL JUEGO SELECCIONADO -->
@@ -836,7 +785,6 @@
       <div style="font-size:0.68rem;color:#555;font-weight:800;letter-spacing:1px;margin-bottom:10px;">ESTADO DE TODOS LOS JUEGOS</div>
       <div id="recompensaResumenJuegos" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
     </div>
-    </div><!-- /sec-recompensa -->
   </div>
 
   <!-- CUPONES ACTIVOS -->
@@ -844,8 +792,7 @@
 
   <!-- CREAR CUPÓN -->
   <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
-    <div class="sec-header" onclick="toggleSec('sec-cupon')" style="cursor:pointer;font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN <span class="sec-arrow" id="arr-sec-cupon">▾</span></div>
-    <div id="sec-cupon">
+    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN</div>
 
     <div style="margin-bottom:10px;">
       <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">CÓDIGO</div>
@@ -898,7 +845,6 @@
     </div>
 
     <button class="btn btn-turquesa" onclick="window.crearCupon()" style="width:100%;">🎟️ Crear cupón</button>
-    </div><!-- /sec-cupon -->
   </div>
 </div>
 
@@ -1141,6 +1087,21 @@
 </div>
 
 <script src="js/vendedor-pin.js"></script>
+<script>
+  // Soporte teclado físico para el PIN del vendedor
+  document.addEventListener('keydown', function(e) {
+    const overlay = document.getElementById('pinOverlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+      pinPress(e.key);
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault();
+      pinBorrar();
+    }
+  });
+</script>
 
 <script type="module" src="js/vendedor-app.js"></script>
 <script src="js/vendedor-herramientas.js"></script>
@@ -1148,32 +1109,6 @@
 <script src="js/vendedor-cupones.js"></script>
 <script src="js/vendedor-juegos-config.js"></script>
 <script src="js/vendedor-sw-register.js"></script>
-
-
-<style>
-.sec-arrow { font-size:0.8rem; margin-left:6px; transition: transform .25s; display:inline-block; }
-.sec-arrow.collapsed { transform: rotate(-90deg); }
-.sec-collapsible { overflow:hidden; transition: max-height .3s ease, opacity .2s ease; max-height:4000px; opacity:1; }
-.sec-collapsible.collapsed { max-height:0 !important; opacity:0; }
-</style>
-<script>
-(function(){
-  // Añadir clase a todos los contenidos colapsables
-  ['sec-juegos','sec-leaderboard','sec-fichas','sec-tragallama','sec-recompensa','sec-cupon'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.classList.add('sec-collapsible','collapsed');
-    var arr = document.getElementById('arr-' + id);
-    if(arr) arr.classList.add('collapsed');
-  });
-})();
-window.toggleSec = function(id) {
-  var el = document.getElementById(id);
-  var arr = document.getElementById('arr-' + id);
-  if(!el) return;
-  var collapsed = el.classList.toggle('collapsed');
-  if(arr) arr.classList.toggle('collapsed', collapsed);
-};
-</script>
 
 </body>
 </html>
