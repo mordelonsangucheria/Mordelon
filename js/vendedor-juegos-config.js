@@ -457,6 +457,7 @@
   };
 
   window.selFreezeUsos = function(usos) {
+    const db = window._fbDB, doc = window._fbDoc, getDoc = window._fbGetDoc;
     _freezeUsos = usos;
     const label = document.getElementById('freezeUsosLabel');
     if (label) label.textContent = usos === 0 ? '∞' : usos + '×';
