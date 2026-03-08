@@ -876,7 +876,7 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
   set: (v) => { juegoActualRecompensa = v; }
 });
 
-const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run' };
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run', impact: '🚀 Impact', battle: '🏰 Battle City' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
 // Mostrar todos los botones de juegos por defecto (Firebase los oculta si corresponde)
@@ -1033,10 +1033,15 @@ onSnapshot(doc(db, 'config', 'runDificultad'), (snap) => {
   }
 });
 
-// ── DIFICULTAD IMPACT desde Firebase ───────────────────────────────────────
 onSnapshot(doc(db, 'config', 'impactDificultad'), (snap) => {
   if (snap.exists() && typeof window.setImpactDificultad === 'function') {
     window.setImpactDificultad(snap.data().valor ?? 1);
+  }
+});
+
+onSnapshot(doc(db, 'config', 'battleDificultad'), (snap) => {
+  if (snap.exists() && typeof window.setBattleDificultad === 'function') {
+    window.setBattleDificultad(snap.data().valor ?? 1);
   }
 });
 
@@ -1078,7 +1083,9 @@ function actualizarBarraRecompensa() {
     minas:  parseInt(localStorage.getItem('minasHiC') || '0'),
     invaders: parseInt(localStorage.getItem('invadersHiC') || '0'),
     slots:  parseInt(localStorage.getItem('slotsHiC') || '0'),
-    run:    parseInt(localStorage.getItem('runHiC') || '0')
+    run:    parseInt(localStorage.getItem('runHiC') || '0'),
+    impact: parseInt(localStorage.getItem('impactHiC') || '0'),
+    battle: parseInt(localStorage.getItem('battleHiC') || '0')
   };
   const puntosActuales = records[juego] || 0;
 

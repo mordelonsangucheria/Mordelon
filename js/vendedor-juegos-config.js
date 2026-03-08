@@ -26,6 +26,7 @@
     { id: 'slots',    label: 'Slots',    emoji: '🎰' },
     { id: 'run',      label: 'Mordelón Run', emoji: '🏃' },
     { id: 'impact',   label: 'Impact',       emoji: '🚀' },
+    { id: 'battle',   label: 'Battle City',  emoji: '🏰' },
   ];
 
   let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
@@ -366,6 +367,13 @@
       window.selRunDif(val);
     }).catch(() => {});
 
+    // Cargar dificultad Battle
+    getDoc(doc(db, 'config', 'battleDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _battleDifActual = val;
+      window.selBattleDif(val);
+    }).catch(() => {});
+
     // Cargar config Freeze Run
     getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
       if (snap.exists()) {
@@ -543,6 +551,39 @@
     window.selImpactDif(1);
     await window.guardarImpactDif();
   };
+
+
+  // ── DIFICULTAD BATTLE ─────────────────────────────────────────────────────
+  const _battleDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
+  const _battleDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+  let _battleDifActual = 1;
+
+  window.selBattleDif = function(nivel) {
+    _battleDifActual = nivel;
+    const label = document.getElementById('battleDifLabel');
+    if (label) { label.textContent = _battleDifLabels[nivel]; label.style.color = _battleDifColors[nivel]; }
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('batDif' + i);
+      if (!btn) continue;
+      btn.style.borderColor = i===nivel ? _battleDifColors[nivel] : '#444';
+      btn.style.background  = i===nivel ? 'rgba(61,191,184,.15)' : 'transparent';
+      btn.style.color       = i===nivel ? _battleDifColors[nivel] : '#666';
+    }
+  };
+
+  window.guardarBattleDif = async function() {
+    const db=window._fbDB, doc=window._fbDoc, setDoc=window._fbSetDoc;
+    const msgEl=document.getElementById('battleDifMsg');
+    try {
+      await setDoc(doc(db,'config','battleDificultad'),{valor:_battleDifActual});
+      if(typeof window.setBattleDificultad==='function') window.setBattleDificultad(_battleDifActual);
+      if(msgEl){msgEl.style.color='var(--verde)';msgEl.textContent='✅ Dificultad guardada';}
+      if(typeof registrarActividad==='function') registrarActividad('🏰 Dificultad Battle → '+_battleDifLabels[_battleDifActual]);
+      setTimeout(()=>{if(msgEl)msgEl.textContent='';},3000);
+    } catch(e){if(msgEl){msgEl.style.color='var(--rojo)';msgEl.textContent='❌ Error al guardar';}}
+  };
+
+  window.resetBattleDif = async function() { window.selBattleDif(1); await window.guardarBattleDif(); };
 
 
 })();

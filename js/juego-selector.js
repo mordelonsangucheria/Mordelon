@@ -77,7 +77,7 @@ async function _iniciarJuegoConFichas(juego, initFn) {
 }
 
 window.elegirJuego = function(juego) {
-  var juegos = ['tetris','snake','2048','dino','minas','invaders','slots','run','impact'];
+  var juegos = ['tetris','snake','2048','dino','minas','invaders','slots','run','impact','battle'];
   juegos.forEach(function(j) {
     var el = document.getElementById('juego' + j.charAt(0).toUpperCase() + j.slice(1));
     if(el) el.style.display = 'none';
@@ -99,6 +99,7 @@ window.elegirJuego = function(juego) {
   if(juego==='slots')   window.slotsInit();
   if(juego==='run')     _iniciarJuegoConFichas('run', function() { window.runInit(); });
   if(juego==='impact')  _iniciarJuegoConFichas('impact', function() { window.impactInit(); });
+  if(juego==='battle')  _iniciarJuegoConFichas('battle', function() { window.battleInit(); });
 
   // Actualizar sistema de recompensa para el juego seleccionado
   window.juegoActualRecompensa = juego;
