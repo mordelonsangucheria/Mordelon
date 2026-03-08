@@ -513,6 +513,9 @@
     if(!canvas){console.error('[runInit] #runCanvas no encontrado');return;}
     ctx=canvas.getContext('2d');
     hiScore=parseInt(localStorage.getItem('runHiC')||'0');
+    // Cargar config freeze si fue seteada por el vendedor antes del init
+    // (window.setRunFreezeConfig ya pudo haber sido llamado por vendedor-juegos-config.js)
+    _resetFreezeUsos();
     document.removeEventListener('keydown',onKD);
     document.removeEventListener('keyup',onKU);
     canvas.removeEventListener('touchstart',onTS);
@@ -521,24 +524,7 @@
     document.addEventListener('keyup',onKU);
     canvas.addEventListener('touchstart',onTS,{passive:true});
     canvas.addEventListener('touchend',onTE);
-    // Leer config freeze desde Firebase ANTES de iniciar el juego
-    (function _cargarFreezeDeFirebase() {
-      const db=window._fbDB, doc=window._fbDoc, getDoc=window._fbGetDoc;
-      if (!db || !doc || !getDoc) { setTimeout(_cargarFreezeDeFirebase, 100); return; }
-      getDoc(doc(db, 'config', 'runFreezeConfig')).then(function(snap) {
-        if (snap.exists()) {
-          var d = snap.data();
-          if (d.duracion != null) FREEZE_DUR  = d.duracion;
-          if (d.usos     != null) FREEZE_USOS = d.usos;
-        }
-        _resetFreezeUsos();
-        _actualizarBtnFreeze();
-        window.runReset();
-      }).catch(function() {
-        _resetFreezeUsos();
-        window.runReset();
-      });
-    })();
+    window.runReset();
   };
 
   Object.defineProperty(window,'runRunning',{get:()=>estado==='jugando',configurable:true,enumerable:true});
