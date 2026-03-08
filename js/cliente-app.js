@@ -888,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run', 'impact', 'battle'];
 
 // ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
 // fichasRequeridas: { tetris: true/false, snake: true/false, ... }
