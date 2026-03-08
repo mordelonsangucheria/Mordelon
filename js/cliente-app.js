@@ -1008,6 +1008,31 @@ onSnapshot(doc(db, 'config', 'dinoDificultad'), (snap) => {
   }
 });
 
+// ── CONFIG FREEZE RUN desde Firebase ───────────────────────────────────────
+onSnapshot(doc(db, 'config', 'runFreezeConfig'), (snap) => {
+  if (snap.exists() && typeof window.setRunFreezeConfig === 'function') {
+    const d = snap.data();
+    window.setRunFreezeConfig(
+      d.duracion != null ? d.duracion : 1500,
+      d.usos     != null ? d.usos     : 0
+    );
+  }
+});
+
+// ── DIFICULTAD INVADERS desde Firebase ─────────────────────────────────────
+onSnapshot(doc(db, 'config', 'invadersDificultad'), (snap) => {
+  if (snap.exists() && typeof window.setInvadersDificultad === 'function') {
+    window.setInvadersDificultad(snap.data().valor ?? 1);
+  }
+});
+
+// ── DIFICULTAD RUN desde Firebase ──────────────────────────────────────────
+onSnapshot(doc(db, 'config', 'runDificultad'), (snap) => {
+  if (snap.exists() && typeof window.setRunDificultad === 'function') {
+    window.setRunDificultad(snap.data().valor ?? 1);
+  }
+});
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
