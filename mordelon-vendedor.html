@@ -463,6 +463,25 @@
         </button>
       </div>
       <div id="dinoDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    <!-- 🚀 DIFICULTAD IMPACT -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🚀 DIFICULTAD — IMPACT</div>
+        <div id="impactDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="impDif0" onclick="window.selImpactDif(0)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😊<br>Fácil</button>
+        <button id="impDif1" onclick="window.selImpactDif(1)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">🙂<br>Normal</button>
+        <button id="impDif2" onclick="window.selImpactDif(2)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😐<br>Medio</button>
+        <button id="impDif3" onclick="window.selImpactDif(3)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😬<br>Alto</button>
+        <button id="impDif4" onclick="window.selImpactDif(4)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">💀<br>Extremo</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarImpactDif()" style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">💾 Guardar</button>
+        <button onclick="window.resetImpactDif()"   style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">↺ Reset</button>
+      </div>
+      <div id="impactDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    </div>
     </div>
 
     <!-- 🏃 DIFICULTAD RUN -->
