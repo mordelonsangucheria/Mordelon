@@ -41,6 +41,7 @@
   window.setRunFreezeConfig = function(dur, usos) {
     FREEZE_DUR  = dur  != null ? dur  : 1500;
     FREEZE_USOS = usos != null ? usos : 0;
+    _resetFreezeUsos();
     _actualizarBtnFreeze();
   };
 
@@ -524,16 +525,16 @@
     (function _cargarFreezeDeFirebase() {
       const db=window._fbDB, doc=window._fbDoc, getDoc=window._fbGetDoc;
       if (!db || !doc || !getDoc) { setTimeout(_cargarFreezeDeFirebase, 100); return; }
-      getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+      getDoc(doc(db, 'config', 'runFreezeConfig')).then(function(snap) {
         if (snap.exists()) {
-          const d = snap.data();
+          var d = snap.data();
           if (d.duracion != null) FREEZE_DUR  = d.duracion;
           if (d.usos     != null) FREEZE_USOS = d.usos;
         }
         _resetFreezeUsos();
         _actualizarBtnFreeze();
         window.runReset();
-      }).catch(() => {
+      }).catch(function() {
         _resetFreezeUsos();
         window.runReset();
       });
