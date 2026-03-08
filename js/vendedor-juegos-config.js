@@ -25,6 +25,7 @@
     { id: 'invaders', label: 'Invaders', emoji: '👾' },
     { id: 'slots',    label: 'Slots',    emoji: '🎰' },
     { id: 'run',      label: 'Mordelón Run', emoji: '🏃' },
+    { id: 'impact',   label: 'Impact',       emoji: '🚀' },
   ];
 
   let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
@@ -351,6 +352,13 @@
       window.selInvadersDif(val);
     }).catch(() => {});
 
+    // Cargar dificultad Impact actual
+    getDoc(doc(db, 'config', 'impactDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _impactDifActual = val;
+      window.selImpactDif(val);
+    }).catch(() => {});
+
     // Cargar dificultad Run actual
     getDoc(doc(db, 'config', 'runDificultad')).then(snap => {
       const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
@@ -384,7 +392,6 @@
   };
 
   window.guardarRunDif = async function() {
-    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const msgEl = document.getElementById('runDifMsg');
     try {
       await setDoc(doc(db, 'config', 'runDificultad'), { valor: _runDifActual });
@@ -398,7 +405,6 @@
   };
 
   window.resetRunDif = async function() {
-    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     _runDifActual = 1;
     window.selRunDif(1);
     const msgEl = document.getElementById('runDifMsg');
@@ -419,20 +425,15 @@
   let _freezeDur  = FREEZE_DUR_DEFAULT;
   let _freezeUsos = FREEZE_USOS_DEFAULT;
 
-  // Cargar valores guardados de Firebase al iniciar (dentro de _ready via llamada diferida)
-  function _cargarFreezeConfig() {
-    const db = window._fbDB, doc = window._fbDoc, getDoc = window._fbGetDoc;
-    if (!db || !doc || !getDoc) { setTimeout(_cargarFreezeConfig, 100); return; }
-    getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.duracion  != null) _freezeDur  = d.duracion;
-        if (d.usos      != null) _freezeUsos = d.usos;
-      }
-      _aplicarFreezeUI();
-    }).catch(() => _aplicarFreezeUI());
-  }
-  _cargarFreezeConfig();
+  // Cargar valores guardados de Firebase al iniciar
+  getDoc(doc(db, 'config', 'runFreezeConfig')).then(snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.duracion  != null) _freezeDur  = d.duracion;
+      if (d.usos      != null) _freezeUsos = d.usos;
+    }
+    _aplicarFreezeUI();
+  }).catch(() => _aplicarFreezeUI());
 
   function _aplicarFreezeUI() {
     const slider = document.getElementById('freezeDurSlider');
@@ -470,7 +471,6 @@
   };
 
   window.guardarFreezeConfig = async function() {
-    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const msgEl = document.getElementById('freezeConfigMsg');
     try {
       await setDoc(doc(db, 'config', 'runFreezeConfig'), { duracion: _freezeDur, usos: _freezeUsos });
@@ -483,7 +483,6 @@
   };
 
   window.resetFreezeConfig = async function() {
-    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     _freezeDur  = FREEZE_DUR_DEFAULT;
     _freezeUsos = FREEZE_USOS_DEFAULT;
     _aplicarFreezeUI();
@@ -499,5 +498,49 @@
 
   // Render inicial con defaults (sin esperar Firebase)
   renderJuegosToggles();
+
+  // ── DIFICULTAD IMPACT ─────────────────────────────────────────────────────
+  const _impactDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
+  const _impactDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+  let _impactDifActual = 1;
+
+  window.selImpactDif = function(nivel) {
+    _impactDifActual = nivel;
+    const label = document.getElementById('impactDifLabel');
+    if (label) { label.textContent = _impactDifLabels[nivel]; label.style.color = _impactDifColors[nivel]; }
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('impDif' + i);
+      if (!btn) continue;
+      if (i === nivel) {
+        btn.style.borderColor = _impactDifColors[nivel];
+        btn.style.background  = 'rgba(61,191,184,.15)';
+        btn.style.color       = _impactDifColors[nivel];
+      } else {
+        btn.style.borderColor = '#444';
+        btn.style.background  = 'transparent';
+        btn.style.color       = '#666';
+      }
+    }
+  };
+
+  window.guardarImpactDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
+    const msgEl = document.getElementById('impactDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'impactDificultad'), { valor: _impactDifActual });
+      if (typeof window.setImpactDificultad === 'function') window.setImpactDificultad(_impactDifActual);
+      if (msgEl) { msgEl.style.color='var(--verde)'; msgEl.textContent='✅ Dificultad guardada'; }
+      if (typeof registrarActividad==='function') registrarActividad('🚀 Dificultad Impact → '+_impactDifLabels[_impactDifActual]);
+      setTimeout(()=>{ if(msgEl) msgEl.textContent=''; },3000);
+    } catch(e) {
+      if (msgEl) { msgEl.style.color='var(--rojo)'; msgEl.textContent='❌ Error al guardar'; }
+    }
+  };
+
+  window.resetImpactDif = async function() {
+    window.selImpactDif(1);
+    await window.guardarImpactDif();
+  };
+
 
 })();

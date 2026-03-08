@@ -1033,6 +1033,13 @@ onSnapshot(doc(db, 'config', 'runDificultad'), (snap) => {
   }
 });
 
+// ── DIFICULTAD IMPACT desde Firebase ───────────────────────────────────────
+onSnapshot(doc(db, 'config', 'impactDificultad'), (snap) => {
+  if (snap.exists() && typeof window.setImpactDificultad === 'function') {
+    window.setImpactDificultad(snap.data().valor ?? 1);
+  }
+});
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
