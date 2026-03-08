@@ -1,24 +1,37 @@
 // ===================== SELECTOR DE JUEGO =====================
 
+// Mostrar/ocultar cartel sinFichas por juego y actualizar nombre de usuario
+function _actualizarCartelSinFichas(juego, sinFichas) {
+  if (juego === 'slots') return; // Slots lo maneja internamente
+  const cartel  = document.getElementById(juego + 'SinFichas');
+  if (!cartel) return;
+  const nombreEl = document.getElementById(juego + 'NombreSinFichas');
+  if (nombreEl) {
+    const nombre = (typeof usuarioActual !== 'undefined' && usuarioActual?.nombre) || '';
+    nombreEl.textContent = nombre;
+  }
+  cartel.style.display = sinFichas ? 'block' : 'none';
+
+  // Ocultar el canvas y controles del juego cuando no hay fichas
+  const canvasIds = {
+    tetris: 'tetrisCanvas', snake: 'snakeCanvas', dino: 'dinoCanvas',
+    run: 'runCanvas', invaders: 'invadersCanvas', minas: 'minasCanvas',
+    impact: 'impactCanvas', battle: 'battleCanvas', blockbuster: 'blockCanvas',
+    '2048': 'canvas2048'
+  };
+  const canvasId = canvasIds[juego];
+  if (canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) canvas.style.display = sinFichas ? 'none' : '';
+  }
+}
+
 // Mostrar/ocultar banner de fichas según el juego
 function _actualizarBannerFichas(juego) {
-  let banner = document.getElementById('fichasJuegoBanner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'fichasJuegoBanner';
-    banner.style.cssText = 'padding:8px 12px;border-radius:10px;margin:6px 0;font-size:0.72rem;text-align:center;display:none;transition:all .2s;';
-    const zona = document.getElementById('zonaJuegos');
-    if (zona) {
-      // Insertar después del selector de juegos
-      const contenedores = zona.querySelectorAll('[id^="juego"]');
-      const primerJuego = contenedores.length ? contenedores[0] : null;
-      if (primerJuego) zona.insertBefore(banner, primerJuego);
-      else zona.appendChild(banner);
-    }
-  }
+  if (juego === 'slots') return; // Slots lo maneja internamente
 
   if (typeof window.juegoRequiereFichas !== 'function' || !window.juegoRequiereFichas(juego)) {
-    banner.style.display = 'none';
+    _actualizarCartelSinFichas(juego, false);
     return;
   }
 
@@ -26,23 +39,7 @@ function _actualizarBannerFichas(juego) {
     ? window.juegoFichasDesglose(juego)
     : { gratis: 0, compradas: 0, total: 0 };
 
-  if (juego === 'slots') {
-    banner.style.display = 'none'; // Slots tiene su propia UI de fichas
-    return;
-  }
-
-  banner.style.display = 'block';
-  if (desglose.total > 0) {
-    banner.style.background = 'rgba(61,191,184,.08)';
-    banner.style.border = '1px solid rgba(61,191,184,.2)';
-    banner.innerHTML = '🎟️ <span style="color:var(--turquesa);font-weight:800;">' + desglose.total + '</span> fichas disponibles'
-      + ' <span style="color:#555;">(' + desglose.gratis + ' gratis + ' + desglose.compradas + ' compradas)</span>';
-  } else {
-    banner.style.background = 'rgba(255,77,77,.08)';
-    banner.style.border = '1px solid rgba(255,77,77,.2)';
-    banner.innerHTML = '🎟️ <span style="color:var(--rojo);font-weight:800;">Sin fichas</span>'
-      + ' <span style="color:#555;">· 3 gratis por día · 5 fichas = $500</span>';
-  }
+  _actualizarCartelSinFichas(juego, desglose.total <= 0);
 }
 
 // Intentar iniciar un juego con fichas
@@ -69,11 +66,11 @@ async function _iniciarJuegoConFichas(juego, initFn) {
     }
   }
 
-  // Sin fichas — mostrar mensaje
+  // Sin fichas — mostrar cartel y toast
   if (typeof showToast === 'function') {
     showToast('🎟️ Sin fichas para ' + juego + '. 3 gratis por día o comprá 5 x $500');
   }
-  _actualizarBannerFichas(juego);
+  _actualizarCartelSinFichas(juego, true);
 }
 
 window.elegirJuego = function(juego) {
