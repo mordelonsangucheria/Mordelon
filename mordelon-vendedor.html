@@ -593,6 +593,46 @@
       </div>
       <div id="battleDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
+
+    <!-- 🐍 DIFICULTAD SNAKE -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🐍 DIFICULTAD — SNAKE</div>
+        <div id="snakeDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="snkDif0" onclick="window.selSnakeDif(0)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😊<br>Fácil</button>
+        <button id="snkDif1" onclick="window.selSnakeDif(1)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">🙂<br>Normal</button>
+        <button id="snkDif2" onclick="window.selSnakeDif(2)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😐<br>Medio</button>
+        <button id="snkDif3" onclick="window.selSnakeDif(3)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😬<br>Alto</button>
+        <button id="snkDif4" onclick="window.selSnakeDif(4)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">💀<br>Extremo</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarSnakeDif()" style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">💾 Guardar</button>
+        <button onclick="window.resetSnakeDif()" style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">↺ Reset</button>
+      </div>
+      <div id="snakeDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    </div>
+
+    <!-- 🥪 DIFICULTAD BLOCKBURGUER -->
+    <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-family:'Righteous',cursive;font-size:0.78rem;color:var(--turquesa);letter-spacing:1px;">🥪 DIFICULTAD — BLOCKBURGUER</div>
+        <div id="bbDifLabel" style="font-size:0.72rem;color:var(--turquesa);font-weight:800;">Normal</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button id="bbkDif0" onclick="window.selBlockbusterDif(0)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😊<br>Fácil</button>
+        <button id="bbkDif1" onclick="window.selBlockbusterDif(1)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid var(--turquesa);background:var(--gris-mid);color:var(--turquesa);font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">🙂<br>Normal</button>
+        <button id="bbkDif2" onclick="window.selBlockbusterDif(2)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😐<br>Medio</button>
+        <button id="bbkDif3" onclick="window.selBlockbusterDif(3)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">😬<br>Alto</button>
+        <button id="bbkDif4" onclick="window.selBlockbusterDif(4)" style="flex:1;padding:7px 2px;border-radius:9px;border:1.5px solid #555;background:var(--gris-mid);color:#888;font-family:'Righteous',cursive;font-size:0.62rem;cursor:pointer;transition:all .2s;">💀<br>Extremo</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window.guardarBlockbusterDif()" style="flex:1;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:8px;font-family:'Righteous',cursive;font-size:0.75rem;cursor:pointer;">💾 Guardar</button>
+        <button onclick="window.resetBlockbusterDif()" style="background:transparent;border:1px solid #444;color:#666;border-radius:10px;padding:8px 12px;font-size:0.73rem;cursor:pointer;">↺ Reset</button>
+      </div>
+      <div id="bbDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
+    </div>
     </div><!-- /sec-juegos -->
   </div>
 
@@ -621,6 +661,7 @@
       <button onclick="window.resetLeaderboard('run')"      style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏃 Run</button>
       <button onclick="window.resetLeaderboard('impact')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🚀 Impact</button>
       <button onclick="window.resetLeaderboard('battle')"   style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🏰 Battle</button>
+      <button onclick="window.resetLeaderboard('blockbuster')" style="background:var(--gris-mid);border:1px solid #333;color:#aaa;border-radius:10px;padding:9px 6px;font-size:0.72rem;cursor:pointer;font-weight:800;">🥪 BlockBurguer</button>
     </div>
     <div id="lbResetMsg" style="font-size:0.7rem;min-height:14px;text-align:center;"></div>
     </div><!-- /sec-leaderboard -->
@@ -748,6 +789,7 @@
       <button onclick="window.selJuegoRecompensa('run')" id="rtab-run" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🏃 Run</button>
       <button onclick="window.selJuegoRecompensa('impact')" id="rtab-impact" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🚀 Impact</button>
       <button onclick="window.selJuegoRecompensa('battle')" id="rtab-battle" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🏰 Battle</button>
+      <button onclick="window.selJuegoRecompensa('blockbuster')" id="rtab-blockbuster" style="flex:1;min-width:70px;padding:9px 8px;border-radius:10px;border:1.5px solid var(--gris-light);background:var(--gris-mid);color:#888;font-family:inherit;font-weight:800;font-size:0.72rem;cursor:pointer;transition:all .2s;">🥪 BlockBurguer</button>
     </div>
 
     <!-- CONFIG DEL JUEGO SELECCIONADO -->

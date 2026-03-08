@@ -248,6 +248,7 @@
         <button onclick="window.elegirJuego('run')" id="btnJuegoRun" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🏃 Run</button>
         <button onclick="window.elegirJuego('impact')" id="btnJuegoImpact" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🚀 Impact</button>
         <button onclick="window.elegirJuego('battle')" id="btnJuegoBattle" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🏰 Battle</button>
+        <button onclick="window.elegirJuego('blockbuster')" id="btnJuegoBlockbuster" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🥪 BlockBurguer</button>
       </div>
     </div>
 
@@ -511,6 +512,27 @@
     </div>
     <button ontouchstart="window.battleShoot();event.preventDefault()" onmousedown="window.battleShoot()" style="width:80px;height:92px;background:rgba(255,221,0,.18);color:#ffdd00;border:1.5px solid rgba(255,221,0,.45);border-radius:14px;font-size:2rem;cursor:pointer;touch-action:none;user-select:none;font-weight:bold;">🔫</button>
   </div>
+</div>
+
+
+<div id="juegoBlockbuster" style="display:none;">
+  <div style="text-align:center;margin-bottom:6px;font-size:0.7rem;color:#555;display:flex;justify-content:center;gap:18px;">
+    <span>Pts: <strong id="bbScore" style="color:var(--turquesa)">0</strong></span>
+    <span>Récord: <strong id="bbHi" style="color:var(--naranja)">0</strong></span>
+    <span>Nivel: <strong id="bbLevel" style="color:var(--verde)">1</strong></span>
+    <span id="bbLives" style="color:var(--rojo)">❤️❤️❤️</span>
+  </div>
+  <canvas id="blockCanvas" width="320" height="420" style="display:block;margin:0 auto;border:1.5px solid var(--gris-light);border-radius:10px;background:#0a0a0a;touch-action:none;max-width:100%;"></canvas>
+  <div style="display:flex;justify-content:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
+    <button onclick="window.blockbusterPause()" id="btnBBPausa" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 16px;font-size:0.85rem;cursor:pointer;">⏸ Pausa</button>
+    <button onclick="window.blockbusterReset()" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;padding:8px 16px;font-size:0.85rem;cursor:pointer;">↺</button>
+  </div>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:10px;">
+    <button onpointerdown="bbMovePaddleBtn(-24)" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:60px;height:50px;">◀</button>
+    <button onclick="if(typeof bbLaunch==='function'&&!bbLaunch())bbFireLaser()" style="background:var(--turquesa);border:none;color:#111;border-radius:10px;font-size:0.9rem;font-weight:800;cursor:pointer;flex:1;height:50px;">🥪 LANZAR / ⚡</button>
+    <button onpointerdown="bbMovePaddleBtn(24)" style="background:var(--gris-mid);border:1.5px solid var(--gris-light);color:var(--blanco);border-radius:10px;font-size:1.3rem;cursor:pointer;width:60px;height:50px;">▶</button>
+  </div>
+  <p style="text-align:center;font-size:0.62rem;color:#444;margin-top:6px;">Mové con el dedo · ← → mover · Tap lanzar · Tap de nuevo: láser ⚡</p>
 </div>
 
 <div id="juegoSlots" style="display:none;">
@@ -832,6 +854,7 @@
 <script src="js/juego-run.js"></script>
 <script src="js/juego-impact.js"></script>
 <script src="js/juego-battle.js"></script>
+<script src="js/juego-blockbuster.js"></script>
 <script src="js/juego-selector.js"></script>
 <script>
 // Carga config freeze de Firebase y la inyecta en juego-run apenas esté disponible
@@ -864,5 +887,11 @@
   </div>
 </div>
 
+<script>
+function bbMovePaddleBtn(delta) {
+  if (typeof bbPaddle === 'undefined' || !bbPaddle) return;
+  if (typeof bbMovePaddle === 'function') bbMovePaddle(bbPaddle.x + bbPaddle.w/2 + delta);
+}
+</script>
 </body>
 </html>
