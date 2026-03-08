@@ -27,6 +27,7 @@
     { id: 'run',      label: 'Mordelón Run', emoji: '🏃' },
     { id: 'impact',   label: 'Impact',       emoji: '🚀' },
     { id: 'battle',   label: 'Battle City',  emoji: '🏰' },
+    { id: 'blockbuster', label: 'BlockBurguer', emoji: '🥪' },
   ];
 
   let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
@@ -383,6 +384,20 @@
       }
       _aplicarFreezeUI();
     }).catch(() => _aplicarFreezeUI());
+
+    // Cargar dificultad Blockbuster actual
+    getDoc(doc(db, 'config', 'blockbusterDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _bbDifActual = val;
+      window.selBlockbusterDif(val);
+    }).catch(() => {});
+
+    // Cargar dificultad Snake actual
+    getDoc(doc(db, 'config', 'snakeDificultad')).then(snap => {
+      const val = snap.exists() ? (snap.data().valor ?? 1) : 1;
+      _snakeDifActual = val;
+      window.selSnakeDif(val);
+    }).catch(() => {});
   });
 
   // ── DIFICULTAD RUN ────────────────────────────────────────────────────────
@@ -588,5 +603,109 @@
 
   window.resetBattleDif = async function() { window.selBattleDif(1); await window.guardarBattleDif(); };
 
+  // ── DIFICULTAD SNAKE ─────────────────────────────────────────────────────
+  const _snakeDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
+  const _snakeDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+  let _snakeDifActual = 1;
+
+  window.selSnakeDif = function(nivel) {
+    _snakeDifActual = nivel;
+    const label = document.getElementById('snakeDifLabel');
+    if (label) { label.textContent = _snakeDifLabels[nivel]; label.style.color = _snakeDifColors[nivel]; }
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('snkDif' + i);
+      if (!btn) continue;
+      if (i === nivel) {
+        btn.style.borderColor = _snakeDifColors[nivel];
+        btn.style.color       = _snakeDifColors[nivel];
+        btn.style.background  = _snakeDifColors[nivel] + '22';
+      } else {
+        btn.style.borderColor = '#555';
+        btn.style.color       = '#888';
+        btn.style.background  = 'var(--gris-mid)';
+      }
+    }
+  };
+
+  window.guardarSnakeDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
+    const msgEl = document.getElementById('snakeDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'snakeDificultad'), { valor: _snakeDifActual });
+      if (typeof window.setSnakeDificultad === 'function') window.setSnakeDificultad(_snakeDifActual);
+      if (typeof registrarActividad === 'function') registrarActividad('🐍 Dificultad Snake → ' + _snakeDifLabels[_snakeDifActual]);
+      if (msgEl) { msgEl.textContent = '✅ Guardado'; msgEl.style.color = 'var(--verde)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error al guardar'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  // ── DIFICULTAD BLOCKBUSTER ──────────────────────────────────────────────────
+  const _bbDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
+  const _bbDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
+  let _bbDifActual = 1;
+
+  window.selBlockbusterDif = function(nivel) {
+    _bbDifActual = nivel;
+    const label = document.getElementById('bbDifLabel');
+    if (label) { label.textContent = _bbDifLabels[nivel]; label.style.color = _bbDifColors[nivel]; }
+    for (let i = 0; i < 5; i++) {
+      const btn = document.getElementById('bbkDif' + i);
+      if (!btn) continue;
+      if (i === nivel) {
+        btn.style.borderColor = _bbDifColors[nivel];
+        btn.style.color       = _bbDifColors[nivel];
+        btn.style.background  = _bbDifColors[nivel] + '22';
+      } else {
+        btn.style.borderColor = '#555';
+        btn.style.color       = '#888';
+        btn.style.background  = 'var(--gris-mid)';
+      }
+    }
+  };
+
+  window.guardarBlockbusterDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
+    const msgEl = document.getElementById('bbDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'blockbusterDificultad'), { valor: _bbDifActual });
+      if (typeof window.setBlockbusterDificultad === 'function') window.setBlockbusterDificultad(_bbDifActual);
+      if (typeof registrarActividad === 'function') registrarActividad('🥪 Dificultad BlockBurguer → ' + _bbDifLabels[_bbDifActual]);
+      if (msgEl) { msgEl.textContent = '✅ Guardado'; msgEl.style.color = 'var(--verde)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error al guardar'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  window.resetBlockbusterDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
+    _bbDifActual = 1; window.selBlockbusterDif(1);
+    const msgEl = document.getElementById('bbDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'blockbusterDificultad'), { valor: 1 });
+      if (typeof window.setBlockbusterDificultad === 'function') window.setBlockbusterDificultad(1);
+      if (msgEl) { msgEl.textContent = '↺ Reseteado a Normal'; msgEl.style.color = 'var(--turquesa)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
+
+  window.resetSnakeDif = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
+    _snakeDifActual = 1;
+    window.selSnakeDif(1);
+    const msgEl = document.getElementById('snakeDifMsg');
+    try {
+      await setDoc(doc(db, 'config', 'snakeDificultad'), { valor: 1 });
+      if (typeof window.setSnakeDificultad === 'function') window.setSnakeDificultad(1);
+      if (msgEl) { msgEl.textContent = '↺ Reseteado a Normal'; msgEl.style.color = 'var(--turquesa)'; }
+    } catch(e) {
+      if (msgEl) { msgEl.textContent = '❌ Error'; msgEl.style.color = 'var(--rojo)'; }
+    }
+    if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
+  };
 
 })();

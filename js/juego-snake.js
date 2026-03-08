@@ -3,6 +3,9 @@ const SC=document.getElementById('snakeCanvas');
 const SX=SC.getContext('2d');
 const SCELLS=14, SSIZ=Math.floor(280/SCELLS);
 let snake,sDir,sFood,sScore,sTimer,snakeRunning=false,sNext;
+let snakeDificultad = 1; // 0=Fácil 1=Normal 2=Medio 3=Alto 4=Extremo
+const SNAKE_SPEEDS = [220, 150, 100, 65, 38]; // ms por tick según dificultad
+const SNAKE_ACCEL  = [0,   0,   2,   3,  4];  // ms que se resta por cada 5 puntos
 let sHi=parseInt(localStorage.getItem('snakeHiC')||'0');
 
 function snakeInit(){
@@ -10,7 +13,7 @@ function snakeInit(){
   sDir={x:1,y:0};sNext={x:1,y:0};sScore=0;snakeRunning=true;
   document.getElementById('snakeScore').textContent=0;
   document.getElementById('snakeHi').textContent=sHi;
-  sPlaceFood();clearInterval(sTimer);sTimer=setInterval(sStep,150);
+  sPlaceFood();clearInterval(sTimer);sTimer=setInterval(sStep, SNAKE_SPEEDS[snakeDificultad]);
 }
 // ── Ingredientes que come la llama ──────────────────────────────────────────
 const S_FOODS = ['🥪','🧀','🥬','🍅','🥩','🧅','🥒','🍞','🥓'];
@@ -26,7 +29,17 @@ function sStep(){
   const head={x:snake[0].x+sDir.x,y:snake[0].y+sDir.y};
   if(head.x<0||head.x>=SCELLS||head.y<0||head.y>=SCELLS||snake.some(s=>s.x===head.x&&s.y===head.y)){snakeOver();return;}
   snake.unshift(head);
-  if(head.x===sFood.x&&head.y===sFood.y){sScore+=10;document.getElementById('snakeScore').textContent=sScore;if(sScore>sHi){sHi=sScore;localStorage.setItem('snakeHiC',sHi);document.getElementById('snakeHi').textContent=sHi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('snake',sHi);}sPlaceFood();}else snake.pop();
+  if(head.x===sFood.x&&head.y===sFood.y){
+    sScore+=10;document.getElementById('snakeScore').textContent=sScore;
+    if(sScore>sHi){sHi=sScore;localStorage.setItem('snakeHiC',sHi);document.getElementById('snakeHi').textContent=sHi;if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('snake',sHi);}
+    sPlaceFood();
+    // Acelerar levemente cada 5 puntos según dificultad
+    if(SNAKE_ACCEL[snakeDificultad]>0 && sScore%50===0){
+      clearInterval(sTimer);
+      const newSpeed = Math.max(25, SNAKE_SPEEDS[snakeDificultad] - Math.floor(sScore/50)*SNAKE_ACCEL[snakeDificultad]);
+      sTimer = setInterval(sStep, newSpeed);
+    }
+  } else snake.pop();
   sDraw();
 }
 // ── Sprite llama (escala 0.6 sobre grilla de 20px) ──────────────────────────
@@ -133,6 +146,9 @@ function snakeOver(){
   SX.fillStyle='#555'; SX.font='10px Nunito';
   SX.fillText('Tap o reiniciar para volver', SC.width/2, 158);
 }
+window.setSnakeDificultad = function(nivel) {
+  snakeDificultad = Math.max(0, Math.min(4, nivel));
+};
 window.snakeDir=function(dx,dy){if(!snakeRunning)return;if(dx!==0&&sDir.x!==0)return;if(dy!==0&&sDir.y!==0)return;sNext={x:dx,y:dy};};
 window.snakeInit=snakeInit;
 
