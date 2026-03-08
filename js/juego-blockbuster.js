@@ -20,7 +20,21 @@ const BB_SPEEDS     = [3.2, 4.0, 5.0, 6.2, 7.8];
 const BB_SPEED_INC  = [0.08, 0.12, 0.18, 0.25, 0.35]; // por nivel
 const BB_MULTI_BALL_PROB = [0, 0, 0.15, 0.25, 0.4];   // chance bloque da multiball
 
-window.setBlockbusterDificultad = function(v) { bbDificultad = Math.max(0, Math.min(4, v)); };
+window.setBlockbusterDificultad = function(v) {
+  bbDificultad = Math.max(0, Math.min(4, v));
+  // Solo ajustar bolas si el juego está corriendo activamente
+  if (!bbRunning || bbPaused || bbOver || bbEnEspera) return;
+  if (!bbBalls || !bbBalls.length) return;
+  const targetSpeed = BB_SPEEDS[bbDificultad];
+  bbBalls.forEach(b => {
+    if (b.stuck) return;
+    const cur = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+    if (cur < 0.1) return;
+    const factor = targetSpeed / cur;
+    b.vx *= factor;
+    b.vy *= factor;
+  });
+};
 
 // ── Ingredientes / bloques ───────────────────────────────────────────────────
 const BB_INGREDIENTES = [
@@ -73,7 +87,8 @@ function bbInit() {
   document.getElementById('bbLevel').textContent  = 1;
   document.getElementById('bbLives').textContent  = '❤️'.repeat(bbLives);
   bbMakePaddle();
-  bbMakeBall();
+  bbBalls = [];
+  bbMakeBall(true);
   bbMakeBlocks(1);
   bbPowerUps = [];
   cancelAnimationFrame(bbAnimFrame);
@@ -377,6 +392,7 @@ function bbDraw() {
   BBX.fillStyle = '#0a0a0a'; BBX.fillRect(0, 0, BBW, BBH);
 
   // Bloques
+  if (!bbBlocks) return;
   bbBlocks.forEach(b => {
     if (!b.alive) return;
     // Fondo del bloque con brillo según HP restante
@@ -419,6 +435,7 @@ function bbDraw() {
   });
 
   // Bolas
+  if (!bbBalls) return;
   bbBalls.forEach(ball => {
     if (ball.fire) {
       // Bola de fuego con halo

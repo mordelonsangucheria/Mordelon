@@ -319,6 +319,8 @@
     await window.guardarInvadersDif();
   };
 
+  let _bbDifActual = 1;
+
   // ── Inicialización vía Firebase ──────────────────────────────────────────
   _ready(function() {
     const db = window._fbDB, doc = window._fbDoc;
@@ -644,7 +646,6 @@
   // ── DIFICULTAD BLOCKBUSTER ──────────────────────────────────────────────────
   const _bbDifLabels = ['😊 Fácil', '🙂 Normal', '😐 Medio', '😬 Alto', '💀 Extremo'];
   const _bbDifColors = ['var(--verde)', 'var(--turquesa)', 'var(--naranja)', '#FF6B35', 'var(--rojo)'];
-  let _bbDifActual = 1;
 
   window.selBlockbusterDif = function(nivel) {
     _bbDifActual = nivel;
@@ -668,10 +669,11 @@
   window.guardarBlockbusterDif = async function() {
     const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc;
     const msgEl = document.getElementById('bbDifMsg');
+    const valorFinal = (typeof _bbDifActual === 'number' && !isNaN(_bbDifActual)) ? _bbDifActual : 1;
     try {
-      await setDoc(doc(db, 'config', 'blockbusterDificultad'), { valor: _bbDifActual });
+      await setDoc(doc(db, 'config', 'blockbusterDificultad'), { valor: valorFinal });
       if (typeof window.setBlockbusterDificultad === 'function') window.setBlockbusterDificultad(_bbDifActual);
-      if (typeof registrarActividad === 'function') registrarActividad('🥪 Dificultad BlockBurguer → ' + _bbDifLabels[_bbDifActual]);
+      if (typeof registrarActividad === 'function') registrarActividad('🥪 Dificultad BlockBurguer → ' + _bbDifLabels[valorFinal]);
       if (msgEl) { msgEl.textContent = '✅ Guardado'; msgEl.style.color = 'var(--verde)'; }
     } catch(e) {
       if (msgEl) { msgEl.textContent = '❌ Error al guardar'; msgEl.style.color = 'var(--rojo)'; }
