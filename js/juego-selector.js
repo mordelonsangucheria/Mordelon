@@ -12,18 +12,6 @@ function _actualizarCartelSinFichas(juego, sinFichas) {
   }
   cartel.style.display = sinFichas ? 'block' : 'none';
 
-  // Ocultar el canvas y controles del juego cuando no hay fichas
-  const canvasIds = {
-    tetris: 'tetrisCanvas', snake: 'snakeCanvas', dino: 'dinoCanvas',
-    run: 'runCanvas', invaders: 'invadersCanvas', minas: 'minasCanvas',
-    impact: 'impactCanvas', battle: 'battleCanvas', blockbuster: 'blockCanvas',
-    '2048': 'canvas2048'
-  };
-  const canvasId = canvasIds[juego];
-  if (canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (canvas) canvas.style.display = sinFichas ? 'none' : '';
-  }
 }
 
 // Mostrar/ocultar banner de fichas según el juego
