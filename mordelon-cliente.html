@@ -258,6 +258,10 @@
         <button onclick="window.elegirJuego('battle')" id="btnJuegoBattle" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🏰 Battle</button>
         <button onclick="window.elegirJuego('blockbuster')" id="btnJuegoBlockbuster" style="background:var(--gris-mid);border:2px solid var(--gris-light);color:var(--blanco);border-radius:20px;padding:7px 16px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🥪 BlockBurguer</button>
       </div>
+      <!-- Botón ranking semanal -->
+      <div style="margin-top:10px;">
+        <button id="btnRankingSemanal" onclick="window._abrirRankingActual()" style="background:rgba(61,191,184,0.08);border:1.5px solid var(--turquesa);color:var(--turquesa);border-radius:20px;padding:7px 20px;font-family:'Righteous',cursive;font-size:0.75rem;letter-spacing:1px;cursor:pointer;transition:all .2s;">🏆 Ranking Semanal</button>
+      </div>
     </div>
 
     <!-- BLOQUE RECOMPENSA COMPARTIDO (visible en todos los juegos cuando hay config activa) -->
@@ -919,6 +923,15 @@
 <script src="js/juego-battle.js"></script>
 <script src="js/juego-blockbuster.js"></script>
 <script src="js/juego-selector.js"></script>
+<script src="js/leaderboard-semanal.js"></script>
+<script>
+// Abre el leaderboard del juego actualmente seleccionado
+window._abrirRankingActual = function() {
+  var juego = window.juegoActualRecompensa || 'snake';
+  if (typeof window.abrirLeaderboard === 'function') window.abrirLeaderboard(juego);
+};
+</script>
+
 <script>
 // Carga config freeze de Firebase y la inyecta en juego-run apenas esté disponible
 (function _initFreezeConfig() {
