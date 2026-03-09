@@ -888,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run', 'impact', 'battle', 'blockbuster'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
 
 // ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
 // fichasRequeridas: { tetris: true/false, snake: true/false, ... }
@@ -1030,20 +1030,6 @@ onSnapshot(doc(db, 'config', 'invadersDificultad'), (snap) => {
 onSnapshot(doc(db, 'config', 'runDificultad'), (snap) => {
   if (snap.exists() && typeof window.setRunDificultad === 'function') {
     window.setRunDificultad(snap.data().valor ?? 1);
-  }
-});
-
-// ── DIFICULTAD BLOCKBUSTER desde Firebase ──────────────────────────────────
-onSnapshot(doc(db, 'config', 'blockbusterDificultad'), (snap) => {
-  if (snap.exists() && typeof window.setBlockbusterDificultad === 'function') {
-    window.setBlockbusterDificultad(snap.data().valor ?? 1);
-  }
-});
-
-// ── DIFICULTAD SNAKE desde Firebase ────────────────────────────────────────
-onSnapshot(doc(db, 'config', 'snakeDificultad'), (snap) => {
-  if (snap.exists() && typeof window.setSnakeDificultad === 'function') {
-    window.setSnakeDificultad(snap.data().valor ?? 1);
   }
 });
 
@@ -1943,6 +1929,13 @@ window.slotsGirar = async function() {
 window.notificarRecordJuego = function(juego, nuevoRecord) {
   if (juego === juegoActualRecompensa) {
     actualizarBarraRecompensa();
+  }
+  // Guardar récord en Firestore si hay usuario logueado
+  if (usuarioActual && usuarioActual.nombre && nuevoRecord > 0) {
+    const ref = doc(db, 'clientes', usuarioActual.nombre);
+    const campo = {};
+    campo['puntosJuegos.' + juego] = nuevoRecord;
+    updateDoc(ref, campo).catch(() => {});
   }
 };
 
