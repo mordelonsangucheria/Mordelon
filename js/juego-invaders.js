@@ -342,6 +342,7 @@ function ivGameOver() {
   IVX.font = '10px Nunito';
   IVX.fillStyle = '#555';
   IVX.fillText('Tap o Espacio para reiniciar', IVW / 2, IVH / 2 + 28);
+  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('invaders'); }, 1200);
 }
 
 // ── Controls ─────────────────────────────────────────────────

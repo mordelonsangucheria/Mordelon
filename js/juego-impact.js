@@ -652,9 +652,10 @@
   function fin(){
     if(estado==='fin') return;
     estado='fin'; cancelAnimationFrame(loopId);
-    if(score>hiScore){hiScore=score;localStorage.setItem('impactHiC',hiScore);}
+    if(score>hiScore){hiScore=score;localStorage.setItem('impactHiC',hiScore);if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('impact',hiScore);}
     draw(); score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('impact'); }, 1200);
   }
 
   function hud(){

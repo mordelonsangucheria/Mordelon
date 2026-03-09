@@ -429,11 +429,11 @@
 
   function fin() {
     estado='fin'; cancelAnimationFrame(loopId);
-    if(score>hiScore){ hiScore=score; localStorage.setItem('runHiC',hiScore); }
+    if(score>hiScore){ hiScore=score; localStorage.setItem('runHiC',hiScore); if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('run',hiScore); }
     draw();
-    // Limpiar puntaje de sesión (no el récord)
     score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('run'); }, 1200);
   }
 
   // ── HUD / Toast ──────────────────────────────────────────────────────────

@@ -2101,6 +2101,10 @@ function minasInit() {
   document.getElementById('minasRestantes').textContent = mTotalMinas;
   const scoreEl = document.getElementById('minasScore');
   if (scoreEl) scoreEl.textContent = '0';
+  const msgEl = document.getElementById('minasMsg');
+  if (msgEl) msgEl.textContent = '';
+  const overlay = document.getElementById('minasOverlay');
+  if (overlay) overlay.style.display = 'none';
   actualizarHiMinas();
   minasRender();
 }
@@ -2304,12 +2308,37 @@ function minasRender(boomR, boomC) {
     msgEl.style.cssText = 'text-align:center;margin-top:10px;font-family:Righteous,cursive;font-size:0.9rem;letter-spacing:1px;min-height:24px;';
     tablero.parentElement.insertBefore(msgEl, tablero.nextSibling);
   }
+
+  // Overlay de game over / victoria
+  let overlay = document.getElementById('minasOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'minasOverlay';
+    overlay.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.82);border-radius:14px;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10;gap:8px;padding:16px;';
+    tablero.style.position = 'relative';
+    tablero.appendChild(overlay);
+  }
+
   if (mWon) {
     msgEl.innerHTML = `<span style="color:var(--turquesa)">🎉 ¡GANASTE en ${mTimerVal}s!</span>`;
+    overlay.innerHTML =
+      '<div style="font-family:Righteous,cursive;font-size:1.1rem;color:var(--turquesa);letter-spacing:2px;">🎉 ¡GANASTE!</div>' +
+      '<div style="font-size:0.82rem;color:#aaa;text-align:center;">Tiempo: <strong style="color:var(--turquesa)">' + mTimerVal + 's</strong>' +
+      '  ·  Puntos: <strong style="color:var(--naranja)">' + mScore + '</strong></div>' +
+      '<button onclick="window.minasReset()" style="margin-top:6px;background:var(--turquesa);border:none;color:#111;border-radius:10px;padding:9px 24px;font-family:Righteous,cursive;font-size:0.8rem;cursor:pointer;font-weight:800;">↺ Jugar de nuevo</button>';
+    overlay.style.display = 'flex';
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('minas'); }, 1200);
   } else if (mGameOver) {
     msgEl.innerHTML = `<span style="color:var(--rojo)">💥 ¡BOOM! Tap ↺ para reintentar</span>`;
+    overlay.innerHTML =
+      '<div style="font-family:Righteous,cursive;font-size:1.2rem;color:#FF4D4D;letter-spacing:2px;">💥 ¡BOOM!</div>' +
+      '<div style="font-size:0.82rem;color:#aaa;">Pisaste una mina</div>' +
+      '<button onclick="window.minasReset()" style="margin-top:6px;background:#FF4D4D;border:none;color:#fff;border-radius:10px;padding:9px 24px;font-family:Righteous,cursive;font-size:0.8rem;cursor:pointer;font-weight:800;">↺ Reintentar</button>';
+    overlay.style.display = 'flex';
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('minas'); }, 1200);
   } else {
     msgEl.textContent = '';
+    overlay.style.display = 'none';
   }
 }
 

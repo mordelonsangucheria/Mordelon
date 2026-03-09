@@ -282,6 +282,7 @@ function dinoDead() {
   DX.fillText('Puntos: '+dScore+'  |  Récord: '+dHi,DW/2,94);
   DX.font='10px Nunito'; DX.fillStyle='#555';
   DX.fillText('Tap o Espacio para reiniciar',DW/2,110);
+  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('dino'); }, 1200);
 }
 
 window.dinoJump = async function() {
