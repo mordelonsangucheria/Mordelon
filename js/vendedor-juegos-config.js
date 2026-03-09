@@ -710,4 +710,44 @@
     if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
   };
 
+  // ===== RESET LEADERBOARD POR JUEGO =====
+  window.resetLeaderboard = async function(juego) {
+    const db = window._fbDB, getDocs = window._fbGetDocs,
+          collection = window._fbCollection, updateDoc = window._fbUpdateDoc;
+    if (!db || !getDocs || !collection || !updateDoc) {
+      window.showNotif('❌ Firebase no disponible'); return;
+    }
+    const nombresJuego = {
+      tetris:'Tetris', snake:'Snake', '2048':'2048', dino:'Dino',
+      minas:'Minas', invaders:'Invaders', slots:'Slots',
+      run:'Run', impact:'Impact', battle:'Battle'
+    };
+    const label = nombresJuego[juego] || juego;
+    if (!confirm('¿Resetear el ranking de ' + label + '? Se borrarán los records de TODOS los clientes.')) return;
+
+    try {
+      const snap = await getDocs(collection(db, 'clientes'));
+      const promesas = [];
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (juego === 'slots') {
+          if ((data.recordSlots ?? 0) > 0) {
+            promesas.push(updateDoc(docSnap.ref, { recordSlots: 0 }));
+          }
+        } else {
+          const campo = 'puntosJuegos.' + juego;
+          if (data.puntosJuegos && data.puntosJuegos[juego] > 0) {
+            promesas.push(updateDoc(docSnap.ref, { [campo]: 0 }));
+          }
+        }
+      });
+      await Promise.all(promesas);
+      window.showNotif('✅ Ranking de ' + label + ' reseteado (' + promesas.length + ' jugadores)');
+      if (typeof registrarActividad === 'function') registrarActividad('🗑️ Ranking ' + label + ' reseteado');
+    } catch(e) {
+      console.error(e);
+      window.showNotif('❌ Error al resetear ranking');
+    }
+  };
+
 })();
