@@ -85,15 +85,9 @@
 
   const MEDALLAS = ['🥇', '🥈', '🥉'];
 
-  // ── Obtener nombre del usuario logueado ──────────────────────────────────────
-  // Lee de window.usuarioActual, variable global usuarioActual, o localStorage
   function _getNombreUsuario() {
-    // 1. window.usuarioActual (expuesto por cliente-app.js)
-    if (window.usuarioActual && window.usuarioActual.nombre)
-      return window.usuarioActual.nombre;
-    // 2. variable global directa (por si está en scope)
+    if (window.usuarioActual && window.usuarioActual.nombre) return window.usuarioActual.nombre;
     try { if (typeof usuarioActual !== 'undefined' && usuarioActual?.nombre) return usuarioActual.nombre; } catch(e) {}
-    // 3. localStorage como fallback
     try {
       const raw = localStorage.getItem('mordelon-usuario');
       if (raw) { const u = JSON.parse(raw); if (u && u.nombre) return u.nombre; }
@@ -123,12 +117,10 @@
     lbBody.innerHTML =
       '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Cargando ranking...</div>';
 
-    // Esperar a que cliente-app.js exponga window._fbDB
     await new Promise(resolve => {
       if (window._fbDB) { resolve(); return; }
       const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
     });
-
     if (!await _ensureFirebase()) {
       lbBody.innerHTML =
         '<div style="text-align:center;padding:20px;color:#c00;font-size:0.82rem;">❌ No se pudo cargar el ranking</div>';
@@ -231,31 +223,20 @@
     }
   }
 
-  // ── Mapa de IDs de score en el DOM por juego ────────────────────────────────
-  const SCORE_DOM_IDS = {
-    dino: 'dinoScore', snake: 'snakeScore', tetris: 'tetrisScore',
-    '2048': 'g2048Score', invaders: 'invadersScore', battle: 'battleScore',
-    impact: 'impactScore', run: 'runScore', blockbuster: 'bbScore',
-  };
-
-  function _leerPuntajeDom(juego) {
-    const el = document.getElementById(SCORE_DOM_IDS[juego] || '');
-    return el ? (parseInt(el.textContent.replace(/[.,]/g, '')) || 0) : 0;
-  }
-
   // ── API pública ──────────────────────────────────────────────────────────────
-  window.abrirLeaderboard = async function (juego) {
+  window.abrirLeaderboard = async function (juego, pts) {
     _juegoActivo = juego;
     const modal = document.getElementById('lbModal');
     if (!modal) return;
-
     modal.style.display = 'flex';
     const lbBody = document.getElementById('lbBody');
     if (lbBody) lbBody.innerHTML = '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Guardando puntaje...</div>';
 
-    // Guardar puntaje y ESPERAR antes de leer el ranking
-    const pts = _leerPuntajeDom(juego);
-    if (pts > 0) await window.guardarPuntajeSemanal(juego, pts);
+    if (pts > 0) {
+      await window.guardarPuntajeSemanal(juego, pts);
+      // Delay para que Firestore propague la escritura antes de leer
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
 
     _renderLeaderboard(juego);
   };
@@ -270,7 +251,6 @@
   // Llamar esto cuando el jugador hace un nuevo récord.
   // Reemplaza a notificarRecordJuego o lo complementa.
   window.guardarPuntajeSemanal = async function (juego, pts) {
-    // Esperar a que cliente-app.js exponga window._fbDB
     await new Promise(resolve => {
       if (window._fbDB) { resolve(); return; }
       const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
@@ -320,7 +300,7 @@
     }
   };
 
-  // El guardado semanal ocurre en abrirLeaderboard al terminar cada partida
+  // El puntaje semanal se guarda en abrirLeaderboard al terminar cada partida
 
   // ── Cerrar modal al tocar el fondo oscuro ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
