@@ -1285,6 +1285,32 @@ function loginExitoso() {
     }
   }
 
+  // Sincronizar récords locales a Firestore al iniciar sesión
+  if (usuarioActual) {
+    const localRecords = {
+      tetris:   parseInt(localStorage.getItem('tetrisHiC')      || '0'),
+      snake:    parseInt(localStorage.getItem('snakeHiC')       || '0'),
+      '2048':   parseInt(localStorage.getItem('g2048HiC')       || '0'),
+      dino:     parseInt(localStorage.getItem('dinoHiC')        || '0'),
+      minas:    parseInt(localStorage.getItem('minasHiC_score') || '0'),
+      invaders: parseInt(localStorage.getItem('invadersHiC')    || '0'),
+      slots:    parseInt(localStorage.getItem('slotsHiC')       || '0'),
+      run:      parseInt(localStorage.getItem('runHiC')         || '0'),
+      impact:   parseInt(localStorage.getItem('impactHiC')      || '0'),
+      battle:   parseInt(localStorage.getItem('battleHiC')      || '0'),
+    };
+    const puntosFirebase = usuarioActual.puntosJuegos || {};
+    const actualizaciones = {};
+    for (const [juego, pts] of Object.entries(localRecords)) {
+      if (pts > 0 && pts > (puntosFirebase[juego] || 0)) {
+        actualizaciones['puntosJuegos.' + juego] = pts;
+      }
+    }
+    if (Object.keys(actualizaciones).length > 0) {
+      updateDoc(doc(db, 'clientes', usuarioActual.nombre), actualizaciones).catch(() => {});
+    }
+  }
+
   // Escuchar cambios del usuario en tiempo real (fichas, etc.)
   if (usuarioActual) {
     onSnapshot(doc(db, 'clientes', usuarioActual.nombre), (s) => {
