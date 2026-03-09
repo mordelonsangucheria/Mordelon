@@ -1,7 +1,7 @@
 let loginResuelto = false;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp, doc, onSnapshot, updateDoc, setDoc, getDoc, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, onSnapshot, updateDoc, setDoc, getDoc, getDocs, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDom7vxzcnnkc5_y3JquIr6TjMp5GX89_0",
@@ -2671,3 +2671,12 @@ window.toggleZonaSorteos = function() {
   if (!visible) _seleccionActual.clear();
 };
 
+
+// ── Exponer Firebase globalmente para leaderboard-semanal.js ─────────────────
+window._fbDB         = db;
+window._fbDoc        = doc;
+window._fbGetDoc     = getDoc;
+window._fbGetDocs    = getDocs;
+window._fbCollection = collection;
+window._fbUpdateDoc  = updateDoc;
+window._fbOnSnapshot = onSnapshot;
