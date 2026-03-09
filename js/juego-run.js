@@ -430,11 +430,11 @@
   function fin() {
     estado='fin'; cancelAnimationFrame(loopId);
     if(score>hiScore){ hiScore=score; localStorage.setItem('runHiC',hiScore); if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('run',hiScore); }
+    var _pts = score; // capturar ANTES de resetear
     draw();
-    var _scoreFin = score; // guardar antes de resetear
     score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
-    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('run', _scoreFin); }, 1200);
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('run', _pts); }, 1200);
   }
 
   // ── HUD / Toast ──────────────────────────────────────────────────────────
