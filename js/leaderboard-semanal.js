@@ -107,6 +107,12 @@
     lbBody.innerHTML =
       '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Cargando ranking...</div>';
 
+    // Esperar a que cliente-app.js (módulo ES diferido) exponga window._fbDB
+    await new Promise(resolve => {
+      if (window._fbDB) { resolve(); return; }
+      const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
+    });
+
     if (!await _ensureFirebase()) {
       lbBody.innerHTML =
         '<div style="text-align:center;padding:20px;color:#c00;font-size:0.82rem;">❌ No se pudo cargar el ranking</div>';
@@ -297,3 +303,13 @@
   });
 
 })();
+
+// ── Patch: asegurar _fbDB antes de guardarPuntajeSemanal ─────────────────────
+const _origGuardar = window.guardarPuntajeSemanal;
+window.guardarPuntajeSemanal = async function(juego, pts) {
+  await new Promise(resolve => {
+    if (window._fbDB) { resolve(); return; }
+    const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
+  });
+  return _origGuardar(juego, pts);
+};
