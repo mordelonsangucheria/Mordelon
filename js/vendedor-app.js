@@ -2432,3 +2432,45 @@ window.tlLimpiarCuponesExpirados = async function() {
   }
 };
 
+// ── Reset Leaderboard Semanal ─────────────────────────────────────────────────
+window.resetLeaderboard = async function(juego) {
+  if (!confirm(`¿Resetear el ranking semanal de ${juego}? Esto borrará los puntajes de TODOS los jugadores.`)) return;
+
+  try {
+    const snap = await getDocs(collection(db, 'clientes'));
+    const promesas = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      if (!data.nombre) return;
+
+      if (juego === 'slots') {
+        // Slots usa campos separados
+        if (data.recordSlotsSemana) {
+          promesas.push(
+            updateDoc(doc(db, 'clientes', data.nombre), {
+              recordSlotsSemana: null,
+              recordSlotsSemanaPts: 0,
+            })
+          );
+        }
+      } else {
+        // Resto de juegos usan puntosJuegosSemana.{juego}
+        if (data.puntosJuegosSemana && data.puntosJuegosSemana[juego]) {
+          promesas.push(
+            updateDoc(doc(db, 'clientes', data.nombre), {
+              [`puntosJuegosSemana.${juego}`]: null,
+            })
+          );
+        }
+      }
+    });
+
+    await Promise.all(promesas);
+    registrarActividad(`🗑️ Leaderboard reseteado: ${juego} (${promesas.length} jugadores)`);
+    alert(`✅ Ranking de ${juego} reseteado. ${promesas.length} jugadores actualizados.`);
+  } catch(e) {
+    console.error('[resetLeaderboard]', e);
+    alert('❌ Error al resetear: ' + e.message);
+  }
+};
