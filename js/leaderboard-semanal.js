@@ -107,12 +107,6 @@
     lbBody.innerHTML =
       '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Cargando ranking...</div>';
 
-    // Esperar a que cliente-app.js (módulo ES diferido) exponga window._fbDB
-    await new Promise(resolve => {
-      if (window._fbDB) { resolve(); return; }
-      const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
-    });
-
     if (!await _ensureFirebase()) {
       lbBody.innerHTML =
         '<div style="text-align:center;padding:20px;color:#c00;font-size:0.82rem;">❌ No se pudo cargar el ranking</div>';
@@ -215,9 +209,38 @@
     }
   }
 
+  // ── Mapa de IDs de DOM por juego ────────────────────────────────────────────
+  const SCORE_DOM_IDS = {
+    dino:        'dinoScore',
+    snake:       'snakeScore',
+    tetris:      'tetrisScore',
+    '2048':      'g2048Score',
+    invaders:    'invadersScore',
+    battle:      'battleScore',
+    impact:      'impactScore',
+    run:         'runScore',
+    blockbuster: 'bbScore',
+  };
+
+  // Lee el puntaje actual desde el DOM del juego
+  function _leerPuntajeDom(juego) {
+    const id = SCORE_DOM_IDS[juego];
+    if (!id) return 0;
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    return parseInt(el.textContent.replace(/[.,]/g, '')) || 0;
+  }
+
   // ── API pública ──────────────────────────────────────────────────────────────
   window.abrirLeaderboard = function (juego) {
     _juegoActivo = juego;
+
+    // Guardar puntaje de esta partida antes de mostrar el ranking
+    const pts = _leerPuntajeDom(juego);
+    if (pts > 0 && typeof window.guardarPuntajeSemanal === 'function') {
+      window.guardarPuntajeSemanal(juego, pts);
+    }
+
     const modal = document.getElementById('lbModal');
     if (modal) {
       modal.style.display = 'flex';
@@ -303,13 +326,3 @@
   });
 
 })();
-
-// ── Patch: asegurar _fbDB antes de guardarPuntajeSemanal ─────────────────────
-const _origGuardar = window.guardarPuntajeSemanal;
-window.guardarPuntajeSemanal = async function(juego, pts) {
-  await new Promise(resolve => {
-    if (window._fbDB) { resolve(); return; }
-    const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
-  });
-  return _origGuardar(juego, pts);
-};
