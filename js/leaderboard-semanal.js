@@ -107,6 +107,12 @@
     lbBody.innerHTML =
       '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Cargando ranking...</div>';
 
+    // Esperar a que cliente-app.js exponga window._fbDB
+    await new Promise(resolve => {
+      if (window._fbDB) { resolve(); return; }
+      const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
+    });
+
     if (!await _ensureFirebase()) {
       lbBody.innerHTML =
         '<div style="text-align:center;padding:20px;color:#c00;font-size:0.82rem;">❌ No se pudo cargar el ranking</div>';
@@ -222,7 +228,6 @@
     blockbuster: 'bbScore',
   };
 
-  // Lee el puntaje actual desde el DOM del juego
   function _leerPuntajeDom(juego) {
     const id = SCORE_DOM_IDS[juego];
     if (!id) return 0;
@@ -232,20 +237,24 @@
   }
 
   // ── API pública ──────────────────────────────────────────────────────────────
-  window.abrirLeaderboard = function (juego) {
+  window.abrirLeaderboard = async function (juego) {
     _juegoActivo = juego;
+    const modal = document.getElementById('lbModal');
+    if (!modal) return;
 
-    // Guardar puntaje de esta partida antes de mostrar el ranking
+    // Mostrar modal con loading inmediatamente
+    modal.style.display = 'flex';
+    const lbBody = document.getElementById('lbBody');
+    if (lbBody) lbBody.innerHTML = '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Guardando puntaje...</div>';
+
+    // Guardar puntaje de esta partida y ESPERAR a que termine
     const pts = _leerPuntajeDom(juego);
     if (pts > 0 && typeof window.guardarPuntajeSemanal === 'function') {
-      window.guardarPuntajeSemanal(juego, pts);
+      await window.guardarPuntajeSemanal(juego, pts);
     }
 
-    const modal = document.getElementById('lbModal');
-    if (modal) {
-      modal.style.display = 'flex';
-      _renderLeaderboard(juego);
-    }
+    // Ahora sí renderizar — el dato ya está en Firestore
+    _renderLeaderboard(juego);
   };
 
   window.cerrarLeaderboard = function () {
@@ -258,6 +267,11 @@
   // Llamar esto cuando el jugador hace un nuevo récord.
   // Reemplaza a notificarRecordJuego o lo complementa.
   window.guardarPuntajeSemanal = async function (juego, pts) {
+    // Esperar a que cliente-app.js (módulo ES diferido) exponga window._fbDB
+    await new Promise(resolve => {
+      if (window._fbDB) { resolve(); return; }
+      const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
+    });
     if (!await _ensureFirebase()) return;
     const db = window._fbDB;
     if (!db) return;
@@ -303,17 +317,8 @@
     }
   };
 
-  // ── Parchar notificarRecordJuego para que también guarde semanalmente ─────────
-  // Se ejecuta cuando Firebase está listo, para que usuarioActual ya exista
-  _ready(function () {
-    const _orig = window.notificarRecordJuego;
-    window.notificarRecordJuego = function (juego, nuevoRecord) {
-      // Llamar lógica original (guarda en puntosJuegos y barras de recompensa)
-      if (typeof _orig === 'function') _orig(juego, nuevoRecord);
-      // Guardar también el puntaje semanal
-      window.guardarPuntajeSemanal(juego, nuevoRecord);
-    };
-  });
+  // notificarRecordJuego llama a guardarPuntajeSemanal desde cliente-app.js
+  // El guardado principal ocurre en abrirLeaderboard al terminar cada partida
 
   // ── Cerrar modal al tocar el fondo oscuro ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {

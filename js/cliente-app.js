@@ -1956,12 +1956,23 @@ window.notificarRecordJuego = function(juego, nuevoRecord) {
   if (juego === juegoActualRecompensa) {
     actualizarBarraRecompensa();
   }
-  // Guardar récord en Firestore si hay usuario logueado
+  // Guardar récord histórico en Firestore si hay usuario logueado
   if (usuarioActual && usuarioActual.nombre && nuevoRecord > 0) {
     const ref = doc(db, 'clientes', usuarioActual.nombre);
     const campo = {};
     campo['puntosJuegos.' + juego] = nuevoRecord;
     updateDoc(ref, campo).catch(() => {});
+  }
+  // Guardar puntaje semanal (aunque no sea récord histórico)
+  if (typeof window.guardarPuntajeSemanal === 'function' && nuevoRecord > 0) {
+    window.guardarPuntajeSemanal(juego, nuevoRecord);
+  }
+};
+
+// Llamar esto desde cada juego al terminar una partida (sea récord o no)
+window.notificarPuntajePartida = function(juego, pts) {
+  if (typeof window.guardarPuntajeSemanal === 'function' && pts > 0) {
+    window.guardarPuntajeSemanal(juego, pts);
   }
 };
 
