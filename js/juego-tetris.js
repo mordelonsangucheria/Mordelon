@@ -105,7 +105,7 @@ function tetrisOver(){
   TX.fillText('Puntos: '+tScore+'  ·  Récord: '+tHi, TC.width/2, 188);
   TX.fillStyle='#555'; TX.font='10px Nunito';
   TX.fillText('Tap o Espacio para reiniciar', TC.width/2, 208);
-  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('tetris'); }, 1200);
+  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('tetris', tScore); }, 1200);
 }
 window.tetrisPause=function(){tPaused=!tPaused;};
 window.tetrisInit=tetrisInit;

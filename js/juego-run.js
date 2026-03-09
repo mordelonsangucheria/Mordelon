@@ -433,7 +433,7 @@
     draw();
     score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
-    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('run'); }, 1200);
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('run', score); }, 1200);
   }
 
   // ── HUD / Toast ──────────────────────────────────────────────────────────

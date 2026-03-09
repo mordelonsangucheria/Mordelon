@@ -523,7 +523,7 @@
     if(score>hiScore){hiScore=score;localStorage.setItem('battleHiC',hiScore);if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('battle',hiScore);}
     draw();hud();
     if(typeof window.actualizarBarraRecompensa==='function')window.actualizarBarraRecompensa();
-    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('battle'); }, 1200);
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('battle', score); }, 1200);
   }
 
   // ── Dibujo ────────────────────────────────────────────────────────────────

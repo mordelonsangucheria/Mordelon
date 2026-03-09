@@ -145,7 +145,7 @@ function snakeOver(){
   SX.fillText('Puntos: '+sScore+'  ·  Récord: '+sHi, SC.width/2, 140);
   SX.fillStyle='#555'; SX.font='10px Nunito';
   SX.fillText('Tap o reiniciar para volver', SC.width/2, 158);
-  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('snake'); }, 1200);
+  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('snake', sScore); }, 1200);
 }
 window.setSnakeDificultad = function(nivel) {
   snakeDificultad = Math.max(0, Math.min(4, nivel));

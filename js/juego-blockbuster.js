@@ -408,7 +408,7 @@ function bbGameOver() {
   BBX.fillText('Puntos: ' + bbScore + '  ·  Récord: ' + bbHi, BBW/2, BBH/2 + 4);
   BBX.fillStyle = '#555'; BBX.font = '10px Nunito';
   BBX.fillText('Tap o Espacio para reiniciar', BBW/2, BBH/2 + 22);
-  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('blockbuster'); }, 1200);
+  setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('blockbuster', bbScore); }, 1200);
 }
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
