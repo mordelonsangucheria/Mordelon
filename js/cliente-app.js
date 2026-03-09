@@ -1155,6 +1155,7 @@ window.actualizarBarraRecompensa = actualizarBarraRecompensa;
 
 // ===================== SISTEMA DE USUARIOS =====================
 let usuarioActual = null; // { nombre, direccion, fichasSlots, record, ... }
+window.usuarioActual = null; // Expuesto globalmente para leaderboard-semanal.js
 
 // ── Tabs login/registro ──
 window.loginMostrarTab = function(tab) {
@@ -1210,6 +1211,7 @@ window.loginEntrar = async function() {
       return;
     }
     usuarioActual = { nombre, ...data };
+    window.usuarioActual = usuarioActual;
     localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
     msgEl.textContent = '';
     loginExitoso();
@@ -1250,6 +1252,7 @@ window.registrarse = async function() {
     };
     await setDoc(ref, nuevoUsuario);
     usuarioActual = { ...nuevoUsuario };
+    window.usuarioActual = usuarioActual;
     localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
     msgEl.textContent = '';
     loginExitoso();
@@ -1263,6 +1266,7 @@ window.registrarse = async function() {
 // ── Continuar sin cuenta ──
 window.continuarSinCuenta = function() {
   usuarioActual = null;
+  window.usuarioActual = null;
   localStorage.removeItem('mordelon-usuario');
   entrarAMenu();
 };
@@ -1331,6 +1335,7 @@ function loginExitoso() {
       }
       // Siempre sincronizar usuarioActual con Firebase
       usuarioActual = { ...usuarioActual, ...d };
+      window.usuarioActual = usuarioActual;
       slotsFichas  = usuarioActual.fichasSlots ?? slotsFichas;
       slotsHiScore = usuarioActual.recordSlots ?? slotsHiScore;
       slotsActualizarUI();
@@ -1381,6 +1386,7 @@ async function intentarAutoLogin() {
     const snap = await getDoc(doc(db, 'clientes', nombre));
     if (snap.exists() && snap.data().clave === clave) {
       usuarioActual = { nombre, ...snap.data() };
+    window.usuarioActual = usuarioActual;
       loginExitoso();
     } else {
       localStorage.removeItem('mordelon-usuario');
@@ -1956,23 +1962,12 @@ window.notificarRecordJuego = function(juego, nuevoRecord) {
   if (juego === juegoActualRecompensa) {
     actualizarBarraRecompensa();
   }
-  // Guardar récord histórico en Firestore si hay usuario logueado
+  // Guardar récord en Firestore si hay usuario logueado
   if (usuarioActual && usuarioActual.nombre && nuevoRecord > 0) {
     const ref = doc(db, 'clientes', usuarioActual.nombre);
     const campo = {};
     campo['puntosJuegos.' + juego] = nuevoRecord;
     updateDoc(ref, campo).catch(() => {});
-  }
-  // Guardar puntaje semanal (aunque no sea récord histórico)
-  if (typeof window.guardarPuntajeSemanal === 'function' && nuevoRecord > 0) {
-    window.guardarPuntajeSemanal(juego, nuevoRecord);
-  }
-};
-
-// Llamar esto desde cada juego al terminar una partida (sea récord o no)
-window.notificarPuntajePartida = function(juego, pts) {
-  if (typeof window.guardarPuntajeSemanal === 'function' && pts > 0) {
-    window.guardarPuntajeSemanal(juego, pts);
   }
 };
 
