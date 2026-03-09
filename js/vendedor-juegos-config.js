@@ -1,8 +1,36 @@
 // ===== CONFIGURACIÓN DE JUEGOS =====
-// Depende de: window._fbDB, window._fbDoc, window._fbSetDoc, window._fbGetDoc, window._fbOnSnapshot, window._fbUpdateDoc, window._fbGetDocs, window._fbCollection
+// Depende de: window._fbDB, window._fbDoc, window._fbSetDoc, window._fbGetDoc, window._fbOnSnapshot
 // Usa: window.showNotif(), registrarActividad() — definidas en vendedor-app.js
 
 (function() {
+  // Funciones de Firebase que pueden no estar expuestas como globales
+  // Se resuelven desde el módulo de Firestore directamente si no están disponibles
+  let _getDocs = null, _updateDoc = null, _collection = null, _getDoc = null;
+
+  async function _ensureFirebaseExtras() {
+    if (_getDocs && _updateDoc && _collection && _getDoc) return true;
+    if (window._fbGetDocs && window._fbUpdateDoc && window._fbCollection) {
+      _getDocs    = window._fbGetDocs;
+      _updateDoc  = window._fbUpdateDoc;
+      _collection = window._fbCollection;
+      _getDoc     = window._fbGetDoc || null;
+    }
+    if (!_getDocs || !_updateDoc || !_collection || !_getDoc) {
+      try {
+        const mod = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
+        if (!_getDocs)    _getDocs    = mod.getDocs;
+        if (!_updateDoc)  _updateDoc  = mod.updateDoc;
+        if (!_collection) _collection = mod.collection;
+        if (!_getDoc)     _getDoc     = mod.getDoc;
+        return true;
+      } catch(e) {
+        console.error('No se pudo cargar Firebase Firestore extras:', e);
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Esperar a que Firebase esté listo
   function _ready(fn) {
     if (window._fbDB && window._fbDoc && window._fbSetDoc && window._fbGetDoc && window._fbOnSnapshot) {
@@ -181,7 +209,8 @@
   let _fichasUsuarioActual = null;
 
   window.buscarUsuarioSlots = async function() {
-    const db = window._fbDB, doc = window._fbDoc, getDoc = window._fbGetDoc;
+    if (!await _ensureFirebaseExtras()) { window.showNotif('❌ Firebase no disponible'); return; }
+    const db = window._fbDB, doc = window._fbDoc, getDoc = _getDoc;
     const nombre = document.getElementById('fichasNombreCliente').value.trim().toUpperCase();
     const msgEl  = document.getElementById('fichasMensaje');
     const infoEl = document.getElementById('fichasUsuarioInfo');
@@ -214,7 +243,8 @@
   };
 
   window.cargarFichas = async function() {
-    const db = window._fbDB, doc = window._fbDoc, updateDoc = window._fbUpdateDoc;
+    if (!await _ensureFirebaseExtras()) { window.showNotif('❌ Firebase no disponible'); return; }
+    const db = window._fbDB, doc = window._fbDoc, updateDoc = _updateDoc;
     const cant  = parseInt(document.getElementById('fichasCantidad').value) || 0;
     const msgEl = document.getElementById('fichasMensaje');
 
@@ -241,7 +271,12 @@
   };
 
   window.verTodosUsuariosSlots = async function() {
-    const db = window._fbDB, getDocs = window._fbGetDocs, collection = window._fbCollection;
+    if (!await _ensureFirebaseExtras()) {
+      const gridEl = document.getElementById('fichasUsuariosGrid');
+      if (gridEl) gridEl.innerHTML = '<div style="color:var(--rojo);font-size:0.7rem;">❌ Firebase no disponible</div>';
+      return;
+    }
+    const db = window._fbDB, getDocs = _getDocs, collection = _collection;
     const listaEl = document.getElementById('fichasUsuariosLista');
     const gridEl  = document.getElementById('fichasUsuariosGrid');
     if (!gridEl) return;
@@ -712,11 +747,10 @@
 
   // ===== RESET LEADERBOARD POR JUEGO =====
   window.resetLeaderboard = async function(juego) {
-    const db = window._fbDB, getDocs = window._fbGetDocs,
-          collection = window._fbCollection, updateDoc = window._fbUpdateDoc;
-    if (!db || !getDocs || !collection || !updateDoc) {
-      window.showNotif('❌ Firebase no disponible'); return;
-    }
+    if (!await _ensureFirebaseExtras()) { window.showNotif('❌ Firebase no disponible'); return; }
+    const db = window._fbDB, getDocs = _getDocs,
+          collection = _collection, updateDoc = _updateDoc;
+
     const nombresJuego = {
       tetris:'Tetris', snake:'Snake', '2048':'2048', dino:'Dino',
       minas:'Minas', invaders:'Invaders', slots:'Slots',
