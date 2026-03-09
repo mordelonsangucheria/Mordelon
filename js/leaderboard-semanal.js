@@ -85,6 +85,22 @@
 
   const MEDALLAS = ['🥇', '🥈', '🥉'];
 
+  // ── Obtener nombre del usuario logueado ──────────────────────────────────────
+  // Lee de window.usuarioActual, variable global usuarioActual, o localStorage
+  function _getNombreUsuario() {
+    // 1. window.usuarioActual (expuesto por cliente-app.js)
+    if (window.usuarioActual && window.usuarioActual.nombre)
+      return window.usuarioActual.nombre;
+    // 2. variable global directa (por si está en scope)
+    try { if (typeof usuarioActual !== 'undefined' && usuarioActual?.nombre) return usuarioActual.nombre; } catch(e) {}
+    // 3. localStorage como fallback
+    try {
+      const raw = localStorage.getItem('mordelon-usuario');
+      if (raw) { const u = JSON.parse(raw); if (u && u.nombre) return u.nombre; }
+    } catch(e) {}
+    return null;
+  }
+
   // ── Estado ──────────────────────────────────────────────────────────────────
   let _juegoActivo = null;
 
@@ -162,7 +178,7 @@
       }
 
       // Obtener nombre del usuario logueado
-      const miNombre = (typeof usuarioActual !== 'undefined' && usuarioActual?.nombre) || null;
+      const miNombre = _getNombreUsuario();
 
       let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
       top.forEach((j, i) => {
@@ -215,25 +231,16 @@
     }
   }
 
-  // ── Mapa de IDs de DOM por juego ────────────────────────────────────────────
+  // ── Mapa de IDs de score en el DOM por juego ────────────────────────────────
   const SCORE_DOM_IDS = {
-    dino:        'dinoScore',
-    snake:       'snakeScore',
-    tetris:      'tetrisScore',
-    '2048':      'g2048Score',
-    invaders:    'invadersScore',
-    battle:      'battleScore',
-    impact:      'impactScore',
-    run:         'runScore',
-    blockbuster: 'bbScore',
+    dino: 'dinoScore', snake: 'snakeScore', tetris: 'tetrisScore',
+    '2048': 'g2048Score', invaders: 'invadersScore', battle: 'battleScore',
+    impact: 'impactScore', run: 'runScore', blockbuster: 'bbScore',
   };
 
   function _leerPuntajeDom(juego) {
-    const id = SCORE_DOM_IDS[juego];
-    if (!id) return 0;
-    const el = document.getElementById(id);
-    if (!el) return 0;
-    return parseInt(el.textContent.replace(/[.,]/g, '')) || 0;
+    const el = document.getElementById(SCORE_DOM_IDS[juego] || '');
+    return el ? (parseInt(el.textContent.replace(/[.,]/g, '')) || 0) : 0;
   }
 
   // ── API pública ──────────────────────────────────────────────────────────────
@@ -242,18 +249,14 @@
     const modal = document.getElementById('lbModal');
     if (!modal) return;
 
-    // Mostrar modal con loading inmediatamente
     modal.style.display = 'flex';
     const lbBody = document.getElementById('lbBody');
     if (lbBody) lbBody.innerHTML = '<div style="text-align:center;padding:20px;color:#555;font-size:0.82rem;">Guardando puntaje...</div>';
 
-    // Guardar puntaje de esta partida y ESPERAR a que termine
+    // Guardar puntaje y ESPERAR antes de leer el ranking
     const pts = _leerPuntajeDom(juego);
-    if (pts > 0 && typeof window.guardarPuntajeSemanal === 'function') {
-      await window.guardarPuntajeSemanal(juego, pts);
-    }
+    if (pts > 0) await window.guardarPuntajeSemanal(juego, pts);
 
-    // Ahora sí renderizar — el dato ya está en Firestore
     _renderLeaderboard(juego);
   };
 
@@ -267,7 +270,7 @@
   // Llamar esto cuando el jugador hace un nuevo récord.
   // Reemplaza a notificarRecordJuego o lo complementa.
   window.guardarPuntajeSemanal = async function (juego, pts) {
-    // Esperar a que cliente-app.js (módulo ES diferido) exponga window._fbDB
+    // Esperar a que cliente-app.js exponga window._fbDB
     await new Promise(resolve => {
       if (window._fbDB) { resolve(); return; }
       const t = setInterval(() => { if (window._fbDB) { clearInterval(t); resolve(); } }, 100);
@@ -277,7 +280,7 @@
     if (!db) return;
 
     // Necesitamos el nombre del usuario logueado
-    const nombre = (typeof usuarioActual !== 'undefined' && usuarioActual?.nombre) || null;
+    const nombre = _getNombreUsuario();
     if (!nombre) return;
 
     const semana = _semanaActual();
@@ -317,8 +320,7 @@
     }
   };
 
-  // notificarRecordJuego llama a guardarPuntajeSemanal desde cliente-app.js
-  // El guardado principal ocurre en abrirLeaderboard al terminar cada partida
+  // El guardado semanal ocurre en abrirLeaderboard al terminar cada partida
 
   // ── Cerrar modal al tocar el fondo oscuro ────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
