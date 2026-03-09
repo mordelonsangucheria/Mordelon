@@ -653,9 +653,10 @@
     if(estado==='fin') return;
     estado='fin'; cancelAnimationFrame(loopId);
     if(score>hiScore){hiScore=score;localStorage.setItem('impactHiC',hiScore);if(typeof window.notificarRecordJuego==='function')window.notificarRecordJuego('impact',hiScore);}
+    var _scoreFin = score; // guardar antes de resetear
     draw(); score=0; hud();
     if(typeof window.actualizarBarraRecompensa==='function') window.actualizarBarraRecompensa();
-    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('impact', score); }, 1200);
+    setTimeout(function(){ if(typeof window.abrirLeaderboard==='function') window.abrirLeaderboard('impact', _scoreFin); }, 1200);
   }
 
   function hud(){
