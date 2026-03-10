@@ -1507,6 +1507,15 @@
     toast('❄️ ¡Congelados! ' + seg + 's' + (FREEZE_USOS > 0 ? ' · ' + freezeUsosRestantes + ' restantes' : ''));
   };
 
+  // Cooldown para evitar doble disparo touchstart+click en botones móviles
+  let _btnCooldown = 0;
+  function _btnMove(fn) {
+    const now = Date.now();
+    if (now - _btnCooldown < 80) return; // ignorar el click sintético
+    _btnCooldown = now;
+    fn();
+  }
+
   window.runDir = function (dx, dy) {
     if (estado === 'jugando') { P.dx = dx; P.dy = dy; pTimer = P_SPD; }
   };
@@ -1514,10 +1523,10 @@
     // En este juego tile-based "saltar" = moverse arriba en escalera
     if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; }
   };
-  window.runMoverIzq = function () { if (estado === 'jugando') { P.dx = -1; P.dy = 0; pTimer = P_SPD; } };
-  window.runMoverDer = function () { if (estado === 'jugando') { P.dx = 1; P.dy = 0; pTimer = P_SPD; } };
-  window.runMoverArriba = function () { if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; } };
-  window.runMoverAbajo = function () { if (estado === 'jugando') { P.dy = 1; P.dx = 0; pTimer = P_SPD; } };
+  window.runMoverIzq    = function () { _btnMove(() => { if (estado === 'jugando') { P.dx = -1; P.dy = 0; pTimer = P_SPD; } }); };
+  window.runMoverDer    = function () { _btnMove(() => { if (estado === 'jugando') { P.dx =  1; P.dy = 0; pTimer = P_SPD; } }); };
+  window.runMoverArriba = function () { _btnMove(() => { if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; } }); };
+  window.runMoverAbajo  = function () { _btnMove(() => { if (estado === 'jugando') { P.dy =  1; P.dx = 0; pTimer = P_SPD; } }); };
 
   window.runPause = function () {
     if (estado === 'jugando') { estado = 'pausa'; draw(lastDt); }
