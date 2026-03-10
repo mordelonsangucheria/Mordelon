@@ -568,8 +568,8 @@
     if (keysDown['ArrowRight'] || keysDown['d'] || keysDown['D']) dx = 1;
     if (keysDown['ArrowUp'] || keysDown['w'] || keysDown['W']) dy = -1;
     if (keysDown['ArrowDown'] || keysDown['s'] || keysDown['S']) dy = 1;
-    if (P.dx) dx = P.dx;
-    if (P.dy) dy = P.dy;
+    if (P.dx) { dx = P.dx; P.dx = 0; }
+    if (P.dy) { dy = P.dy; P.dy = 0; }
 
     if (dx !== 0) P.facingDir = dx;
 
