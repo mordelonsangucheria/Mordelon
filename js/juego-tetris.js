@@ -280,7 +280,7 @@ function tMaybeSpecial() {
   tPiecesUntilSpecial--;
   if (tPiecesUntilSpecial > 0) return tRandPiece();
   tPiecesUntilSpecial = tRandSpecialCooldown();
-  return Math.random() < 0.8 ? tRandTrapPiece() : tRandBombPiece();
+  return tRandBombPiece(); // solo bomba, trampa desactivada
 }
 
 // ── Mutación (encadenada — muta varias veces) ───────────────────
