@@ -670,7 +670,7 @@ window.tetrisDir = function(d) {
   if(tState!==TSTATE.PLAYING) return;
   if(d==='left'&&!tCollide(-1,0)){tX--;tSoundMove();}
   else if(d==='right'&&!tCollide(1,0)){tX++;tSoundMove();}
-  else if(d==='down'&&!tCollide(0,1)){tY++;tScore++;document.getElementById('tetrisScore').textContent=tScore;}
+  else if(d==='down'&&!tCollide(0,1)){tY++;}
   else if(d==='up'){
     const rot=tPiece.shape[0].map((_,i)=>tPiece.shape.map(r=>r[i]).reverse());
     let kicked=false;
