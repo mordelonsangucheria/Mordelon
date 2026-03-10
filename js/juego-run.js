@@ -568,8 +568,8 @@
     if (keysDown['ArrowRight'] || keysDown['d'] || keysDown['D']) dx = 1;
     if (keysDown['ArrowUp'] || keysDown['w'] || keysDown['W']) dy = -1;
     if (keysDown['ArrowDown'] || keysDown['s'] || keysDown['S']) dy = 1;
-    if (P.dx) { dx = P.dx; P.dx = 0; }
-    if (P.dy) { dy = P.dy; P.dy = 0; }
+    if (P.dx) dx = P.dx;
+    if (P.dy) dy = P.dy;
 
     if (dx !== 0) P.facingDir = dx;
 
@@ -1523,10 +1523,10 @@
     // En este juego tile-based "saltar" = moverse arriba en escalera
     if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; }
   };
-  window.runMoverIzq    = function () { if (estado === 'jugando') { P.dx = -1; P.dy = 0; } };
-  window.runMoverDer    = function () { if (estado === 'jugando') { P.dx =  1; P.dy = 0; } };
-  window.runMoverArriba = function () { if (estado === 'jugando') { P.dy = -1; P.dx = 0; } };
-  window.runMoverAbajo  = function () { if (estado === 'jugando') { P.dy =  1; P.dx = 0; } };
+  window.runMoverIzq    = function () { if (estado === 'jugando') { P.dx = -1; P.dy = 0; pTimer = P_SPD; } };
+  window.runMoverDer    = function () { if (estado === 'jugando') { P.dx =  1; P.dy = 0; pTimer = P_SPD; } };
+  window.runMoverArriba = function () { if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; } };
+  window.runMoverAbajo  = function () { if (estado === 'jugando') { P.dy =  1; P.dx = 0; pTimer = P_SPD; } };
 
   window.runPause = function () {
     if (estado === 'jugando') { estado = 'pausa'; draw(lastDt); }
