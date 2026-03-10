@@ -1523,10 +1523,10 @@
     // En este juego tile-based "saltar" = moverse arriba en escalera
     if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; }
   };
-  window.runMoverIzq    = function () { _btnMove(() => { if (estado === 'jugando') { P.dx = -1; P.dy = 0; pTimer = P_SPD; } }); };
-  window.runMoverDer    = function () { _btnMove(() => { if (estado === 'jugando') { P.dx =  1; P.dy = 0; pTimer = P_SPD; } }); };
-  window.runMoverArriba = function () { _btnMove(() => { if (estado === 'jugando') { P.dy = -1; P.dx = 0; pTimer = P_SPD; } }); };
-  window.runMoverAbajo  = function () { _btnMove(() => { if (estado === 'jugando') { P.dy =  1; P.dx = 0; pTimer = P_SPD; } }); };
+  window.runMoverIzq    = function () { if (estado === 'jugando') { P.dx = -1; P.dy = 0; } };
+  window.runMoverDer    = function () { if (estado === 'jugando') { P.dx =  1; P.dy = 0; } };
+  window.runMoverArriba = function () { if (estado === 'jugando') { P.dy = -1; P.dx = 0; } };
+  window.runMoverAbajo  = function () { if (estado === 'jugando') { P.dy =  1; P.dx = 0; } };
 
   window.runPause = function () {
     if (estado === 'jugando') { estado = 'pausa'; draw(lastDt); }
