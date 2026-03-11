@@ -77,7 +77,7 @@ window.elegirJuego = function(juego) {
   // Iniciar juego (con verificación de fichas para los que no son slots)
   if(juego==='tetris')  _iniciarJuegoConFichas('tetris', function() { if(!tetrisRunning) window.tetrisInit(); });
   if(juego==='snake')   _iniciarJuegoConFichas('snake',  function() { if(!snakeRunning) window.snakeInit(); });
-  if(juego==='2048')    _iniciarJuegoConFichas('2048',   function() { window.g2048Init(); });
+  if(juego==='2048')    _iniciarJuegoConFichas('2048',   function() { if(!window.g2048Running) window.g2048Init(); });
   if(juego==='dino')    _iniciarJuegoConFichas('dino',   function() { window.dinoInit(); });
   if(juego==='minas')   _iniciarJuegoConFichas('minas',  function() { window.minasInit(); });
   if(juego==='invaders') _iniciarJuegoConFichas('invaders', function() { window.invadersInit(); });
