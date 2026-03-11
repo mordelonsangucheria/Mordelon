@@ -6,7 +6,7 @@
   const TILE = 16;
   const COLS = W / TILE;
   const ROWS = H / TILE;
-  const SCALE = 1.5; // escala visual
+  const SCALE = 1.2; // escala visual
 
   const T_EMPTY=0, T_BRICK=1, T_STEEL=2, T_BASE=3, T_BUSH=4;
 
