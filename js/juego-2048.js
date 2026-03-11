@@ -8,9 +8,10 @@ const G2COLORS={'0':'#1a1a1a','2':'#3DBFB8','4':'#2A9E98','8':'#D4831A','16':'#C
 function g2048Init(){
   g2Board=Array.from({length:4},()=>Array(4).fill(0));
   g2Score=0; g2Over=false; g2Running=true;
-  document.getElementById('g2048Score').textContent=0;
-  document.getElementById('g2048Hi').textContent=g2Hi;
-  // Ocultar overlay si existe
+  const scoreEl=document.getElementById('g2048Score');
+  const hiEl=document.getElementById('g2048Hi');
+  if(scoreEl) scoreEl.textContent=0;
+  if(hiEl) hiEl.textContent=g2Hi;
   const ov = document.getElementById('g2048Overlay');
   if (ov) ov.style.display='none';
   g2Spawn();g2Spawn();g2Render();
