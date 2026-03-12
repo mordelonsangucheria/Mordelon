@@ -562,6 +562,32 @@
     if (msgEl) setTimeout(() => { if(msgEl) msgEl.textContent = ''; }, 3000);
   };
 
+  // Forzar que juegos nuevos queden como activos en Firestore
+  // (útil cuando el doc config/juegos fue creado antes de que existieran estos juegos)
+  window.inicializarJuegosNuevos = async function() {
+    const db = window._fbDB, doc = window._fbDoc, setDoc = window._fbSetDoc, getDoc = window._fbGetDoc;
+    try {
+      const snap = await getDoc(doc(db, 'config', 'juegos'));
+      const data = snap.exists() ? snap.data() : {};
+      let hubocambios = false;
+      JUEGOS_TOGGLE_INFO.forEach(j => {
+        if (data[j.id] === undefined) { data[j.id] = true; hubocambios = true; }
+        if (j.id !== 'slots' && data['fichasReq_' + j.id] === undefined) {
+          data['fichasReq_' + j.id] = false; hubocambios = true;
+        }
+      });
+      if (hubocambios) {
+        await setDoc(doc(db, 'config', 'juegos'), data);
+        window.showNotif('✅ Juegos nuevos inicializados como activos');
+        if (typeof registrarActividad === 'function') registrarActividad('🕹️ Juegos nuevos inicializados en Firebase');
+      } else {
+        window.showNotif('✅ Todos los juegos ya estaban sincronizados');
+      }
+    } catch(e) {
+      window.showNotif('❌ Error al inicializar juegos');
+    }
+  };
+
   // Render inicial con defaults (sin esperar Firebase)
   renderJuegosToggles();
 
@@ -754,7 +780,7 @@
     const nombresJuego = {
       tetris:'Tetris', snake:'Snake', '2048':'2048', dino:'Dino',
       minas:'Minas', invaders:'Invaders', slots:'Slots',
-      run:'Run', impact:'Impact', battle:'Battle'
+      run:'Run', impact:'Impact', battle:'Battle', blockbuster:'BlockBurguer'
     };
     const label = nombresJuego[juego] || juego;
     if (!confirm('¿Resetear el ranking de ' + label + '? Se borrarán los records de TODOS los clientes.')) return;
