@@ -1,6 +1,11 @@
 // ===================== BLOCKBUSTER — MORDELÓN =====================
-const BBC  = document.getElementById('blockCanvas');
-const BBX  = BBC.getContext('2d');
+let BBC, BBX;
+function _bbInitCanvas() {
+  BBC = document.getElementById('blockCanvas');
+  if (!BBC) return false;
+  BBX = BBC.getContext('2d');
+  return true;
+}
 const BBW  = 320, BBH = 420;
 const PADDLE_W_BASE = 64, PADDLE_H = 12;
 const BALL_R = 7;
@@ -573,50 +578,64 @@ function bbFireLaser() {
 }
 
 // Mouse / touch
-BBC.addEventListener('mousemove', e => {
-  if (!bbRunning || bbPaused) return;
-  const r = BBC.getBoundingClientRect();
-  bbMovePaddle(e.clientX - r.left);
-}, { passive: true });
-
-BBC.addEventListener('touchmove', e => {
-  if (!bbRunning || bbPaused) return;
-  e.preventDefault();
-  const r = BBC.getBoundingClientRect();
-  const scaleX = BBW / r.width;
-  bbMovePaddle((e.touches[0].clientX - r.left) * scaleX);
-}, { passive: false });
-
-BBC.addEventListener('click', e => {
-  if (bbOver) { window.blockbusterReset(); return; }
-  if (!bbRunning || bbPaused) return;
-  if (!bbLaunch()) bbFireLaser();
-});
-
-BBC.addEventListener('touchend', e => {
-  if (bbOver) { window.blockbusterReset(); return; }
-  if (!bbRunning || bbPaused) return;
-  if (!bbLaunch()) bbFireLaser();
-}, { passive: true });
-
-// ── Teclado: movimiento continuo en el loop ──────────────────────────────────
-const bbKeys = {};
-document.addEventListener('keydown', e => {
-  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
-  if (document.getElementById('juegoBlockbuster').style.display === 'none') return;
-  if (['ArrowLeft','ArrowRight','Space'].includes(e.key) || e.code === 'Space') e.preventDefault();
-  bbKeys[e.key] = true;
-  if (e.code === 'Space' || e.key === ' ') {
+let _bbListenersBound = false;
+function _bbBindEventListeners() {
+  if (_bbListenersBound) return;
+  _bbListenersBound = true;
+  BBC.addEventListener('mousemove', e => {
+    if (!bbRunning || bbPaused) return;
+    const r = BBC.getBoundingClientRect();
+    bbMovePaddle(e.clientX - r.left);
+  }, { passive: true });
+  
+  BBC.addEventListener('touchmove', e => {
+    if (!bbRunning || bbPaused) return;
+    e.preventDefault();
+    const r = BBC.getBoundingClientRect();
+    const scaleX = BBW / r.width;
+    bbMovePaddle((e.touches[0].clientX - r.left) * scaleX);
+  }, { passive: false });
+  
+  BBC.addEventListener('click', e => {
     if (bbOver) { window.blockbusterReset(); return; }
+    if (!bbRunning || bbPaused) return;
     if (!bbLaunch()) bbFireLaser();
-  }
-});
-document.addEventListener('keyup', e => { bbKeys[e.key] = false; });
-
-// ── API pública ───────────────────────────────────────────────────────────────
-let _bbFichaOk = false; // true solo cuando el selector ya consumió la ficha
+  });
+  
+  BBC.addEventListener('touchend', e => {
+    if (bbOver) { window.blockbusterReset(); return; }
+    if (!bbRunning || bbPaused) return;
+    if (!bbLaunch()) bbFireLaser();
+  }, { passive: true });
+  
+  // ── Teclado: movimiento continuo en el loop ──────────────────────────────────
+  const bbKeys = {};
+  document.addEventListener('keydown', e => {
+    if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
+    if (document.getElementById('juegoBlockbuster').style.display === 'none') return;
+    if (['ArrowLeft','ArrowRight','Space'].includes(e.key) || e.code === 'Space') e.preventDefault();
+    bbKeys[e.key] = true;
+    if (e.code === 'Space' || e.key === ' ') {
+      if (bbOver) { window.blockbusterReset(); return; }
+      if (!bbLaunch()) bbFireLaser();
+    }
+  });
+  document.addEventListener('keyup', e => { bbKeys[e.key] = false; });
+  
+  // ── API pública ───────────────────────────────────────────────────────────────
+  let _bbFichaOk = false; // true solo cuando el selector ya consumió la ficha
+  BBC.addEventListener('pointerdown', () => { if (bbEnEspera) _bbArrancar(); }, { passive: true });
+  document.addEventListener('keydown', e => {
+    if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
+    if (bbEnEspera && e.code === 'Space' && document.getElementById('juegoBlockbuster').style.display !== 'none') {
+      e.preventDefault(); _bbArrancar();
+    }
+  });
+}
 
 window.blockbusterInit = function() {
+  if (!_bbInitCanvas()) return;
+  _bbBindEventListeners();
   // Llamado desde el selector (ficha ya consumida) — muestra pantalla de inicio
   _bbFichaOk = true;
   bbEnEspera = true;
@@ -700,12 +719,5 @@ function _bbArrancar() {
   bbInit();
 }
 
-BBC.addEventListener('pointerdown', () => { if (bbEnEspera) _bbArrancar(); }, { passive: true });
-document.addEventListener('keydown', e => {
-  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
-  if (bbEnEspera && e.code === 'Space' && document.getElementById('juegoBlockbuster').style.display !== 'none') {
-    e.preventDefault(); _bbArrancar();
-  }
-});
-
-bbDrawStart();
+// estos listeners se registran desde _bbBindEventListeners()
+// bbDrawStart se llama desde blockbusterInit

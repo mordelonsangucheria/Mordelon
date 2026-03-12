@@ -1,9 +1,15 @@
 // ===================== SPACE INVADERS — MORDELÓN =====================
 (function () {
 
-const IVC = document.getElementById('invadersCanvas');
-const IVX = IVC.getContext('2d');
+let IVC, IVX;
 const IVW = 320, IVH = 220;
+
+function _ivInitCanvas() {
+  IVC = document.getElementById('invadersCanvas');
+  if (!IVC) return false;
+  IVX = IVC.getContext('2d');
+  return true;
+}
 
 // ── Dificultad ─────────────────────────────────────────────────────────────
 let ivDificultad = 0;
@@ -869,8 +875,11 @@ async function _ivHandleAction() {
   ivShoot();
 }
 
-// Touch
-(function () {
+// Touch — se registra solo una vez cuando el juego arranca
+let _ivTouchBound = false;
+function _ivBindTouch() {
+  if (_ivTouchBound || !IVC) return;
+  _ivTouchBound = true;
   let touchX = null;
   IVC.addEventListener('touchstart', e => {
     e.preventDefault();
@@ -901,13 +910,19 @@ async function _ivHandleAction() {
     if (ivOver) { _ivHandleAction(); return; }
     ivShoot();
   });
-})();
+}
 
 // Auto-shoot espacio
 setInterval(() => { if (ivRunning && !ivOver && !ivPaused && ivKeys[' ']) ivShoot(); }, 100);
 
 // ── Exports ────────────────────────────────────────────────────────────────
-window.invadersInit  = ivInit;
+let _ivKeyMovStarted = false;
+window.invadersInit = function() {
+  if (!_ivInitCanvas()) return;
+  _ivBindTouch();
+  if (!_ivKeyMovStarted) { ivKeyMovement(); _ivKeyMovStarted = true; }
+  ivInit();
+};
 window.invadersPause = ivTogglePause;
 window.invadersReset = async function () {
   if (window._ivGoAnimInterval) { clearInterval(window._ivGoAnimInterval); window._ivGoAnimInterval = null; }
@@ -921,6 +936,6 @@ window.invadersReset = async function () {
   ivInit();
 };
 
-ivKeyMovement();
+// ivKeyMovement se inicia cuando el juego arranca, no al cargar el script
 
 })();

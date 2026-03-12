@@ -876,19 +876,19 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
   set: (v) => { juegoActualRecompensa = v; }
 });
 
-const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run', impact: '🚀 Impact', battle: '🏰 Battle City', blockbuster: '🥪 BlockBurguer', pong: '🏓 Pong' };
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run', impact: '🚀 Impact', battle: '🏰 Battle City' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
 // Mostrar todos los botones de juegos por defecto (Firebase los oculta si corresponde)
 document.addEventListener('DOMContentLoaded', () => {
-  ['tetris','snake','2048','dino','minas','invaders','slots','run','impact','battle','blockbuster','pong'].forEach(id => {
+  ['tetris','snake','2048','dino','minas','invaders','slots','run'].forEach(id => {
     const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
     if (btn) btn.style.display = '';
   });
 });
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run', 'impact', 'battle', 'blockbuster', 'pong'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
 
 // ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
 // fichasRequeridas: { tetris: true/false, snake: true/false, ... }
@@ -1045,6 +1045,7 @@ onSnapshot(doc(db, 'config', 'battleDificultad'), (snap) => {
   }
 });
 
+
 onSnapshot(doc(db,'config','recompensaJuegos'), (snap) => {
   if (snap.exists()) {
     recompensasConfig = snap.data(); // { tetris:{...}, snake:{...}, ... }
@@ -1085,7 +1086,7 @@ function actualizarBarraRecompensa() {
     slots:  parseInt(localStorage.getItem('slotsHiC') || '0'),
     run:    parseInt(localStorage.getItem('runHiC') || '0'),
     impact: parseInt(localStorage.getItem('impactHiC') || '0'),
-    battle: parseInt(localStorage.getItem('battleHiC') || '0')
+    battle: parseInt(localStorage.getItem('battleHiC') || '0'),
   };
   const puntosActuales = records[juego] || 0;
 
@@ -1213,6 +1214,7 @@ window.loginEntrar = async function() {
     usuarioActual = { nombre, ...data };
     window.usuarioActual = usuarioActual;
     localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
+    if (typeof window.referidosOnRegistro === 'function') await window.referidosOnRegistro(nombre);
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -1273,6 +1275,10 @@ window.continuarSinCuenta = function() {
 
 // ── Post-login: cargar datos del usuario ──
 function loginExitoso() {
+  // Sistema de referidos
+  if (typeof window.referidosIniciarEscucha === 'function') window.referidosIniciarEscucha();
+  if (typeof window.referidosRenderBloque === 'function') window.referidosRenderBloque();
+
   // Pre-llenar campos del carrito con datos del usuario
   const nombreInput = document.getElementById('nombreCliente');
   const dirInput    = document.getElementById('direccionCliente');
