@@ -727,6 +727,7 @@ dAnimFrame = requestAnimationFrame(dinoLoop);
 
 // ─── Eventos ───────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
+  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   if (document.getElementById('juegoDino').style.display === 'none') return;
   if (e.code === 'Space' || e.key === 'ArrowUp') { e.preventDefault(); window.dinoJump(); }
   if (e.key === 'ArrowDown') { e.preventDefault(); window.dinoFastFall(); }

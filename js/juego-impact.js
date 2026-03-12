@@ -674,6 +674,7 @@
   }
 
   function onKD(e){
+    if(document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
     if(estado!=='jugando') return;
     keysDown[e.key]=true;
     if([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();

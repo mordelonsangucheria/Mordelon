@@ -602,6 +602,7 @@ BBC.addEventListener('touchend', e => {
 // ── Teclado: movimiento continuo en el loop ──────────────────────────────────
 const bbKeys = {};
 document.addEventListener('keydown', e => {
+  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   if (document.getElementById('juegoBlockbuster').style.display === 'none') return;
   if (['ArrowLeft','ArrowRight','Space'].includes(e.key) || e.code === 'Space') e.preventDefault();
   bbKeys[e.key] = true;
@@ -701,6 +702,7 @@ function _bbArrancar() {
 
 BBC.addEventListener('pointerdown', () => { if (bbEnEspera) _bbArrancar(); }, { passive: true });
 document.addEventListener('keydown', e => {
+  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   if (bbEnEspera && e.code === 'Space' && document.getElementById('juegoBlockbuster').style.display !== 'none') {
     e.preventDefault(); _bbArrancar();
   }

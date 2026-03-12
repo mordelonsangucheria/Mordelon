@@ -1398,6 +1398,7 @@
   // CONTROLES — sin input lag
   // ═══════════════════════════════════════════════════════════════════════════
   function onKD(e) {
+    if(document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
     if (estado === 'parado') {
       if (e.key === ' ' || e.key === 'Enter') { iniciarJuego(); return; }
     }

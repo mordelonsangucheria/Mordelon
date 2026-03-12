@@ -838,6 +838,7 @@ function ivShoot() {
 // ── Controls ──────────────────────────────────────────────────────────────
 let ivKeys = {};
 document.addEventListener('keydown', e => {
+  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   if (document.getElementById('juegoInvaders')?.style.display === 'none') return;
   ivKeys[e.key] = true;
   if (e.code === 'Space') { e.preventDefault(); _ivHandleAction(); }

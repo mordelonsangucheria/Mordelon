@@ -612,6 +612,7 @@ function tetrisInit() {
 // ── Teclado ─────────────────────────────────────────────────────
 const TKEYS_BLOCKED=new Set(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Space']);
 document.addEventListener('keydown',e=>{
+  if(document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   const el=document.getElementById('juegoTetris');
   if(!el||el.style.display==='none') return;
   if(TKEYS_BLOCKED.has(e.key)||TKEYS_BLOCKED.has(e.code)){e.preventDefault();e.stopPropagation();}

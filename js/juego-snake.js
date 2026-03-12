@@ -270,6 +270,7 @@ SC.addEventListener('pointerdown', ()=>{
 }, {passive:true});
 
 document.addEventListener('keydown', e=>{
+  if (document.activeElement && (document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
   if (document.getElementById('juegoSnake').style.display==='none') return;
   if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.key||e.code)) e.preventDefault();
   if (e.code==='Space') {
