@@ -1214,7 +1214,6 @@ window.loginEntrar = async function() {
     usuarioActual = { nombre, ...data };
     window.usuarioActual = usuarioActual;
     localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
-    if (typeof window.referidosOnRegistro === 'function') await window.referidosOnRegistro(nombre);
     msgEl.textContent = '';
     loginExitoso();
   } catch(e) {
@@ -1257,6 +1256,8 @@ window.registrarse = async function() {
     window.usuarioActual = usuarioActual;
     localStorage.setItem('mordelon-usuario', JSON.stringify({ nombre, clave }));
     msgEl.textContent = '';
+    // Hook referidos: registrar quién trajo a este usuario
+    if (typeof window.referidosOnRegistro === 'function') await window.referidosOnRegistro(nombre);
     loginExitoso();
   } catch(e) {
     msgEl.style.color = 'var(--rojo)';

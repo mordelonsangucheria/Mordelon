@@ -335,26 +335,46 @@ window.refCargarStats = async function() {
 
   try {
     const snap = await getDocs(collection(db, 'clientes'));
-    const usuarios = [];
+
+    // Construir mapa: referidor -> [lista de referidos]
+    const arbol = {};   // { JUAN: ['PEDRO','MARIA'], ... }
+    const conOrigen = []; // usuarios que tienen referidoPor
+
     snap.forEach(d => {
       const data = d.data();
-      if ((data.referidosCount || 0) > 0) {
-        usuarios.push({ nombre: d.id, count: data.referidosCount || 0 });
+      const nombre = d.id;
+      if (data.referidoPor) {
+        const ref = data.referidoPor;
+        if (!arbol[ref]) arbol[ref] = [];
+        arbol[ref].push(nombre);
+        conOrigen.push(nombre);
       }
     });
-    usuarios.sort((a, b) => b.count - a.count);
 
-    if (!usuarios.length) {
+    if (!Object.keys(arbol).length) {
       cont.innerHTML = '<div style="font-size:0.75rem;color:#555;text-align:center;padding:12px;">Aún no hay referidos registrados</div>';
       return;
     }
-    cont.innerHTML = usuarios.map((u, i) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--gris-dark);border-radius:10px;padding:10px 14px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:0.7rem;color:#555;width:16px;">${i + 1}</span>
-          <span style="font-size:0.85rem;font-weight:800;color:var(--blanco);">${u.nombre}</span>
+
+    // Ordenar referidores por cantidad de referidos desc
+    const referidores = Object.entries(arbol).sort((a, b) => b[1].length - a[1].length);
+
+    cont.innerHTML = referidores.map(([ref, hijos]) => `
+      <div style="background:#111;border:1px solid #222;border-radius:12px;padding:10px 12px;margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${hijos.length ? '8px' : '0'};">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.95rem;">👤</span>
+            <span style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);">${ref}</span>
+          </div>
+          <span style="font-size:0.7rem;color:#555;background:#1a1a1a;border-radius:20px;padding:3px 10px;">
+            🔗 ${hijos.length} referido${hijos.length !== 1 ? 's' : ''}
+          </span>
         </div>
-        <span style="font-size:0.75rem;color:var(--turquesa);font-weight:800;">🔗 ${u.count} referido${u.count !== 1 ? 's' : ''}</span>
+        ${hijos.map(h => `
+          <div style="display:flex;align-items:center;gap:6px;padding:5px 0 5px 14px;border-left:2px solid #2a2a2a;">
+            <span style="font-size:0.7rem;color:#444;">└</span>
+            <span style="font-size:0.8rem;color:#aaa;font-weight:800;">${h}</span>
+          </div>`).join('')}
       </div>`).join('');
   } catch(e) {
     cont.innerHTML = '<div style="color:var(--rojo);font-size:0.75rem;">Error al cargar</div>';
@@ -440,10 +460,10 @@ window.referidosRenderPanelVendedor = function() {
       </button>
       <div id="refMsg" style="font-size:0.7rem;min-height:14px;text-align:center;"></div>
 
-      <!-- Stats -->
+      <!-- Stats árbol referidos -->
       <div style="margin-top:16px;border-top:1px solid var(--gris-light);padding-top:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:0.7rem;font-weight:800;color:#666;letter-spacing:1px;">TOP REFERIDORES</div>
+          <div style="font-size:0.7rem;font-weight:800;color:#666;letter-spacing:1px;">🌳 ÁRBOL DE REFERIDOS</div>
           <button onclick="window.refCargarStats()"
             style="background:transparent;border:1px solid #333;color:#666;border-radius:8px;padding:4px 10px;font-size:0.68rem;cursor:pointer;">
             🔄 Actualizar
@@ -451,7 +471,7 @@ window.referidosRenderPanelVendedor = function() {
         </div>
         <div id="refStatsGrid" style="display:flex;flex-direction:column;gap:6px;">
           <div style="font-size:0.75rem;color:#555;text-align:center;padding:10px;">
-            Tocá "Actualizar" para ver el ranking
+            Tocá "Actualizar" para ver el árbol
           </div>
         </div>
       </div>
