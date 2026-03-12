@@ -336,10 +336,6 @@ window.refCargarStats = async function() {
   try {
     const snap = await getDocs(collection(db, 'clientes'));
 
-    // Construir mapa: referidor -> [lista de referidos]
-    const arbol = {};   // { JUAN: ['PEDRO','MARIA'], ... }
-    const conOrigen = []; // usuarios que tienen referidoPor
-
     // Mapa referidoPor (relación exacta)
     const arbol = {};        // { JUAN: ['PEDRO','MARIA'] }
     const conContador = {};  // { JUAN: 3 } — de referidosCount (datos viejos sin referidoPor)
