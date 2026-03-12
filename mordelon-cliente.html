@@ -712,14 +712,14 @@
       <span class="total-label">Total</span>
       <span class="total-num" id="carritoTotal">$0</span>
     </div>
-    <input type="text" class="campo" id="nombreCliente" placeholder="👤 Tu nombre — requerido" />
-    <input type="text" class="campo" id="direccionCliente" placeholder="📍 Tu dirección — requerido" />
+    <input type="text" class="campo" id="nombreCliente" placeholder="👤 Tu nombre — requerido" onkeydown="event.stopPropagation()" />
+    <input type="text" class="campo" id="direccionCliente" placeholder="📍 Tu dirección — requerido" onkeydown="event.stopPropagation()" />
     <div style="position:relative;">
-      <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp — requerido" oninput="validarWA(this)" style="padding-right:36px;border-color:var(--rojo);"/>
+      <input type="tel" class="campo" id="whatsappCliente" placeholder="📱 Tu WhatsApp — requerido" oninput="validarWA(this)" onkeydown="event.stopPropagation()" style="padding-right:36px;border-color:var(--rojo);"/>
       <span id="waCheck" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:1rem;display:none;">✅</span>
     </div>
     <div id="waError" style="font-size:0.72rem;color:var(--rojo);font-weight:800;margin-top:-6px;margin-bottom:6px;display:none;">⚠️ Ingresá tu número para continuar</div>
-    <textarea class="campo" id="notaPedido" rows="2" placeholder="📝 Notas: sin cebolla, extra queso..."></textarea>
+    <textarea class="campo" id="notaPedido" rows="2" placeholder="📝 Notas: sin cebolla, extra queso..." onkeydown="event.stopPropagation()"></textarea>
     <button class="btn btn-turquesa" onclick="irAPago()">💳 Continuar al pago</button>
     <button class="btn btn-ghost" onclick="irAMenu()">← Seguir eligiendo</button>
   </div>
@@ -797,8 +797,8 @@
         <div class="monto-label">Total con recargo (10%)</div>
         <div class="monto-num" id="montoTarjeta">$0</div>
       </div>
-      <input class="campo" id="nombreTarjeta" placeholder="Nombre en la tarjeta" />
-      <input class="campo" id="numTarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatTarjeta(this)" />
+      <input class="campo" id="nombreTarjeta" placeholder="Nombre en la tarjeta" onkeydown="event.stopPropagation()" />
+      <input class="campo" id="numTarjeta" placeholder="Número de tarjeta" maxlength="19" oninput="formatTarjeta(this)" onkeydown="event.stopPropagation()" />
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <input class="campo" id="vencTarjeta" placeholder="MM/AA" maxlength="5" oninput="formatVenc(this)" />
         <input class="campo" id="cvvTarjeta" placeholder="CVV" maxlength="4" type="password"/>
