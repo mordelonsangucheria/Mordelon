@@ -14,6 +14,18 @@
 <title>Mordelón — Vendedor</title>
 <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/vendedor-base.css">
+
+<style>
+.acord-header {
+  display:flex;align-items:center;justify-content:space-between;
+  cursor:pointer;user-select:none;padding:4px 0;
+}
+.acord-header:hover { opacity:.85; }
+.acord-arrow { font-size:0.7rem;transition:transform .25s;display:inline-block; }
+.acord-arrow.open { transform:rotate(180deg); }
+.acord-body { overflow:hidden;transition:max-height .3s ease,opacity .25s;max-height:0;opacity:0; }
+.acord-body.open { max-height:2000px;opacity:1; }
+</style>
 </head>
 <body>
 
@@ -89,8 +101,15 @@
     <div class="empty-state"><p>📋</p><span style="font-size:.9rem;">Sin pedidos cobrados aún</span></div>
   </div>
 
-  <!-- CALIFICACIONES -->
-  <div style="margin-top:28px;">
+    <!-- CALIFICACIONES -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordCalif')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:1px;">⭐ CALIFICACIONES</div>
+      <span class="acord-arrow" id="acordCalif-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordCalif-body">
+      <div style="height:10px;"></div>
+      <div style="margin-top:28px;">
     <div style="font-size:0.72rem;color:#666;font-weight:800;letter-spacing:.08em;margin-bottom:12px;">⭐ CALIFICACIONES DE CLIENTES</div>
     <div id="ratingSummary" style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
       <div style="text-align:center;min-width:60px;">
@@ -108,6 +127,8 @@
     </div>
     <div id="ratingsLista" style="display:flex;flex-direction:column;gap:8px;">
       <div class="empty-state" style="padding:16px;"><span style="font-size:.85rem;">Sin calificaciones aún</span></div>
+    </div>
+  </div>
     </div>
   </div>
 </div>
@@ -141,8 +162,15 @@
 <div id="panel-menu-admin" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:16px;">Editá precios y agregá productos nuevos. Los cambios se aplican al instante en el menú del cliente.</p>
 
-  <!-- AGREGAR PRODUCTO -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;margin-bottom:20px;">
+    <!-- AGREGAR PRODUCTO -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordAgregarProd')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">➕ NUEVO PRODUCTO</div>
+      <span class="acord-arrow" id="acordAgregarProd-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordAgregarProd-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:16px;margin-bottom:20px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO PRODUCTO</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
       <div style="position:relative;">
@@ -177,15 +205,33 @@
     </div>
     <button class="btn btn-turquesa" onclick="agregarProducto()" style="margin-bottom:0;">➕ Agregar al menú</button>
   </div>
+    </div>
+  </div>
 
-  <!-- LISTA DE PRODUCTOS -->
-  <div id="menuAdminLista"></div>
+    <!-- LISTA DE PRODUCTOS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordListaProd')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">📋 LISTA DE PRODUCTOS</div>
+      <span class="acord-arrow" id="acordListaProd-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordListaProd-body">
+      <div style="height:10px;"></div>
+      <div id="menuAdminLista"></div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-config" class="panel">
 
-  <!-- QR DEL MENÚ -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <!-- QR DEL MENÚ -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordQR')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">📱 QR DEL MENÚ</div>
+      <span class="acord-arrow" id="acordQR-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordQR-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">📱 QR DEL MENÚ</div>
     <div style="text-align:center;">
       <div id="qrContainer" style="display:inline-block;background:white;padding:16px;border-radius:16px;margin-bottom:14px;"></div>
@@ -196,9 +242,18 @@
       </div>
     </div>
   </div>
+    </div>
+  </div>
 
-  <!-- USUARIOS -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <!-- USUARIOS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordUsuarios')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">👥 USUARIOS</div>
+      <span class="acord-arrow" id="acordUsuarios-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordUsuarios-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:12px;">👥 USUARIOS</div>
     <div id="usuariosLista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
     <div id="seccionAgregarUsuario" style="display:none;">
@@ -223,9 +278,18 @@
       <div id="actividadLista" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
     </div>
   </div>
+    </div>
+  </div>
 
-  <!-- MODO PAUSA -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <!-- MODO PAUSA -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordPausa')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">⏸️ MODO PAUSA</div>
+      <span class="acord-arrow" id="acordPausa-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordPausa-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div>
         <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);letter-spacing:2px;">⏸️ MODO PAUSA</div>
@@ -238,21 +302,41 @@
     </div>
     <div id="pausaStatus" style="font-size:0.78rem;color:#555;"></div>
   </div>
+    </div>
+  </div>
 
-  <!-- MENSAJE BIENVENIDA -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+    <!-- MENSAJE BIENVENIDA -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordBienvenida')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:1px;">📢 MENSAJE DE BIENVENIDA</div>
+      <span class="acord-arrow" id="acordBienvenida-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordBienvenida-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;margin-bottom:14px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--naranja);letter-spacing:2px;margin-bottom:10px;">📢 MENSAJE DE BIENVENIDA</div>
     <p style="font-size:0.75rem;color:#666;margin-bottom:10px;">Aparece arriba del menú del cliente. Dejalo vacío para ocultarlo.</p>
     <textarea id="inputBienvenida" rows="3" placeholder="Ej: ¡Hoy tenemos promo en tequeños! 2x1 hasta las 21hs 🔥" style="width:100%;padding:11px 14px;border:1.5px solid var(--gris-light);border-radius:12px;background:var(--gris-mid);color:var(--blanco);font-family:inherit;font-size:0.85rem;outline:none;resize:none;margin-bottom:10px;"></textarea>
     <button class="btn btn-turquesa" onclick="window.guardarBienvenida()" style="margin-bottom:0;">💾 Guardar mensaje</button>
   </div>
+    </div>
+  </div>
 
-  <!-- NOTAS INTERNAS -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
+    <!-- NOTAS INTERNAS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordNotas')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:#888;letter-spacing:1px;">📝 NOTAS INTERNAS</div>
+      <span class="acord-arrow" id="acordNotas-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordNotas-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
     <div style="font-family:'Righteous',cursive;font-size:1rem;color:#888;letter-spacing:2px;margin-bottom:10px;">📝 NOTAS INTERNAS</div>
     <p style="font-size:0.75rem;color:#666;margin-bottom:10px;">Anotá lo que necesites. Solo vos lo ves.</p>
     <textarea id="inputNotas" rows="4" placeholder="Ej: Hoy falta cheddar. Reponer mañana." style="width:100%;padding:11px 14px;border:1.5px solid var(--gris-light);border-radius:12px;background:var(--gris-mid);color:var(--blanco);font-family:inherit;font-size:0.85rem;outline:none;resize:none;margin-bottom:10px;"></textarea>
     <button class="btn btn-turquesa" onclick="window.guardarNotas()" style="margin-bottom:0;">💾 Guardar notas</button>
+  </div>
+    </div>
   </div>
 
 </div>
@@ -351,11 +435,27 @@
 <div id="panel-promos" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Las promos activas aparecen como banner y badge en el menú del cliente en tiempo real.</p>
 
-  <!-- PROMOS ACTIVAS -->
-  <div id="promosActivas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+    <!-- PROMOS ACTIVAS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordPromosAct')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">🏷️ PROMOS ACTIVAS</div>
+      <span class="acord-arrow" id="acordPromosAct-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordPromosAct-body">
+      <div style="height:10px;"></div>
+      <div id="promosActivas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+    </div>
+  </div>
 
-  <!-- CREAR PROMO -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
+    <!-- CREAR PROMO -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordCrearPromo')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">➕ NUEVA PROMO</div>
+      <span class="acord-arrow" id="acordCrearPromo-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordCrearPromo-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
     <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVA PROMO</div>
 
     <div style="margin-bottom:10px;">
@@ -421,13 +521,22 @@
 
     <button class="btn btn-turquesa" onclick="window.crearPromo()" style="width:100%;">🎉 Publicar promo</button>
   </div>
+    </div>
+  </div>
 </div>
 
 <div id="panel-descuentos" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Creá códigos de descuento de un solo uso. El cliente lo ingresa antes de confirmar el pedido.</p>
 
-  <!-- 🕹️ ACTIVAR / DESACTIVAR JUEGOS INDIVIDUALES -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
+    <!-- 🕹️ ACTIVAR / DESACTIVAR JUEGOS INDIVIDUALES -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordJuegos')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;">🕹️ JUEGOS EN EL MENÚ</div>
+      <span class="acord-arrow" id="acordJuegos-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordJuegos-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
       <div>
         <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;margin-bottom:2px;">🕹️ JUEGOS EN EL MENÚ</div>
@@ -600,14 +709,18 @@
       <div id="battleDifMsg" style="font-size:0.7rem;min-height:14px;margin-top:5px;text-align:center;"></div>
     </div>
   </div>
+    </div>
+  </div>
 
-  <!-- 🎮 RECOMPENSA POR JUEGO -->
-
-
-
-  
-  <!-- 🏆 LEADERBOARD -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
+    <!-- 🎮 RECOMPENSA POR JUEGO -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordRecompensa')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">🎮 RECOMPENSA POR JUEGO</div>
+      <span class="acord-arrow" id="acordRecompensa-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordRecompensa-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--turquesa);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
       <div>
         <div style="font-family:'Righteous',cursive;font-size:1rem;color:var(--turquesa);">🏆 LEADERBOARD</div>
@@ -630,9 +743,18 @@
     </div>
     <div id="lbResetMsg" style="font-size:0.7rem;min-height:14px;text-align:center;"></div>
   </div>
+    </div>
+  </div>
 
-<!-- 🎰 FICHAS DE SLOTS -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
+  <!-- 🎰 FICHAS DE SLOTS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordFichas')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:1px;">🎰 FICHAS DE SLOTS</div>
+      <span class="acord-arrow" id="acordFichas-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordFichas-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:1.5px solid var(--naranja);border-radius:16px;padding:18px;margin-bottom:20px;">
     <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--naranja);letter-spacing:2px;margin-bottom:6px;">🎰 FICHAS DE SLOTS</div>
     <p style="font-size:0.75rem;color:#888;margin-bottom:14px;line-height:1.5;">Buscá un usuario por nombre y cargale fichas. Los nombres están en mayúsculas.</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
@@ -666,9 +788,18 @@
     <div id="fichasMensaje" style="font-size:0.75rem;margin-top:10px;min-height:18px;"></div>
     <button onclick="window.verTodosUsuariosSlots()" style="background:transparent;border:none;color:#555;font-size:0.68rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Ver todos los usuarios</button>
   </div>
+    </div>
+  </div>
 
-  <!-- 🔥 TRAGALLAMA — JACKPOT & STATS -->
-  <div style="background:var(--gris-dark);border:2px solid #FFB800;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 0 20px rgba(255,184,0,0.08);">
+    <!-- 🔥 TRAGALLAMA — JACKPOT & STATS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordTragallama')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:#FFB800;letter-spacing:1px;">🔥 TRAGALLAMA — JACKPOT</div>
+      <span class="acord-arrow" id="acordTragallama-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordTragallama-body">
+      <div style="height:10px;"></div>
+      <div style="background:var(--gris-dark);border:2px solid #FFB800;border-radius:16px;padding:18px;margin-bottom:20px;box-shadow:0 0 20px rgba(255,184,0,0.08);">
     <div style="font-family:'Righteous',cursive;font-size:0.9rem;color:#FFB800;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
       🔥 TRAGALLAMA — CONTROL JACKPOT
     </div>
@@ -722,6 +853,8 @@
         🗑️ Limpiar cupones expirados de slots
       </button>
       <div id="tlLimpiezaMsg" style="font-size:0.68rem;min-height:14px;text-align:center;color:#555;"></div>
+    </div>
+  </div>
     </div>
   </div>
 
@@ -798,12 +931,38 @@
     </div>
   </div>
 
+  <!-- SISTEMA DE REFERIDOS -->
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordReferidos')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--blanco);letter-spacing:1px;">🔗 REFERIDOS</div>
+      <span class="acord-arrow" id="acordReferidos-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordReferidos-body">
+      <div style="height:10px;"></div>
+      <div id="referidosPanelVendedor"></div>
+    </div>
+  </div>
+
   <!-- CUPONES ACTIVOS -->
-  <div id="cuponesLista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordCupones')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">🎟️ CUPONES ACTIVOS</div>
+      <span class="acord-arrow open" id="acordCupones-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordCupones-body">
+      <div style="height:10px;"></div>
+      <div id="cuponesLista" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;"></div>
+    </div>
+  </div>
 
   <!-- CREAR CUPÓN -->
-  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:18px;">
-    <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:2px;margin-bottom:14px;">➕ NUEVO CUPÓN</div>
+  <div style="background:var(--gris-dark);border:1.5px solid var(--gris-light);border-radius:16px;padding:16px 18px;margin-bottom:14px;">
+    <div class="acord-header" onclick="window._acordToggle('acordCrearCupon')">
+      <div style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);letter-spacing:1px;">➕ NUEVO CUPÓN</div>
+      <span class="acord-arrow" id="acordCrearCupon-arrow">▼</span>
+    </div>
+    <div class="acord-body" id="acordCrearCupon-body">
+      <div style="height:10px;"></div>
 
     <div style="margin-bottom:10px;">
       <div style="font-size:0.72rem;color:#666;font-weight:800;margin-bottom:5px;">CÓDIGO</div>
@@ -856,6 +1015,7 @@
     </div>
 
     <button class="btn btn-turquesa" onclick="window.crearCupon()" style="width:100%;">🎟️ Crear cupón</button>
+    </div>
   </div>
 </div>
 
@@ -1099,6 +1259,16 @@
 
 <script src="js/vendedor-pin.js"></script>
 <script>
+  // ── Acordeón genérico ──
+  window._acordToggle = function(id) {
+    const body  = document.getElementById(id + '-body');
+    const arrow = document.getElementById(id + '-arrow');
+    if (!body) return;
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    if (arrow) arrow.classList.toggle('open', !isOpen);
+  };
+
   // Soporte teclado físico para el PIN del vendedor
   document.addEventListener('keydown', function(e) {
     const overlay = document.getElementById('pinOverlay');
@@ -1118,6 +1288,7 @@
 <script src="js/vendedor-herramientas.js"></script>
 <script src="js/vendedor-juegos.js"></script>
 <script src="js/vendedor-cupones.js"></script>
+<script type="module" src="js/referidos.js"></script>
 <script src="js/vendedor-juegos-config.js"></script>
 <script src="js/vendedor-sw-register.js"></script>
 
