@@ -340,26 +340,46 @@ window.refCargarStats = async function() {
     const arbol = {};   // { JUAN: ['PEDRO','MARIA'], ... }
     const conOrigen = []; // usuarios que tienen referidoPor
 
+    // Mapa referidoPor (relación exacta)
+    const arbol = {};        // { JUAN: ['PEDRO','MARIA'] }
+    const conContador = {};  // { JUAN: 3 } — de referidosCount (datos viejos sin referidoPor)
+
     snap.forEach(d => {
       const data = d.data();
       const nombre = d.id;
+      // Relación exacta guardada en el referido
       if (data.referidoPor) {
         const ref = data.referidoPor;
         if (!arbol[ref]) arbol[ref] = [];
         arbol[ref].push(nombre);
-        conOrigen.push(nombre);
+      }
+      // Contador en el referidor (puede haber datos de antes del fix)
+      if ((data.referidosCount || 0) > 0) {
+        conContador[nombre] = data.referidosCount;
       }
     });
 
-    if (!Object.keys(arbol).length) {
+    // Unir ambas fuentes: referidores conocidos + referidores con contador pero sin árbol
+    const todosReferidores = new Set([...Object.keys(arbol), ...Object.keys(conContador)]);
+
+    if (!todosReferidores.size) {
       cont.innerHTML = '<div style="font-size:0.75rem;color:#555;text-align:center;padding:12px;">Aún no hay referidos registrados</div>';
       return;
     }
 
-    // Ordenar referidores por cantidad de referidos desc
-    const referidores = Object.entries(arbol).sort((a, b) => b[1].length - a[1].length);
+    // Ordenar por cantidad desc
+    const referidores = [...todosReferidores].sort((a, b) => {
+      const ca = (arbol[a] || []).length || conContador[a] || 0;
+      const cb = (arbol[b] || []).length || conContador[b] || 0;
+      return cb - ca;
+    });
 
-    cont.innerHTML = referidores.map(([ref, hijos]) => `
+    cont.innerHTML = referidores.map(ref => {
+      const hijos  = arbol[ref] || [];
+      const countFB = conContador[ref] || 0;
+      // Si hay árbol usamos eso; si no, mostramos el contador con aviso
+      const sinDetalle = !hijos.length && countFB > 0;
+      return `
       <div style="background:#111;border:1px solid #222;border-radius:12px;padding:10px 12px;margin-bottom:4px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${hijos.length ? '8px' : '0'};">
           <div style="display:flex;align-items:center;gap:6px;">
@@ -367,7 +387,7 @@ window.refCargarStats = async function() {
             <span style="font-family:'Righteous',cursive;font-size:0.85rem;color:var(--turquesa);">${ref}</span>
           </div>
           <span style="font-size:0.7rem;color:#555;background:#1a1a1a;border-radius:20px;padding:3px 10px;">
-            🔗 ${hijos.length} referido${hijos.length !== 1 ? 's' : ''}
+            🔗 ${hijos.length || countFB} referido${(hijos.length || countFB) !== 1 ? 's' : ''}
           </span>
         </div>
         ${hijos.map(h => `
@@ -375,7 +395,12 @@ window.refCargarStats = async function() {
             <span style="font-size:0.7rem;color:#444;">└</span>
             <span style="font-size:0.8rem;color:#aaa;font-weight:800;">${h}</span>
           </div>`).join('')}
-      </div>`).join('');
+        ${sinDetalle ? `
+          <div style="padding:4px 0 2px 14px;border-left:2px solid #2a2a2a;">
+            <span style="font-size:0.68rem;color:#444;font-style:italic;">└ detalle no disponible (registros anteriores)</span>
+          </div>` : ''}
+      </div>`;
+    }).join('');
   } catch(e) {
     cont.innerHTML = '<div style="color:var(--rojo);font-size:0.75rem;">Error al cargar</div>';
   }
