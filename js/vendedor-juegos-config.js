@@ -56,6 +56,7 @@
     { id: 'impact',   label: 'Impact',       emoji: '🚀' },
     { id: 'battle',   label: 'Battle City',  emoji: '🏰' },
     { id: 'blockbuster', label: 'BlockBurguer', emoji: '🥪' },
+    { id: 'pong',        label: 'Pong',         emoji: '🏓' },
   ];
 
   let juegosEstado = {}; // { tetris: true, snake: false, fichasReq_tetris: true, ... }
@@ -780,7 +781,7 @@
     const nombresJuego = {
       tetris:'Tetris', snake:'Snake', '2048':'2048', dino:'Dino',
       minas:'Minas', invaders:'Invaders', slots:'Slots',
-      run:'Run', impact:'Impact', battle:'Battle', blockbuster:'BlockBurguer'
+      run:'Run', impact:'Impact', battle:'Battle', blockbuster:'BlockBurguer', pong:'Pong'
     };
     const label = nombresJuego[juego] || juego;
     if (!confirm('¿Resetear el ranking de ' + label + '? Se borrarán los records de TODOS los clientes.')) return;

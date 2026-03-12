@@ -876,19 +876,19 @@ Object.defineProperty(window, 'juegoActualRecompensa', {
   set: (v) => { juegoActualRecompensa = v; }
 });
 
-const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run', impact: '🚀 Impact', battle: '🏰 Battle City' };
+const JUEGOS_NOMBRES = { tetris: '🧱 Tetris', snake: '🐍 Snake', '2048': '🔢 2048', dino: '🦕 Dino', minas: '💣 Minas', invaders: '👾 Invaders', slots: '🎰 Slots', run: '🏃 Mordelón Run', impact: '🚀 Impact', battle: '🏰 Battle City', blockbuster: '🥪 BlockBurguer', pong: '🏓 Pong' };
 
 // Escuchar configuraciones: nuevo doc recompensaJuegos (por juego) y fallback al legacy recompensaJuego (solo dino)
 // Mostrar todos los botones de juegos por defecto (Firebase los oculta si corresponde)
 document.addEventListener('DOMContentLoaded', () => {
-  ['tetris','snake','2048','dino','minas','invaders','slots','run'].forEach(id => {
+  ['tetris','snake','2048','dino','minas','invaders','slots','run','impact','battle','blockbuster','pong'].forEach(id => {
     const btn = document.getElementById('btnJuego' + id.charAt(0).toUpperCase() + id.slice(1));
     if (btn) btn.style.display = '';
   });
 });
 
 // ── TOGGLE VISIBILIDAD DE JUEGOS INDIVIDUALES ────────────────────────────
-const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run'];
+const JUEGOS_IDS = ['tetris', 'snake', '2048', 'dino', 'minas', 'invaders', 'slots', 'run', 'impact', 'battle', 'blockbuster', 'pong'];
 
 // ── SISTEMA DE FICHAS POR JUEGO ──────────────────────────────────────────
 // fichasRequeridas: { tetris: true/false, snake: true/false, ... }
