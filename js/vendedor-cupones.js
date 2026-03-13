@@ -73,6 +73,8 @@
       usado: false,
       usadoPor: null,
       creadoEn: Date.now(),
+      generadoPor: 'vendedor',  // 'vendedor' | 'juego' | 'referido'
+      para: null,               // nombre del cliente asignado (si aplica)
     };
     cuponesData.push(cupon);
     await setDoc(doc(db, 'config', 'cupones'), { lista: cuponesData });
@@ -133,17 +135,38 @@
         : c.activo
           ? '<span style="background:rgba(61,191,184,.15);color:var(--turquesa);border:1px solid var(--turquesa);padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;">ACTIVO</span>'
           : '<span style="background:#33333388;color:#666;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;">PAUSADO</span>';
-      const usadoPorTxt = c.usado && c.usadoPor
-        ? '<div style="font-size:0.7rem;color:#555;margin-top:4px;">Usado por: ' + c.usadoPor + '</div>'
+      // Línea de origen del cupón
+      const origenIcon = c.generadoPor === 'juego'    ? '🎮 Ganado en juego'
+                       : c.generadoPor === 'referido' ? '🔗 Por referido'
+                       : c.generadoPor === 'vendedor' ? '🏪 Creado por vos'
+                       : '🏪 Creado manualmente';
+      const origenColor = c.generadoPor === 'juego'    ? 'var(--naranja)'
+                        : c.generadoPor === 'referido' ? 'var(--turquesa)'
+                        : '#555';
+
+      const paraTxt = c.para
+        ? '<div style="font-size:0.68rem;color:#888;margin-top:2px;">👤 Asignado a: <strong style="color:var(--blanco);">' + c.para + '</strong></div>'
         : '';
+      const usadoPorTxt = c.usado && c.usadoPor
+        ? '<div style="font-size:0.68rem;color:#555;margin-top:2px;">✅ Canjeado por: <strong style="color:#aaa;">' + c.usadoPor + '</strong></div>'
+        : '';
+      const fechaTxt = c.creadoEn
+        ? '<div style="font-size:0.62rem;color:#333;margin-top:2px;">' + new Date(c.creadoEn).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit'}) + '</div>'
+        : '';
+
       card.innerHTML =
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
-          '<div>' +
-            '<div style="font-family:Righteous,cursive;font-size:1.1rem;letter-spacing:2px;color:var(--blanco);">' + c.codigo + '</div>' +
-            '<div style="font-size:0.8rem;color:var(--turquesa);font-weight:800;">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+              '<div style="font-family:Righteous,cursive;font-size:1.1rem;letter-spacing:2px;color:var(--blanco);">' + c.codigo + '</div>' +
+            '</div>' +
+            '<div style="font-size:0.8rem;color:var(--turquesa);font-weight:800;margin-top:2px;">' +
               (c.tipo === 'item' ? `🎁 ${c.item || 'Item gratis'}` : `${c.pct}% de descuento`) +
             '</div>' +
+            '<div style="font-size:0.68rem;color:' + origenColor + ';margin-top:3px;">' + origenIcon + '</div>' +
+            paraTxt +
             usadoPorTxt +
+            fechaTxt +
           '</div>' +
           '<div style="display:flex;align-items:center;gap:6px;">' +
             estado +

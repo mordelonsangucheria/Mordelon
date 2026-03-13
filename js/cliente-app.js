@@ -1767,6 +1767,8 @@ async function tlGenerarCupon(premio, origen) {
       activo: true,
       usado: false,
       origen: 'slots-' + origen,
+      generadoPor: 'juego',
+      para: usuarioActual?.nombre || null,
       usuario: usuarioActual?.nombre || 'anon',
       creadoEn: Date.now(),
       expira,
@@ -1996,6 +1998,8 @@ async function generarCuponRecompensa(cfg, juego) {
       activo: true,
       usado: false,
       origen: 'juego-' + juego,
+      generadoPor: 'juego',
+      para: usuarioActual?.nombre || null,
       creadoEn: Date.now()
     });
     await setDoc(doc(db,'config','cupones'), { lista });
