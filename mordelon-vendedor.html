@@ -24,7 +24,7 @@
 .acord-arrow { font-size:0.7rem;transition:transform .25s;display:inline-block; }
 .acord-arrow.open { transform:rotate(180deg); }
 .acord-body { overflow:hidden;transition:max-height .3s ease,opacity .25s;max-height:0;opacity:0; }
-.acord-body.open { max-height:2000px;opacity:1; }
+.acord-body.open { max-height:6000px;opacity:1; }
 </style>
 </head>
 <body>
@@ -83,6 +83,7 @@
   <div class="tab" data-tab="horarios">🕐 Horarios</div>
   <div class="tab" data-tab="config">⚙️ Config</div>
   <div class="tab" data-tab="calculadora">🧮 Vuelto</div>
+  <div class="tab" data-tab="finanzas">💵 Finanzas</div>
   <div class="tab" data-tab="cronometro">⏱️ Timer</div>
   <div class="tab" data-tab="promos">🎉 Promos</div>
   <div class="tab" data-tab="descuentos">🎟️ Cupones</div>
@@ -157,6 +158,10 @@
 <div id="panel-stock" class="panel">
   <p style="font-size:0.8rem;color:#666;margin-bottom:14px;">Activá o desactivá productos. Los cambios se reflejan al instante en el menú del cliente.</p>
   <div id="stockGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;"></div>
+</div>
+
+<div id="panel-finanzas" class="panel">
+  <div id="finanzasPanelVendedor"></div>
 </div>
 
 <div id="panel-menu-admin" class="panel">
@@ -1288,6 +1293,7 @@
 <script src="js/vendedor-herramientas.js"></script>
 <script src="js/vendedor-juegos.js"></script>
 <script src="js/vendedor-cupones.js"></script>
+  <script type="module" src="js/vendedor-finanzas.js"></script>
 <script type="module" src="js/referidos.js"></script>
 <script src="js/vendedor-juegos-config.js"></script>
 <script src="js/vendedor-sw-register.js"></script>
